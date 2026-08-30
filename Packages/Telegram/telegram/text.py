@@ -4,9 +4,13 @@ Two hard facts about the live rail shape everything here.
 
 **The delivery node sends `parse_mode: "None"`.** Markdown is not rendered — it
 is transmitted. A message built as `*Kaggle settled*` arrives with the asterisks
-visible, which looks like a bug in the sender and not in the formatting. So the
-package never emits markup: `plain()` converts markup to the text a human meant
+visible, which looks like a bug in the sender and not in the formatting. So
+templates are written in plain prose and `plain()` flattens leftover *structure*
 (TG-01).
+
+The same fact cuts the other way, which cost a round of review to notice: since
+the markers are inert, *stripping* them is not sanitisation, it is data loss.
+`plain()` therefore leaves inline delimiters exactly as they arrived (TG-23).
 
 **Telegram caps a message at 4096 UTF-16 code units**, not characters and not
 bytes. An emoji outside the BMP is one Python character and *two* units, so a
@@ -32,9 +36,6 @@ _LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _HEADING = re.compile(r"^\s{0,3}#{1,6}\s+", re.MULTILINE)
 _QUOTE = re.compile(r"^\s{0,3}>\s?", re.MULTILINE)
 _RULE = re.compile(r"^\s{0,3}(?:[-*_]\s*){3,}$", re.MULTILINE)
-_BOLD = re.compile(r"(\*\*|__)(?=\S)(.+?)(?<=\S)\1", re.DOTALL)
-_ITALIC = re.compile(r"(?<![\w*_])([*_])(?=\S)([^*_]+?)(?<=\S)\1(?![\w*_])")
-_CODE = re.compile(r"`([^`]+)`")
 _BULLET = re.compile(r"^\s{0,3}[-*+]\s+", re.MULTILINE)
 _BLANKS = re.compile(r"\n{3,}")
 
@@ -49,25 +50,32 @@ def tg_len(text: str) -> int:
 
 
 def plain(text: str) -> str:
-    """Convert markdown-ish text to the plain text a reader expects.
+    """Flatten markdown *structure* to plain text, without touching content.
 
-    Not an escape and not a sanitiser — a *conversion*. `**done**` becomes
-    `done`, not `\\*\\*done\\*\\*`, because the intent was emphasis and the rail
-    cannot render emphasis (TG-01). Links keep both halves: the label is what
-    the sentence needs, the URL is what the reader may want to open.
+    Only line-level structure is removed — heading hashes, blockquote markers,
+    fence lines, horizontal rules — plus links, which become `label (url)` so
+    both halves survive. Bullets get a real bullet character.
+
+    **Inline delimiters are deliberately left alone.** An earlier version
+    stripped `**`, `__`, `*`, `_` and backticks on the reasoning that the rail
+    cannot render emphasis so the markers are noise. That reasoning was wrong in
+    a way that loses data: because `parse_mode` is already `None`, those
+    characters are *inert*, so removing them buys no rendering benefit and
+    silently corrupts any content that happens to contain them —
+    `pw: __secret__` arrived as `pw: secret`, and quoted code lost its
+    backticks. Template authors write plain prose by convention (TG-01); the
+    text flowing through from third-party APIs is data, and data is returned
+    intact.
     """
     if not text:
         return ""
     out = str(text)
-    out = _FENCE.sub("", out)            # fence markers, not the code inside
-    out = _IMAGE.sub(r"\1", out)         # images have no meaning here
+    out = _FENCE.sub("", out)            # the ``` lines, never the code inside
+    out = _IMAGE.sub(r"\1", out)         # an image has no meaning on this rail
     out = _LINK.sub(r"\1 (\2)", out)
     out = _HEADING.sub("", out)
     out = _QUOTE.sub("", out)
     out = _RULE.sub("", out)
-    out = _BOLD.sub(r"\2", out)
-    out = _ITALIC.sub(r"\2", out)
-    out = _CODE.sub(r"\1", out)
     out = _BULLET.sub("• ", out)
     out = _BLANKS.sub("\n\n", out)
     return out.strip()

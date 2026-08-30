@@ -211,16 +211,36 @@ class TestResponseSignature(unittest.TestCase):
         # "Not signed" and "signed wrongly" are different facts.
         self.assertIsNone(verify_response(ok(b'{"ok":true}'), "sec-123456"))
 
-    def test_a_mismatch_does_not_fail_the_send(self):
-        # n8n re-serialises its own reply, so a spacing difference is not a
-        # security event and must not turn an accepted send into a failure.
+    def test_a_mismatch_fails_the_send(self):
+        # Verified live: the signature DOES match in practice, so tolerating a
+        # mismatch was defending nothing while looking like a check (TG-24).
         seam = Seam(FakeResolver(WIRED),
                     client=RecordingClient([ok(b'{"ok": true}',
                                                headers={"x-n8n-signature": "nope"})]),
                     clock=FakeClock(STAMP))
         result = seam.send("hello")
-        self.assertTrue(result.accepted)
+        self.assertFalse(result.accepted)
         self.assertFalse(result.response_signature_ok)
+        self.assertIn("TG-24", result.note)
+
+    def test_an_unsigned_response_is_still_accepted(self):
+        # "Unsigned" and "signed wrongly" are different facts; only the second
+        # is evidence of anything.
+        seam = Seam(FakeResolver(WIRED), client=RecordingClient([ok(b'{"ok":true}')]),
+                    clock=FakeClock(STAMP))
+        result = seam.send("hello")
+        self.assertTrue(result.accepted)
+        self.assertIsNone(result.response_signature_ok)
+
+    def test_a_correctly_signed_response_is_accepted(self):
+        body = b'{"ok":true}'
+        seam = Seam(FakeResolver(WIRED),
+                    client=RecordingClient([ok(body, headers={
+                        "x-n8n-signature": sign(body.decode(), WIRED["NOTIFY_TOKEN"])})]),
+                    clock=FakeClock(STAMP))
+        result = seam.send("hello")
+        self.assertTrue(result.accepted)
+        self.assertTrue(result.response_signature_ok)
 
 
 if __name__ == "__main__":

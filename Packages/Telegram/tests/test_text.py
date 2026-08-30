@@ -30,16 +30,25 @@ class TestLength(unittest.TestCase):
 
 
 class TestPlain(unittest.TestCase):
-    """The rail sends parse_mode None, so markup must be converted, not escaped."""
+    """Structure is flattened; content is returned intact.
 
-    def test_bold_and_italic_lose_their_markers(self):
-        self.assertEqual(plain("**done** and *now*"), "done and now")
+    The rail sends `parse_mode: None`, so inline delimiters are inert. An
+    earlier version stripped them anyway, which bought no rendering benefit and
+    silently corrupted content that legitimately contains them (TG-23).
+    """
 
-    def test_underscore_emphasis(self):
-        self.assertEqual(plain("_emphasis_"), "emphasis")
+    def test_inline_delimiters_are_left_alone(self):
+        self.assertEqual(plain("**done** and *now*"), "**done** and *now*")
 
-    def test_inline_code_keeps_its_content(self):
-        self.assertEqual(plain("ref `55881637`"), "ref 55881637")
+    def test_a_delimited_secret_is_not_mangled(self):
+        # The case that exposed this: `pw: __secret__` arrived as `pw: secret`.
+        self.assertEqual(plain("pw: __secret__"), "pw: __secret__")
+
+    def test_quoted_code_keeps_its_backticks(self):
+        self.assertEqual(plain("`SELECT * FROM t`"), "`SELECT * FROM t`")
+
+    def test_an_identifier_with_underscores_survives(self):
+        self.assertEqual(plain("part_number_1"), "part_number_1")
 
     def test_link_keeps_label_and_url(self):
         self.assertEqual(plain("[the run](https://x.test/1)"), "the run (https://x.test/1)")

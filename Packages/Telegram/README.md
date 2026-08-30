@@ -95,9 +95,11 @@ own `command` sink with no coupling between the two.
 `send` reports `accepted`; only `verify` can report `delivered`, by reading the
 workflow's execution record. (TG-02)
 
-**Markdown does not render.** The delivery node sends `parse_mode: "None"`, so
-`*bold*` arrives with the asterisks. Templates are written in plain prose and
-rendered through a converter. (TG-01)
+**Markdown does not render, and is not stripped either.** The delivery node
+sends `parse_mode: "None"`, so `*bold*` arrives with the asterisks — write
+templates in plain prose (TG-01). Rendering flattens *structure* only; inline
+delimiters are left alone, because removing inert markers bought no rendering
+benefit and silently corrupted content like `pw: __secret__` (TG-23).
 
 **`callback_data` is a 64-byte budget, and going over fails silently.** The
 encoder refuses rather than truncating, because a truncated key produces a
@@ -113,7 +115,7 @@ had ever worked. Both are fixed in `n8n/`.
 
 ## What is proven, and how
 
-`./run-tests.sh` runs 185 offline tests. Three of them are the ones that matter
+`./run-tests.sh` runs 189 offline tests. Three of them are the ones that matter
 most, and each **skips loudly** rather than passing quietly if it cannot run:
 
 - **Envelope conformance against `client.mjs`** — the real file, executed in
