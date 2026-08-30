@@ -1,0 +1,38 @@
+# ── Scratch discipline: untracked working surfaces ───────────────────────────
+# Nothing under any of these ever enters git history. Append this block to a
+# repo's .gitignore; adjust names to your tree — the shape (ignore every working
+# surface + every secret file) is the point.
+
+# Repo-level scratch: persistent, cross-session junk drawer + durable transport
+scratch/
+
+# Runtime state, created on demand
+.runstate/
+
+# Parallel-agent / fleet git worktrees
+.worktrees/
+.claude/worktrees/
+
+# Per-client / per-run work — often each its own nested repo; keep it out of the parent
+clients/
+
+# Separate nested repos (labs, experiments) — never commit into the parent tree
+labs/
+
+# ── Secrets: names/status may appear in tracked docs, VALUES NEVER ────────────
+.env
+*.env
+.env.*.bak
+.env.bak-*
+*.pem
+*.key
+*_token
+*.token
+
+# ── Build / cache noise ──────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+.next/
+.vercel/
+*.tsbuildinfo
+*.log
