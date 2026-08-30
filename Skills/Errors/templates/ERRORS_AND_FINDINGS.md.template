@@ -1,0 +1,83 @@
+# <Project> — Errors & Findings Registry
+
+> **Purpose.** A durable, greppable record of every error, defect, and gotcha hit across
+> this project, so a future session can (a) **recognize** a problem it has seen before
+> from its *signature*, (b) **reuse** the known fix, and (c) **catch the whole class
+> upfront** via the listed guard.
+>
+> **How to use this file.**
+> - Hit an error? **Grep the registry (this hub + `errors/*.md`) for the error string or
+>   symptom first** — most are already here with a fix.
+> - Before any build / deploy / migration, skim **Part 1 (Recurring Failure Classes)**.
+> - Concrete incidents are split per area under `errors/` (see the Index). Each entry
+>   leads with a *Signature* (an actual error string or observable behavior) so it's
+>   greppable — and machine-matchable by any triage tooling.
+> - Adding a finding? Append it to the right `errors/<area>.md` section in the entry
+>   format: **ID — Title · Signature · Cause · Fix · Guard · Status · Source**. If it's a
+>   new pattern that has bitten more than once, add a `PAT-` class here too.
+> - `Status: FIXED` = resolved in code/config. `Status: OPEN` = unresolved; the live open
+>   set is rolled up in **Part 3**.
+>
+> **Layout note.** This hub holds Part 1 (recurring `PAT-*` classes) and Part 3 (the
+> open-items rollup). The per-incident detail a "Part 2" would hold is externalized into
+> `errors/<area>.md` — there is intentionally **no Part 2** section here.
+>
+> _Last full rebuild: <YYYY-MM-DD>._ (Incremental appends land continuously; this stamp
+> marks the last full recompile, not the last edit.)
+
+---
+
+## Index — per-area catalogs
+
+| Area | File | Scope | IDs |
+|---|---|---|---|
+| <Area one> | [`errors/<area-one>.md`](errors/<area-one>.md) | <what it covers> | `AA-*` |
+| <Area two> | [`errors/<area-two>.md`](errors/<area-two>.md) | <what it covers> | `BB-*` |
+<!-- one row per area file; pick a short, stable, UNIQUE prefix per area -->
+
+---
+
+## Part 1 — Recurring Failure Classes (read before debugging)
+
+<!-- A PAT-* class is minted ONLY when a failure has bitten more than once, across more
+     than one area. It aggregates incidents rather than recording one, so its shape is
+     Title + prose + Watch-for/Signature + Guard, and it enumerates its member incident
+     IDs inline. The three below are portable — keep the ones that apply, add your own. -->
+
+### PAT-1 — Empty HTTP-200 body → `res.json()` throws
+A service returns HTTP 200 with an **empty body** (not `[]`); `await res.json()` throws.
+- **Signature:** `SyntaxError: Unexpected end of JSON input`.
+- **Guard:** `const t = await res.text(); return t.trim() ? JSON.parse(t) : []`.
+
+### PAT-2 — Secret leaked into a URL, log line, or commit
+A token/key interpolated into a remote URL, echoed to a log, or staged for commit.
+- **Watch for:** `https://<token>@…` remotes; `echo $TOKEN`; `.env` in `git status`.
+- **Guard:** credential-helper / header auth only; never interpolate secrets into URLs or
+  logs; `.gitignore` every secret file (see the Scratch skill). Names + status in docs,
+  values never.
+
+### PAT-3 — Knowledge-infra not seeded at scaffold (this registry's charter)
+A project scaffolded *without* its knowledge-infra runs its most error-prone phase blind,
+and retrofitting costs more than seeding.
+- **Guard:** ship the scaffolds pre-seeded from day one — **this hub + per-area error
+  files + a triage stub + a state-doc skeleton + a `MEMORY.md` + an SOP index**, carrying
+  the portable generic `PAT-*` taxonomy. (See the Memory and Handoff skills.)
+
+<!-- Add project-specific PAT-N classes here as cross-cutting patterns emerge. -->
+
+---
+
+## Part 3 — Open Items (rolled up across all areas)
+
+<!-- Mirror of every `Status: OPEN` entry from the area files, grouped by priority.
+     NOTE: an open item lives in BOTH here and its area file's "Open items" section —
+     update both on any status change, or FIXED-here / OPEN-there drift hides. -->
+
+**Security / critical**
+- _(none yet)_
+
+**Blocked / functional**
+- _(none yet)_
+
+**Hardening / lower priority**
+- _(none yet)_
