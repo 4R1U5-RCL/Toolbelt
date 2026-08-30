@@ -1,0 +1,18 @@
+<!-- One incident = one entry. Canonical format:
+       ID — Title · Signature · Cause · Fix · Guard · Status · Source.
+     The Signature LEADS and must be an actual error string or observable behavior
+     (greppable + machine-matchable). Append the finished entry to the matching topical
+     section of the right errors/<area>.md. -->
+
+## AA-N — <short, specific title>
+
+- **Signature:** <verbatim error string or observable behavior>
+- **Cause:** <root cause, one line>
+- **Fix:** <the change that resolved it — command / config / SHA>
+- **Guard:** <the check or pattern that catches the whole class; or `see PAT-N`>
+- **Status:** OPEN | FIXED <YYYY-MM-DD or PR #NN>
+- **Source:** <git SHA | work-unit slug | handoff filename>
+
+<!-- Cross-refs: cite related classes/incidents inline, e.g. "See PAT-3." / "→ AA-8."
+     If this failure has now bitten more than once across areas, also mint a PAT-* in the
+     hub and list this ID as a member. -->

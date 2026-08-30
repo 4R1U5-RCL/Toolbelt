@@ -1,0 +1,37 @@
+# Errors & Findings — <Area>
+
+> Part of the [Errors & Findings Registry](../ERRORS_AND_FINDINGS.md). The cross-area
+> **recurring failure classes (`PAT-*`)** live in the hub; this file is the per-incident
+> catalog for **<area>**. Entry format:
+> **ID — Title · Signature · Cause · Fix · Guard · Status · Source.**
+
+<!-- Pick a short, stable, UNIQUE prefix for this area's IDs (e.g. AA-1, AA-2 …). IDs are
+     monotonic per prefix, assigned at add-time, NEVER reused, and IMMUTABLE once minted
+     (they get cited by plain-text ID from other docs / triage tooling). Append a new
+     incident to the BOTTOM of the matching topical section — the file is grouped by
+     topic/stage, not global newest-first. Before assigning a number, grep the prefix for
+     the highest in use (a plain counter has no collision guard). -->
+
+## <Topic / stage one>
+
+## AA-1 — <short, specific title>
+- **Signature:** <the actual error string or observable behavior — leads, so it's greppable>
+- **Cause:** <root cause, one line>
+- **Fix:** <the change that resolved it — command / config / SHA>
+- **Guard:** <the check/pattern that prevents the whole class — or `see PAT-N`>
+- **Status:** OPEN | FIXED <YYYY-MM-DD or PR #NN>
+- **Source:** <git SHA | work-unit slug | handoff filename>
+
+---
+
+## <Topic / stage two>
+
+<!-- more AA-N entries, appended to the bottom of the matching section … -->
+
+---
+
+## Open items (this component)
+
+<!-- Every `Status: OPEN` entry above, mirrored here for at-a-glance triage; kept in sync
+     with the hub's Part 3. -->
+- _(none yet)_
