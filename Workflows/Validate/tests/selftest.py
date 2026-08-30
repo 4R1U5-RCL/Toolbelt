@@ -95,5 +95,39 @@ ok("F: doc has Panel + Disagreements + Findings", all(s in doc for s in ("## Pan
 ok("F: doc marks the failed model", "FAILED" in doc)
 ok("F: parse_stance reads STANCE line", vc.parse_stance(review("dissent", "x")) == ("dissent", "x"))
 
+# I — a responder returns an UNPARSEABLE stance → non-responding (not a silent 'concerns')
+r = vc.run_validation("subj", C, PANEL, "k", call_model=fake({
+    "openai/gpt-5": (True, review("concur")),
+    "google/gemini-2.5-pro": (True, "STRENGTHS\n- x\nRISKS\n- y\n(no stance line at all)"),
+    "x-ai/grok-4.6": (True, review("concur"))}))
+gem = [x for x in r["reviews"] if x["key"] == "gemini"][0]
+ok("I: unparseable stance → ok False", gem["ok"] is False)
+ok("I: error flags unparseable", "unparseable" in (gem["error"] or ""))
+ok("I: two parseable concur → HIGH", r["confidence"] == "HIGH")
+
+# J — HONESTY REGRESSION: 1 parseable + 2 unparseable → unknown (old parser faked 'concerns'→HIGH)
+r = vc.run_validation("subj", C, PANEL, "k", call_model=fake({
+    "openai/gpt-5": (True, review("concur")),
+    "google/gemini-2.5-pro": (True, "prose only, no anchored stance"),
+    "x-ai/grok-4.6": (True, "prose only, no anchored stance")}))
+ok("J: unparseable no longer inflates the panel → unknown", r["confidence"] == "unknown")
+
+# K — a stance mentioned ONLY inside a code fence is ignored (parses to non-responding)
+fenced = "STRENGTHS\n- x\n```\nSTANCE: concur\n```\nRISKS\n- y"
+ok("K: fenced stance ignored", vc.parse_stance(fenced)[0] is None)
+
+# L — doc shows stance counts + the resolved-model manifest column
+r = vc.run_validation("subj", C, PANEL, "k", call_model=fake({
+    "openai/gpt-5": (True, review("concur")), "google/gemini-2.5-pro": (True, review("concerns")),
+    "x-ai/grok-4.6": (True, review("concur"))}))
+doc = vc.render_doc(r, "t", "2026-01-01T00-00Z", "inline")
+ok("L: doc has stance counts", "**Stances:**" in doc)
+ok("L: doc has resolved-model column", "Resolved model" in doc)
+
+# M — critic prompt carries the injection guardrail; MEDIUM wording no longer claims 'sound'
+ok("M: CRITIC_SYSTEM warns of untrusted content", "UNTRUSTED" in vc.CRITIC_SYSTEM)
+ok("M: MEDIUM wording dropped 'sound'", "sound" not in vc.compute_confidence(
+    [{"ok": True, "stance": "concur"}, {"ok": True, "stance": "concerns"}])[1])
+
 print("\n== selftest: %d passed, %d failed ==" % (P, F))
 sys.exit(0 if F == 0 else 1)

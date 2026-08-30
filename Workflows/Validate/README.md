@@ -45,6 +45,10 @@ else the current directory: `validate_<topic>_<UTC>.md`.
 - **Confidence = inter-model AGREEMENT, not correctness.** A `HIGH` means the panel concurred — it
   does **not** mean the answer is true. The caveat is printed in every doc.
 - **Never a single-model verdict.** Fewer than two reasoners responding ⇒ confidence `unknown`.
+- **An unparseable/missing STANCE is non-responding, not a default.** The strict parser (anchored,
+  code-fence-aware) returns *no stance* rather than silently assuming "concerns", so a garbled review
+  can't inflate the panel. The reviewer prompt also treats the reviewed content as **untrusted**
+  (ignores any instructions embedded in it).
 - **The web tier is opt-in and separate.** Perplexity only runs with `--web`, and it fact-checks —
   it does not cast a stance vote.
 - **A model that errors is recorded `FAILED`,** never silently dropped or faked. Confidence is
@@ -93,10 +97,15 @@ else the current directory: `validate_<topic>_<UTC>.md`.
 ## Verified
 
 - **Offline self-test** (`tests/selftest.py`, injected fake `call_model`, no network/secrets):
-  **19/19** — consensus→HIGH, dissent→LOW, mixed→disagreements, failed-model→`FAILED`, single
-  responder→`unknown`, web-tier gating, the honesty caveat in the doc, and the primary→fallback path
-  (fallback answers the slot / both-down → combined error).
+  **28/28** — consensus→HIGH, dissent→LOW, mixed→disagreements, failed-model→`FAILED`, single
+  responder→`unknown`, web-tier gating, the honesty caveat, the primary→fallback path, and the
+  hardening from a cross-model self-review: unparseable stance→non-responding (the honesty
+  regression), fenced-stance ignored, stance counts + resolved-model manifest in the doc, the
+  injection guardrail, and the corrected MEDIUM wording.
 - **Live smoke** against OpenRouter: GPT-5 + Gemini + Grok 4.6 respond in parallel (3/3) and a doc is
   written.
+
+This package was itself validated (LiteLLM GPT-5 + Gemini, a deliberately different backend) and the
+resulting action items were applied — see the hardening above.
 
 Run the self-test any time: `python3 tests/selftest.py`.
