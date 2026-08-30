@@ -32,6 +32,8 @@ from .log import get_logger
 from .model import Event, EventReason, Item, ItemState
 from .render import render
 from .sinks import Sink
+from .supervisor import ON_LOSS_FALLBACK, Supervisor
+from .sinks import WHEN_FALLBACK
 from .sources.base import Source
 from .state import Store, write_json_atomic
 
@@ -52,6 +54,7 @@ class Engine:
         clock: Optional[Clock] = None,
         lock: Optional[InstanceLock] = None,
         rand: Optional[random.Random] = None,
+        supervisor: Optional[Supervisor] = None,
     ):
         self.config = config
         self.source = source
@@ -60,6 +63,7 @@ class Engine:
         self.store = store or Store(config.state_file, clock=self.clock,
                                     max_records=config.max_records)
         self.lock = lock or InstanceLock(config.lock_file, name=config.name, clock=self.clock)
+        self.supervisor = supervisor or Supervisor(config.supervisor, clock=self.clock)
         self.rand = rand or random.Random()
         self.log = get_logger()
 
@@ -116,9 +120,15 @@ class Engine:
         return exit_code
 
     def _startup(self, seed: Optional[bool], once: bool = False) -> None:
-        self.log.info("poller %r watching %s every %ss (limit %s)",
+        self.log.info("poller %r watching %s every %ss (limit %s, supervisor %s)",
                       self.config.name, self.source.describe(),
-                      self.config.interval_seconds, self._duration_text())
+                      self.config.interval_seconds, self._duration_text(),
+                      self.supervisor.describe())
+        fallback = [s.name for s in self.sinks if s.when == WHEN_FALLBACK]
+        if fallback and not self.supervisor.configured:
+            self.log.warning(
+                "fallback rail(s) %s are configured but no supervisor is — they will "
+                "never activate", ", ".join(fallback))
         should_seed = self.config.seed_on_first_run if seed is None else seed
         if self.store.was_fresh and should_seed:
             self._seed()
@@ -173,6 +183,10 @@ class Engine:
         """One poll: fetch, classify, enroll, deliver, heartbeat."""
         self.ticks += 1
         events: List[Event] = []
+        # Before acting: know whether anyone is still listening. Checking here
+        # rather than after dispatch means a successor rail is told *why* it
+        # woke up before it is handed this tick's reports.
+        self._check_supervisor()
         try:
             items = self.source.fetch()
         except TransientSourceError as exc:
@@ -231,6 +245,29 @@ class Engine:
             item=item,
         )
 
+    def _check_supervisor(self) -> None:
+        """Notice when the session that launched this watch has gone away.
+
+        The watch itself never depended on that session — it is a detached
+        process. What it loses is the attention: reports keep landing with
+        nobody reading them. Reporting the loss (and, if configured, switching
+        on fallback rails) is what closes that gap.
+        """
+        lost = self.supervisor.poll()
+        if lost:
+            self._emit_lifecycle(EventReason.SUPERVISOR_LOST, lost, severity="warn")
+
+    @property
+    def fallback_active(self) -> bool:
+        """True when fallback-only rails should deliver.
+
+        Derived from the supervisor's current liveness rather than latched, so a
+        restarted poller re-evaluates from scratch instead of inheriting a stale
+        verdict.
+        """
+        return (not self.supervisor.alive
+                and self.supervisor.on_loss == ON_LOSS_FALLBACK)
+
     # -- delivery --------------------------------------------------------------
 
     def _dispatch(self) -> None:
@@ -242,6 +279,13 @@ class Engine:
             event = record.to_event()
             for sink in self.sinks:
                 if sink.name in record.delivered or sink.name in record.fatal:
+                    continue
+                if sink.when == WHEN_FALLBACK and not self.fallback_active:
+                    # A fallback rail stays dark while the supervisor is alive.
+                    # Counted as delivered so the record can complete; if the
+                    # supervisor dies later, it is *future* events that escalate,
+                    # not a replay of everything already reported.
+                    self.store.mark_delivered(record, sink.name)
                     continue
                 if not sink.accepts(event):
                     # Filtered out by this sink's `reasons`: count it settled so
@@ -295,6 +339,7 @@ class Engine:
             "ticks": str(self.ticks),
             "items": str(len(self.store.first_seen)),
             "run_id": self.run_id,
+            "supervisor": self.supervisor.describe(),
         }
 
     # -- health ----------------------------------------------------------------
@@ -329,6 +374,9 @@ class Engine:
             "items_last_tick": items,
             "source": self.source.describe(),
             "sinks": self._sink_names,
+            "supervisor": self.supervisor.describe(),
+            "supervisor_alive": self.supervisor.alive,
+            "fallback_active": self.fallback_active,
             "state": self.store.stats(),
         }
         try:

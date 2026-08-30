@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional
 from .errors import ConfigError
 from .log import get_logger
 from .model import EventReason, ItemState
+from .supervisor import ON_LOSS_CHOICES, ON_LOSS_FALLBACK
 
 DEFAULT_STATE_DIR = "~/.poller"
 
@@ -53,6 +54,10 @@ DEFAULT_TEMPLATES: Dict[str, Dict[str, str]] = {
         "title": "Poller degraded: {poller}",
         "body": "{failures} consecutive fetch failures. Still retrying. Last error: {error}",
     },
+    EventReason.SUPERVISOR_LOST: {
+        "title": "Supervising session gone: {poller}",
+        "body": "{stop_reason}\nThe watch continues. Fallback rails, if configured, are now live.",
+    },
     EventReason.HEARTBEAT: {
         "title": "Poller alive: {poller}",
         "body": "tick {ticks} · {items} items tracked · watching {source}",
@@ -65,6 +70,7 @@ _KNOWN_KEYS = {
     "notify_states", "stale_after_seconds", "heartbeat_every_ticks",
     "notify_on_start", "notify_on_end", "max_delivery_attempts", "max_records",
     "seed_on_first_run", "degraded_after_failures", "templates", "source", "sinks",
+    "supervisor",
 }
 
 
@@ -100,6 +106,11 @@ class Config:
     seed_on_first_run: bool = True
     degraded_after_failures: int = 3
     templates: Dict[str, Dict[str, str]] = field(default_factory=dict)
+
+    #: Who launched this watch, and what to do when they go away. See
+    #: `poller/supervisor.py`. Absent means "nobody is supervising", and
+    #: fallback rails then stay dark forever.
+    supervisor: Dict[str, Any] = field(default_factory=dict)
 
     # -- derived ---------------------------------------------------------------
 
@@ -144,6 +155,10 @@ class Config:
             raise ConfigError("`source` is required")
         if not self.sinks:
             raise ConfigError("`sinks` must list at least one rail")
+        on_loss = (self.supervisor or {}).get("on_loss", ON_LOSS_FALLBACK)
+        if on_loss not in ON_LOSS_CHOICES:
+            raise ConfigError("`supervisor.on_loss` must be one of: {0}".format(
+                ", ".join(ON_LOSS_CHOICES)))
 
 
 def load_config(path: str, overrides: Optional[Dict[str, Any]] = None) -> Config:
