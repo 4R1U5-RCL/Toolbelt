@@ -113,7 +113,7 @@ had ever worked. Both are fixed in `n8n/`.
 
 ## What is proven, and how
 
-`./run-tests.sh` runs 181 offline tests. Three of them are the ones that matter
+`./run-tests.sh` runs 185 offline tests. Three of them are the ones that matter
 most, and each **skips loudly** rather than passing quietly if it cannot run:
 
 - **Envelope conformance against `client.mjs`** — the real file, executed in
@@ -135,6 +135,9 @@ records, not status codes.
 | Plain text, all three groups | executions 15034 / 15035 / 15036 |
 | Buttons, template-driven | execution 15075 — three buttons, correct callbacks |
 | **Round trip** workflow → human → workflow | a real press decoded to `att:loop:rt-1`, recorded, callback answered (15097 out, 15098 back) |
+| 1-, 2- and 3-button branches | executions 15109 / 15108 / 15107 |
+| Multi-part chunking | execution 15104 |
+| Poll | execution 15111 — **degrades to text**: n8n has no `sendPoll` (TG-22) |
 
 Both workflows are now **ACTIVE**: `[STUDIO] Telegram Interactive`
 (`tpke3idOSDgGAA1X`) and `[STUDIO] Telegram Receiver` (`h2IF63cRYxQYUBFW`), the
@@ -142,5 +145,6 @@ latter now owning the bot's webhook (TG-09) — taken from an incumbent that had
 never once succeeded.
 
 Not in v1: the blocking `telegram await` loop, which needs a durable answer store
-and is a decision rather than a detail. Polls are built and unit-proven but have
-not been fired live.
+and is a decision rather than a detail. **Native polls need
+`TELEGRAM_BOT_TOKEN` in n8n's environment** — without it a poll still arrives,
+as a numbered list that says why (TG-22).

@@ -218,7 +218,7 @@ is why everything rides the webhook and not the Bot API (TG-08).
 |---|---|---|---|
 | Plain text | `[TEMPLATE] Notification Fan-out` | *(default)* | live — proven |
 | Buttons | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | live — proven |
-| A native poll | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | live — built, not fired |
+| A native poll | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | live — needs `TELEGRAM_BOT_TOKEN` in n8n, else degrades to text (TG-22) |
 | To receive a press or a vote | `[STUDIO] Telegram Receiver` | — | live — proven |
 
 **Buttons are not free on the default rail.** The live fan-out cannot attach an

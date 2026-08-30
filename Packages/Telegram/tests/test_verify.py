@@ -72,7 +72,7 @@ class TestVerdicts(unittest.TestCase):
                             execution(15003, {"Webhook": None, "Reject 401": None})]
                            ).confirm(request_id="req-1")
         self.assertEqual(verdict.status, Verdict.FAILED)
-        self.assertIn("never reached", verdict.note)
+        self.assertIn("no delivery node", verdict.note)
         self.assertIn("Reject 401", verdict.note)
 
     def test_no_matching_execution(self):
@@ -86,6 +86,25 @@ class TestVerdicts(unittest.TestCase):
                             execution(15003, {"Deliver": None}, request_id="anything")]
                            ).confirm(needle="lastNodeExecuted")
         self.assertEqual(verdict.status, Verdict.DELIVERED)
+
+    def test_any_known_delivery_node_counts(self):
+        """The interactive workflow routes to a different node per button count.
+
+        Looking only for the fan-out's `Deliver` reported a real, successful
+        delivery as a FAILURE during the live smoke — worse than not checking,
+        because it teaches you to disbelieve the checker.
+        """
+        for node in ("Send 1 Button", "Send 2 Buttons", "Send 3 Buttons",
+                     "Send Poll", "Send Message", "Deliver"):
+            verdict = verifier([listing(1), execution(1, {node: None})]
+                               ).confirm(request_id="req-1")
+            self.assertTrue(verdict.ok, "{0} was not recognised".format(node))
+            self.assertEqual(verdict.node, node)
+
+    def test_an_error_on_the_delivery_node_still_fails(self):
+        verdict = verifier([listing(1), execution(1, {"Send 3 Buttons": "chat not found"})]
+                           ).confirm(request_id="req-1")
+        self.assertEqual(verdict.status, Verdict.FAILED)
 
     def test_a_custom_delivery_node_name(self):
         checker = DeliveryVerifier(

@@ -34,6 +34,7 @@ rediscover them the hard way.
 | [TG-19](#tg-19) | Inline keyboards were silently discarded — on the live rail, always | A literal `replyMarkup`, plus TG-20 | Send interactive templates with `--url-env NOTIFY_INTERACTIVE_URL` |
 | [TG-20](#tg-20) | A `fixedCollection` cannot be filled from an expression | Literal keyboard structure, expressions only at the leaves | Keep to three buttons; overflow is counted, not silent |
 | [TG-21](#tg-21) | Every inbound callback was rejected 401, then retried into a storm | A Telegram Trigger, which owns its endpoint and answers correctly | Only one receiver can own the bot — decide which |
+| [TG-22](#tg-22) | A poll errored `Not Found` — n8n's Telegram node has no `sendPoll` | A direct Bot API call, degrading to readable text without a token | Set `TELEGRAM_BOT_TOKEN` in n8n for real polls |
 
 ---
 
@@ -539,3 +540,51 @@ behaviours so the difference stays intentional.
 **Still your job.** A bot has one webhook URL (TG-09), so activating this takes
 it from the incumbent. Here that cost nothing, because the incumbent had never
 worked — but check the execution history before assuming the same elsewhere.
+
+---
+
+<a name="tg-22"></a>
+## TG-22 — A poll errored `Not Found`: n8n's Telegram node has no `sendPoll`
+
+**What you see.** `NodeApiError: Not Found` from the Telegram node on a poll, and
+nothing delivered. The workflow looks correctly configured — resource
+`message`, operation `sendPoll`, a valid question and options.
+
+**Why.** n8n's Telegram node has no `sendPoll` operation. Its `message` resource
+covers `sendMessage`, `sendPhoto`, `sendDocument`, `sendLocation` and the rest,
+but not polls. Given an operation it does not implement, it composes a Bot API
+URL for a method that does not exist — hence Telegram's `Not Found`, which reads
+like a bad chat id and is nothing of the kind.
+
+**How it was found.** A full re-smoke, after the docs had already claimed polls
+were "built and unit-proven, not yet fired live". They were built and unit-proven
+against the *package's* contract, which was correct — and the workflow node
+underneath could never have worked. Unit tests cannot see this; only sending one
+can.
+
+**What the package does.** The poll is a direct HTTP call to the Bot API's
+`sendPoll`, which needs a bot token in **n8n's** environment
+(`TELEGRAM_BOT_TOKEN`). Since that may not be set, the branch is gated:
+
+* token present → a real native poll;
+* token absent → the message is delivered as a **numbered list that names the
+  degrade**, rather than erroring.
+
+```
+Smoke 7/7 — which lane next?
+  1. Track A — public climber
+  2. Track B — private board
+  3. Track C — throughput
+
+(sent as text: TELEGRAM_BOT_TOKEN is not set in n8n, so a native poll cannot be
+created — TG-22)
+```
+
+That is the difference between this and TG-18/19/20: a capability that is not
+wired **says so on the message itself**. A silent degrade is the failure mode
+this whole package exists to remove, so a deliberate one has to announce itself.
+
+**Still your job.** For real polls, set `TELEGRAM_BOT_TOKEN` in n8n's
+environment — the same token as the `[STUDIO] Telegram Bot` credential. Until
+then polls are legible, not native. Note this is the one place a bot token is
+needed anywhere; every other path avoids it (TG-08).

@@ -372,7 +372,10 @@ def _build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--request-id", default=None)
     verify.add_argument("--needle", default=None,
                         help="text to look for, when there is no request id")
-    verify.add_argument("--node", default="Deliver", help="the delivery node's name")
+    verify.add_argument("--node", default=None,
+                        help="delivery node name, or a comma-separated list. Defaults "
+                             "to every known delivery node across the studio's "
+                             "Telegram workflows")
     verify.add_argument("--limit", type=int, default=20, help="executions to scan")
     verify.add_argument("--wait", type=float, default=0.0,
                         help="seconds to keep looking for the execution record")

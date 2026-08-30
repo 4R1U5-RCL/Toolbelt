@@ -21,7 +21,7 @@ this package should make on its own.
 | | Why |
 |---|---|
 | **Attach an inline keyboard** | Its `replyMarkup` is set from an expression. That parameter gates `inlineKeyboard` through `displayOptions`, which n8n evaluates against the RAW parameter — an expression never equals `'inlineKeyboard'`, so the keyboard is skipped (TG-19) |
-| **Send a native poll** | Its Telegram node is hard-wired to `sendMessage`. An envelope carrying `meta.poll` is delivered as plain text, successfully, with no error (TG-18) |
+| **Send a native poll** | n8n's Telegram node has **no `sendPoll` operation at all** — configuring one answers `Not Found` from the Bot API. A poll must be a direct HTTP call, which needs a bot token in n8n's env (TG-18, TG-22) |
 | **Receive an answer** | It is send-only. Button presses arrive as Telegram *updates* on the bot's webhook, which is a different endpoint entirely |
 
 So this directory adds two workflows, both now deployed and **ACTIVE**:
@@ -90,9 +90,13 @@ this package's envelopes: same HMAC contract, same `NOTIFY_FANOUT_SECRET`, same
 `meta.reply_markup` handling, plus the poll branch. Activating it takes nothing
 away from anything else, because nothing else points at that path.
 
-Set env in n8n if you have not already: `TELEGRAM_DEFAULT_CHAT` (TG-12 — it
-falls back to a hard-coded literal), and `NOTIFY_FANOUT_SECRET` (already set,
-since the fan-out uses it).
+Set env in n8n if you have not already:
+
+* `TELEGRAM_DEFAULT_CHAT` — TG-12, it falls back to a hard-coded literal;
+* `NOTIFY_FANOUT_SECRET` — already set, the fan-out uses it;
+* `TELEGRAM_BOT_TOKEN` — **only needed for native polls** (TG-22). The same
+  token as the `[STUDIO] Telegram Bot` credential. Without it a poll is
+  delivered as a numbered list that names the degrade, rather than failing.
 
 **Until this is active, nothing interactive works** — not polls, and not
 buttons. Callers reach it with

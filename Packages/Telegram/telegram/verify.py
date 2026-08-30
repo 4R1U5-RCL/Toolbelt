@@ -25,8 +25,15 @@ from .log import get_logger
 
 DEFAULT_BASE_ENV = "N8N_BASE_URL"
 DEFAULT_KEY_ENV = "N8N_API_KEY"
-#: The node that actually talks to Telegram in `[TEMPLATE] Notification Fan-out`.
-DEFAULT_DELIVERY_NODE = "Deliver"
+#: The nodes that actually talk to Telegram, across the workflows this package
+#: sends to. A list rather than one name because the interactive workflow routes
+#: to a different node per button count (TG-20) — and looking for only the
+#: fan-out's `Deliver` reported a real, successful delivery as a FAILURE, which
+#: is worse than not checking: it teaches you to disbelieve the checker.
+DEFAULT_DELIVERY_NODES = ("Deliver", "Send Message", "Send With Buttons",
+                          "Send 1 Button", "Send 2 Buttons", "Send 3 Buttons",
+                          "Send Poll")
+DEFAULT_DELIVERY_NODE = DEFAULT_DELIVERY_NODES[0]
 
 
 class Verdict:
@@ -62,13 +69,21 @@ class DeliveryVerifier:
     def __init__(self, resolver, client: Optional[HttpClient] = None,
                  clock: Optional[Clock] = None, base_env: str = DEFAULT_BASE_ENV,
                  key_env: str = DEFAULT_KEY_ENV,
-                 delivery_node: str = DEFAULT_DELIVERY_NODE):
+                 delivery_node: Optional[str] = None):
         self.resolver = resolver
         self.client = client or HttpClient()
         self.clock = clock or Clock()
         self.base_env = base_env
         self.key_env = key_env
-        self.delivery_node = delivery_node
+        # One name or a comma-separated list; any of them running clean counts
+        # as delivered, since a given execution takes exactly one of the paths.
+        self.delivery_nodes = ([n.strip() for n in delivery_node.split(",") if n.strip()]
+                               if delivery_node else list(DEFAULT_DELIVERY_NODES))
+
+    @property
+    def delivery_node(self) -> str:
+        """The first configured name, for messages that need to name one."""
+        return self.delivery_nodes[0]
 
     def available(self) -> bool:
         return self.resolver.present(self.base_env) and self.resolver.present(self.key_env)
@@ -134,26 +149,29 @@ class DeliveryVerifier:
                        "no execution in the last {0} carried that message yet".format(limit))
 
     def _judge(self, detail: Dict[str, Any], execution_id: str) -> Verdict:
-        """Did the delivery node run, and did it run clean?"""
+        """Did a delivery node run, and did it run clean?"""
         run_data = (((detail.get("data") or {}).get("resultData") or {}).get("runData") or {})
-        runs: List[Dict[str, Any]] = run_data.get(self.delivery_node) or []
-        if not runs:
+        present = [n for n in self.delivery_nodes if run_data.get(n)]
+
+        if not present:
             reached = ", ".join(sorted(run_data)) or "(none)"
             return Verdict(Verdict.FAILED,
-                           "execution {0} never reached {1!r} — nodes that ran: {2}".format(
-                               execution_id, self.delivery_node, reached),
-                           execution_id, self.delivery_node)
-        for run in runs:
-            if run.get("error"):
-                return Verdict(Verdict.FAILED,
-                               "{0!r} errored in execution {1}: {2}".format(
-                                   self.delivery_node, execution_id,
-                                   str(run.get("error"))[:200]),
-                               execution_id, self.delivery_node)
+                           "execution {0} reached no delivery node — looked for {1}; "
+                           "nodes that ran: {2}".format(
+                               execution_id, "/".join(self.delivery_nodes), reached),
+                           execution_id, None)
+
+        for name in present:
+            for run in run_data[name]:
+                if run.get("error"):
+                    return Verdict(Verdict.FAILED,
+                                   "{0!r} errored in execution {1}: {2}".format(
+                                       name, execution_id, str(run.get("error"))[:200]),
+                                   execution_id, name)
         return Verdict(Verdict.DELIVERED,
                        "{0!r} ran clean in execution {1}".format(
-                           self.delivery_node, execution_id),
-                       execution_id, self.delivery_node)
+                           present[0], execution_id),
+                       execution_id, present[0])
 
 
 def _stringify(value: Any) -> str:

@@ -109,6 +109,30 @@ for (const it of $input.all()) {
     __anonymous: isPoll ? poll.is_anonymous !== false : true,
   }) };
 
+  // TG-22: n8n's Telegram node has NO sendPoll operation, so a poll must go
+  // straight to the Bot API over HTTP — which needs a bot token in n8n's env.
+  // When that is absent the poll degrades to a readable text message rather than
+  // erroring, and says so, because a silent nothing is the failure this package
+  // exists to stop.
+  if (isPoll) {
+    item.json.__pollBody = JSON.stringify({
+      chat_id: item.json.__chatId,
+      question: item.json.__question,
+      options: poll.options.map((o) => String(o).slice(0, 100)),
+      is_anonymous: poll.is_anonymous !== false,
+      allows_multiple_answers: !!poll.allows_multiple_answers,
+    });
+    item.json.__canPoll = !!readSecret('TELEGRAM_BOT_TOKEN');
+    item.json.__text = item.json.__canPoll ? item.json.__text
+      : (item.json.__question + '\n' +
+         poll.options.map((o, i) => '  ' + (i + 1) + '. ' + o).join('\n') +
+         '\n\n(sent as text: TELEGRAM_BOT_TOKEN is not set in n8n, so a native ' +
+         'poll cannot be created — TG-22)');
+  } else {
+    item.json.__canPoll = false;
+    item.json.__pollBody = '';
+  }
+
   // TG-20: the keyboard is flattened into FLAT LEAF FIELDS, not a nested object.
   // n8n cannot populate a fixedCollection parameter from an expression — the
   // structure must be literal in the node, with expressions only at the leaves.
@@ -197,17 +221,25 @@ INTERACTIVE = {
                              "rightValue": "",
                              "operator": {"type": "boolean", "operation": "true"}}],
              "combinator": "and"}, "options": {}}},
-        {"id": "sendpoll", "name": "Send Poll", "type": "n8n-nodes-base.telegram",
-         "typeVersion": 1.2, "position": [1100, -180],
-         "parameters": {"resource": "message", "operation": "sendPoll",
-                        "chatId": "={{ $json.__chatId }}",
-                        "question": "={{ $json.__question }}",
-                        "options": "={{ $json.__options }}",
-                        "additionalFields": {
-                            "appendAttribution": False,
-                            "allows_multiple_answers": "={{ $json.__multiple }}",
-                            "is_anonymous": "={{ $json.__anonymous }}"}},
-         "credentials": TELEGRAM_CREDENTIAL},
+        # TG-22: there is no sendPoll on n8n's Telegram node — it answered
+        # "Not Found" from the Bot API because the method does not exist. A poll
+        # has to be an HTTP call, and that needs a bot token in n8n's env.
+        {"id": "canpoll", "name": "Can Send Poll?", "type": "n8n-nodes-base.if",
+         "typeVersion": 2, "position": [1100, -260],
+         "parameters": {"conditions": {
+             "options": {"caseSensitive": True, "typeValidation": "loose", "version": 2},
+             "conditions": [{"id": "canpoll", "leftValue": "={{ $json.__canPoll }}",
+                             "rightValue": "",
+                             "operator": {"type": "boolean", "operation": "true"}}],
+             "combinator": "and"}, "options": {}}},
+        {"id": "sendpoll", "name": "Send Poll", "type": "n8n-nodes-base.httpRequest",
+         "typeVersion": 4.2, "position": [1340, -320],
+         "parameters": {
+             "method": "POST",
+             "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendPoll",
+             "sendBody": True, "specifyBody": "json",
+             "jsonBody": "={{ $json.__pollBody }}",
+             "options": {"timeout": 30000}}},
         {"id": "haskb", "name": "Has Buttons?", "type": "n8n-nodes-base.if",
          "typeVersion": 2, "position": [1100, 60],
          "parameters": {"conditions": {
@@ -325,8 +357,13 @@ INTERACTIVE = {
             [{"node": "Reject 401", "type": "main", "index": 0}]]},
         "Shape": {"main": [[{"node": "Poll or Message", "type": "main", "index": 0}]]},
         "Poll or Message": {"main": [
-            [{"node": "Send Poll", "type": "main", "index": 0}],
+            [{"node": "Can Send Poll?", "type": "main", "index": 0}],
             [{"node": "Has Buttons?", "type": "main", "index": 0}]]},
+        # No token: fall through to a plain message that spells the poll out,
+        # rather than failing the execution and delivering nothing (TG-22).
+        "Can Send Poll?": {"main": [
+            [{"node": "Send Poll", "type": "main", "index": 0}],
+            [{"node": "Send Message", "type": "main", "index": 0}]]},
         "Has Buttons?": {"main": [
             [{"node": "How Many Buttons", "type": "main", "index": 0}],
             [{"node": "Send Message", "type": "main", "index": 0}]]},

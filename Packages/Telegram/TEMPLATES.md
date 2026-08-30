@@ -252,6 +252,11 @@ works from the CLI:
 Telegram allows 2–10 options at 100 characters each; the template enforces both.
 Fewer than two raises rather than silently dropping the widget.
 
+**A native poll needs `TELEGRAM_BOT_TOKEN` in n8n's environment** — n8n's
+Telegram node has no `sendPoll`, so the workflow calls the Bot API directly
+(TG-22). Without the token the poll still arrives, as a numbered list that names
+the degrade. It never silently vanishes.
+
 **A poll answer carries no chat id.** Telegram does not send one, so a poll vote
 can only ever be user-allow-listed, never chat-allow-listed (TG-15).
 

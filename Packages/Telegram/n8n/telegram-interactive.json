@@ -80,7 +80,7 @@
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "\n// Decide whether this envelope is a poll or a message, and shape it for the\n// delivery node. Mirrors telegram/template.py's `Message.meta()`.\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const b = j.body || j;\n  const meta = b.meta || {};\n  const poll = meta.poll;\n  const isPoll = !!(poll && Array.isArray(poll.options) && poll.options.length >= 2);\n\n  const item = { json: Object.assign({}, j, {\n    __isPoll: isPoll,\n    // TG-12: the literal is a last-resort fallback. If TELEGRAM_DEFAULT_CHAT is\n    // unset, messages go THERE rather than failing \u2014 set it deliberately.\n    __chatId: b.chat_id || readSecret('TELEGRAM_DEFAULT_CHAT') || '8859170398',\n    __text: b.message || b.text || '(no message)',\n    __question: isPoll ? String(poll.question || b.message || '').slice(0, 300) : '',\n    // The Telegram node wants options as a newline-joined string.\n    __options: isPoll ? poll.options.map((o) => String(o).slice(0, 100)).join('\\n') : '',\n    __multiple: isPoll ? !!poll.allows_multiple_answers : false,\n    __anonymous: isPoll ? poll.is_anonymous !== false : true,\n  }) };\n\n  // TG-20: the keyboard is flattened into FLAT LEAF FIELDS, not a nested object.\n  // n8n cannot populate a fixedCollection parameter from an expression \u2014 the\n  // structure must be literal in the node, with expressions only at the leaves.\n  // Passing the whole object was discarded silently, which is why buttons never\n  // appeared. Hence one row of up to three buttons, and a Switch on the count.\n  const rm = meta.reply_markup;\n  const flat = [];\n  if (rm && Array.isArray(rm.inline_keyboard)) {\n    for (const row of rm.inline_keyboard) {\n      for (const btn of row || []) {\n        if (btn && btn.text) flat.push(btn);\n      }\n    }\n  }\n  const MAX_BUTTONS = 3;\n  item.json.__btnDropped = Math.max(0, flat.length - MAX_BUTTONS);\n  const shown = flat.slice(0, MAX_BUTTONS);\n  item.json.__btnCount = shown.length;\n  item.json.__hasKb = shown.length > 0;\n  for (let i = 0; i < MAX_BUTTONS; i++) {\n    item.json['__b' + (i + 1) + 'text'] = shown[i] ? String(shown[i].text) : '';\n    item.json['__b' + (i + 1) + 'data'] = shown[i] ? String(shown[i].callback_data) : '';\n  }\n  if (it.binary) item.binary = it.binary;\n  out.push(item);\n}\nreturn out;\n"
+        "jsCode": "\n// Decide whether this envelope is a poll or a message, and shape it for the\n// delivery node. Mirrors telegram/template.py's `Message.meta()`.\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const b = j.body || j;\n  const meta = b.meta || {};\n  const poll = meta.poll;\n  const isPoll = !!(poll && Array.isArray(poll.options) && poll.options.length >= 2);\n\n  const item = { json: Object.assign({}, j, {\n    __isPoll: isPoll,\n    // TG-12: the literal is a last-resort fallback. If TELEGRAM_DEFAULT_CHAT is\n    // unset, messages go THERE rather than failing \u2014 set it deliberately.\n    __chatId: b.chat_id || readSecret('TELEGRAM_DEFAULT_CHAT') || '8859170398',\n    __text: b.message || b.text || '(no message)',\n    __question: isPoll ? String(poll.question || b.message || '').slice(0, 300) : '',\n    // The Telegram node wants options as a newline-joined string.\n    __options: isPoll ? poll.options.map((o) => String(o).slice(0, 100)).join('\\n') : '',\n    __multiple: isPoll ? !!poll.allows_multiple_answers : false,\n    __anonymous: isPoll ? poll.is_anonymous !== false : true,\n  }) };\n\n  // TG-22: n8n's Telegram node has NO sendPoll operation, so a poll must go\n  // straight to the Bot API over HTTP \u2014 which needs a bot token in n8n's env.\n  // When that is absent the poll degrades to a readable text message rather than\n  // erroring, and says so, because a silent nothing is the failure this package\n  // exists to stop.\n  if (isPoll) {\n    item.json.__pollBody = JSON.stringify({\n      chat_id: item.json.__chatId,\n      question: item.json.__question,\n      options: poll.options.map((o) => String(o).slice(0, 100)),\n      is_anonymous: poll.is_anonymous !== false,\n      allows_multiple_answers: !!poll.allows_multiple_answers,\n    });\n    item.json.__canPoll = !!readSecret('TELEGRAM_BOT_TOKEN');\n    item.json.__text = item.json.__canPoll ? item.json.__text\n      : (item.json.__question + '\\n' +\n         poll.options.map((o, i) => '  ' + (i + 1) + '. ' + o).join('\\n') +\n         '\\n\\n(sent as text: TELEGRAM_BOT_TOKEN is not set in n8n, so a native ' +\n         'poll cannot be created \u2014 TG-22)');\n  } else {\n    item.json.__canPoll = false;\n    item.json.__pollBody = '';\n  }\n\n  // TG-20: the keyboard is flattened into FLAT LEAF FIELDS, not a nested object.\n  // n8n cannot populate a fixedCollection parameter from an expression \u2014 the\n  // structure must be literal in the node, with expressions only at the leaves.\n  // Passing the whole object was discarded silently, which is why buttons never\n  // appeared. Hence one row of up to three buttons, and a Switch on the count.\n  const rm = meta.reply_markup;\n  const flat = [];\n  if (rm && Array.isArray(rm.inline_keyboard)) {\n    for (const row of rm.inline_keyboard) {\n      for (const btn of row || []) {\n        if (btn && btn.text) flat.push(btn);\n      }\n    }\n  }\n  const MAX_BUTTONS = 3;\n  item.json.__btnDropped = Math.max(0, flat.length - MAX_BUTTONS);\n  const shown = flat.slice(0, MAX_BUTTONS);\n  item.json.__btnCount = shown.length;\n  item.json.__hasKb = shown.length > 0;\n  for (let i = 0; i < MAX_BUTTONS; i++) {\n    item.json['__b' + (i + 1) + 'text'] = shown[i] ? String(shown[i].text) : '';\n    item.json['__b' + (i + 1) + 'data'] = shown[i] ? String(shown[i].callback_data) : '';\n  }\n  if (it.binary) item.binary = it.binary;\n  out.push(item);\n}\nreturn out;\n"
       }
     },
     {
@@ -116,30 +116,54 @@
       }
     },
     {
-      "id": "sendpoll",
-      "name": "Send Poll",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "id": "canpoll",
+      "name": "Can Send Poll?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
       "position": [
         1100,
-        -180
+        -260
       ],
       "parameters": {
-        "resource": "message",
-        "operation": "sendPoll",
-        "chatId": "={{ $json.__chatId }}",
-        "question": "={{ $json.__question }}",
-        "options": "={{ $json.__options }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "allows_multiple_answers": "={{ $json.__multiple }}",
-          "is_anonymous": "={{ $json.__anonymous }}"
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "pojHLD8xi2lxHgNp",
-          "name": "[STUDIO] Telegram Bot"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "canpoll",
+              "leftValue": "={{ $json.__canPoll }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "sendpoll",
+      "name": "Send Poll",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        -320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendPoll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.__pollBody }}",
+        "options": {
+          "timeout": 30000
         }
       }
     },
@@ -544,7 +568,7 @@
       "main": [
         [
           {
-            "node": "Send Poll",
+            "node": "Can Send Poll?",
             "type": "main",
             "index": 0
           }
@@ -552,6 +576,24 @@
         [
           {
             "node": "Has Buttons?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Can Send Poll?": {
+      "main": [
+        [
+          {
+            "node": "Send Poll",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Message",
             "type": "main",
             "index": 0
           }

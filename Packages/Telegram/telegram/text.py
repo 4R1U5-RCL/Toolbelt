@@ -143,8 +143,26 @@ def _cut_to(text: str, units: int) -> str:
     return text[:lo]
 
 
+#: A boundary is only worth honouring if it uses a decent share of the window.
+#: Without this, text whose single paragraph break sits near the start splits
+#: there — emitting a two-line first message followed by a full one, which reads
+#: like something went wrong.
+_MIN_FILL = 0.5
+
+
 def _last_boundary(head: str) -> int:
-    """Index of the best split point in `head`: paragraph > line > word."""
+    """Index of the best split point in `head`: paragraph > line > word.
+
+    Coarsest separator first, but only while it still fills the message. A
+    paragraph break at 2% of the window loses to a line break at 90%.
+    """
+    floor = int(len(head) * _MIN_FILL)
+    for candidate in ("\n\n", "\n", " "):
+        idx = head.rfind(candidate)
+        if idx > floor:
+            return idx + len(candidate)
+    # Nothing fills the window: take the coarsest boundary that exists at all
+    # rather than cutting mid-token.
     for candidate in ("\n\n", "\n", " "):
         idx = head.rfind(candidate)
         if idx > 0:

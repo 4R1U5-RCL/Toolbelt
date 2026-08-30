@@ -106,6 +106,16 @@ class TestChunk(unittest.TestCase):
         self.assertTrue(parts[0].startswith("a"))
         self.assertTrue(parts[1].startswith("b"))
 
+    def test_a_boundary_near_the_start_does_not_waste_the_window(self):
+        """A title paragraph must not become a message of its own.
+
+        The only paragraph break sits at ~10 characters; honouring it blindly
+        emits a two-word first message followed by a full one, which reads like
+        a failure. The coarsest separator wins only while it still fills.
+        """
+        parts = chunk("Chunk test\n\n" + " ".join("word%d" % i for i in range(1200)))
+        self.assertGreater(tg_len(parts[0]), TELEGRAM_LIMIT // 2)
+
     def test_no_content_is_lost(self):
         text = "\n".join("line {0}".format(i) for i in range(900))
         rejoined = "".join(p.rsplit(" (", 1)[0] for p in chunk(text))

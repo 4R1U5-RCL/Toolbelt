@@ -224,7 +224,24 @@ process.stdout.write(JSON.stringify(run().map((i) => i.json)));
         shaped = self._shape({"message": message.text, "meta": message.meta()})
         self.assertTrue(shaped["__isPoll"])
         self.assertEqual(shaped["__question"], "Which lane?")
-        self.assertEqual(shaped["__options"], "A\nB\nC")
+        body = json.loads(shaped["__pollBody"])
+        self.assertEqual(body["question"], "Which lane?")
+        self.assertEqual(body["options"], ["A", "B", "C"])
+
+    def test_a_poll_degrades_to_readable_text_without_a_bot_token(self):
+        """n8n has no sendPoll, so a poll is a Bot API call needing a token.
+
+        Absent it, the poll must arrive as a legible numbered list that SAYS it
+        was degraded — not vanish, and not fail the execution (TG-22).
+        """
+        from telegram.template import Catalogue
+        message = Catalogue().load().get("poll").render(
+            {"question": "Which lane?", "options": ["A", "B", "C"]})
+        shaped = self._shape({"message": message.text, "meta": message.meta()})
+        self.assertFalse(shaped["__canPoll"])          # no token in the harness env
+        self.assertIn("1. A", shaped["__text"])
+        self.assertIn("3. C", shaped["__text"])
+        self.assertIn("TG-22", shaped["__text"])
 
     def test_a_button_envelope_routes_to_the_message_branch_with_a_keyboard(self):
         from telegram.template import Catalogue
