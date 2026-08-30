@@ -122,3 +122,6 @@ Rule of thumb: **true only for this thread → handoff; true across threads → 
 This is the live system. The studio's `~/.claude/projects/-studio/memory/` is loaded at the start of
 every session — its `MEMORY.md` index appears in-context as the auto-memory block — and the templates
 shipped here are the exact skeletons that new memory directories and entries are cut from.
+
+
+**Committed self-check:** `bash tests/verify.sh` — **18/18** (frontmatter validity, the index-is-recall invariant, wikilink resolution, and a live drift demo where an un-indexed entry is caught then fixed).
