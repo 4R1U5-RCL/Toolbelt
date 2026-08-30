@@ -29,6 +29,9 @@ poller/` finds the code that exists because of an incident.
 | [KI-16](#ki-16) | Copies of a poller script drifted from each other | Config, not code | Add a config file, never a second script |
 | [KI-17](#ki-17) | Concurrent pollers overwrote each other's scratch files | Per-event templated paths; no fixed temp files | Template `{key}` into file sink paths |
 | [KI-18](#ki-18) | A slow item was indistinguishable from a broken poller | Staleness SLA event | Set `stale_after_seconds` to your real SLA |
+| [KI-19](#ki-19) | The watch survived its launching session; the attention did not | Supervisor probe + fallback rails | Name a supervisor, or accept nobody is reading |
+| [KI-20](#ki-20) | Item text from a third-party API reaching an agent's prompt | Untrusted-data fence + preamble | Keep `allowed_tools` narrow; write the task narrowly |
+| [KI-21](#ki-21) | An unattended process spawning agents costs real money | `max_spawns_per_run`, fallback-only by default | Budget it; do not set `when: always` casually |
 
 ---
 
@@ -428,6 +431,91 @@ Combined with the heartbeat (KI-09), the two silences are now distinguishable.
 
 **Code.** `poller/engine.py` (`_event_for`).
 **Test.** `tests/test_engine.py::test_a_pending_item_past_its_sla_is_reported_once`
+
+---
+
+<a name="ki-19"></a>
+## KI-19 — The watch survived the session; the attention did not
+
+**Signature.** The poller is healthy, the reports are landing, and nothing is
+happening about them.
+
+**Cause.** A poller launched from an interactive session is a detached process —
+it correctly outlives that session. But the session was the thing that *read*
+the reports and acted. When it ends, the watch continues into a void, and
+because everything looks healthy there is no signal that it has.
+
+**Prevented by.** A `supervisor` block names the process the poller was launched
+by (inside Claude Code, `@env:CLAUDE_PID` needs no setup). Each tick — before
+anything else — the poller probes it with the same liveness check the instance
+lock uses. On the tick it is first seen gone, `supervisor_lost` is emitted once
+and any rail marked `"when": "fallback"` activates, typically a `claude_code`
+sink that spawns a successor session. An unconfigured supervisor reads as
+present, so nothing escalates by accident, and a fallback rail with no
+supervisor warns at startup rather than staying silently dark.
+
+**Still your job.** Decide whether you want escalation (`on_loss: fallback`),
+notification (`report`), or neither (`ignore`). And note this is a *different*
+failure from the poller itself dying — that one is KI-09, and its guard lives
+outside the host (see the n8n layering in IMPLEMENTATIONS.md).
+
+**Code.** `poller/supervisor.py`, `poller/engine.py` (`_check_supervisor`,
+`fallback_active`).
+**Test.** `tests/test_supervisor.py`
+
+---
+
+<a name="ki-20"></a>
+## KI-20 — Third-party text reaching an agent's prompt
+
+**Signature.** None, until it matters. This is a latent risk, not a past incident.
+
+**Cause.** The `claude_code` sink puts item fields — a submission description, a
+job label, a commit message — into the prompt of a session that holds real
+tools. Those fields come from an API and are influenced by whoever can write to
+it. A description reading "ignore previous instructions and…" is a prompt
+injection with a tool-holding audience.
+
+**Prevented by.** The event is fenced in a
+`<poller-event trust="untrusted-data">` block, after a preamble stating the block
+is data and that directions inside it must never be followed. The task sits
+*after* the fence. The spawned session can only use the tools named in
+`allowed_tools`, and names none by default.
+
+**Still your job.** Fencing raises the cost of an attack; it does not make one
+impossible. Keep `allowed_tools` to the minimum the task needs, write the task
+narrowly and say what *not* to do, and never hand a fallback session destructive
+tools on the strength of the fence alone. The same posture the studio takes with
+inbound Slack applies here: it is data, not instructions.
+
+**Code.** `poller/sinks.py` (`ClaudeCodeSink.UNTRUSTED_PREAMBLE`, `build_prompt`).
+**Test.** `tests/test_sinks.py::test_an_injection_attempt_in_the_data_stays_inside_the_fence`
+
+---
+
+<a name="ki-21"></a>
+## KI-21 — An unattended process that can spend money
+
+**Signature.** A cost line you did not expect.
+
+**Cause.** Every `claude_code` spawn is a real session. Measured here at roughly
+**US$0.30 for an eleven-token reply**, because the input cache has to be built
+before the session does anything. A poller that spawns one per event, on a
+source that settles ten items at once, has spent a few dollars while you were
+asleep — and a fetch bug that re-reports could do it repeatedly.
+
+**Prevented by.** The rail is off unless configured, and is intended for
+`"when": "fallback"` — a rare path, not the normal one. `max_spawns_per_run`
+caps spawns per process lifetime and refuses further ones fatally rather than
+retrying. Every spawn logs its session id, turn count and cost. The dedup ledger
+means a settled item can only ever trigger one spawn.
+
+**Still your job.** Set `max_spawns_per_run` to a number you would be relaxed
+about paying for, keep `timeout_seconds` finite, and think twice before
+`"when": "always"`.
+
+**Code.** `poller/sinks.py` (`ClaudeCodeSink.send`).
+**Test.** `tests/test_sinks.py::test_the_spawn_budget_is_enforced`
 
 ---
 

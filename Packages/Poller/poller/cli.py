@@ -28,6 +28,7 @@ from .render import render
 from .sinks import build_sinks
 from .sources import build_source
 from .state import Store
+from .supervisor import Supervisor
 
 EXIT_UNHEALTHY = 1
 
@@ -62,7 +63,7 @@ def main(argv: Optional[list] = None) -> int:
 # -- commands -----------------------------------------------------------------
 
 def cmd_run(args, config: Config) -> int:
-    engine = _engine(config, dry_run=args.dry_run)
+    engine = _engine(config, dry_run=args.dry_run, supervisor_pid=args.supervisor_pid)
     seed = False if args.no_seed else None
     return engine.run(once=args.once, seed=seed, force=args.force)
 
@@ -226,11 +227,15 @@ _COMMANDS = {
 }
 
 
-def _engine(config: Config, dry_run: bool = False) -> Engine:
+def _engine(config: Config, dry_run: bool = False, supervisor_pid: Optional[int] = None) -> Engine:
     resolver = EnvResolver(config.env_file)
     source = build_source(config.source, resolver)
     sinks = build_sinks(config.sinks, resolver, dry_run=dry_run)
-    return Engine(config, source, sinks)
+    supervisor_config = dict(config.supervisor)
+    if supervisor_pid:
+        supervisor_config["pid"] = supervisor_pid   # --supervisor-pid wins
+    return Engine(config, source, sinks,
+                  supervisor=Supervisor(supervisor_config, resolver=resolver))
 
 
 def _read_json(path: str) -> Optional[dict]:
@@ -261,6 +266,9 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--no-seed", action="store_true",
                      help="report on everything already terminal (default: seed and suppress)")
     run.add_argument("--force", action="store_true", help="take over a lock held by a dead process")
+    run.add_argument("--supervisor-pid", type=int, default=None, metavar="PID",
+                     help="watch this pid as the supervising session; when it dies, "
+                          "fallback rails activate (inside Claude Code: $CLAUDE_PID)")
 
     with_config("check", "validate config, credentials and the source without sending anything")
 

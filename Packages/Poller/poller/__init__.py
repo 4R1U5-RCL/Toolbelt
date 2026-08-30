@@ -9,7 +9,7 @@ on a laptop — the three places pollers have historically been asked to live.
 
 Public surface:
 
-    from poller import Engine, load_config, build_source, build_sinks
+    from poller import Engine, load_config, build_source, build_sinks, Supervisor
 
 Everything else is an implementation detail and may change.
 """
@@ -19,8 +19,9 @@ from .engine import Engine
 from .model import Event, Item, ItemState
 from .sinks import build_sinks
 from .sources import build_source
+from .supervisor import Supervisor
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 __all__ = [
     "Config",
@@ -29,6 +30,7 @@ __all__ = [
     "Item",
     "ItemState",
     "__version__",
+    "Supervisor",
     "build_sinks",
     "build_source",
     "load_config",

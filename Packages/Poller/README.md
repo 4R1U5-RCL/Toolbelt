@@ -9,12 +9,13 @@ Zero dependencies: Python 3.9+ standard library only. No pip, no Node, no paths
 into other repos. The same tree runs in a container, on a VPS, or under cron on
 a laptop.
 
-- **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** — the eighteen ways pollers have
+- **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** — the ways pollers have
   actually broken here, what each one looked like, and what guards it now.
   Read this before writing a config.
 - **[IMPLEMENTATIONS.md](IMPLEMENTATIONS.md)** — how to plug in a new source,
   with Kaggle worked end to end and recipes for GitHub Actions, generic REST,
-  and custom Python sources.
+  and custom Python sources; plus how to configure the headless-session
+  fallback and where n8n fits.
 
 ## Why this exists
 
@@ -79,6 +80,9 @@ The minimum viable config:
                             ▼            ▼            ▼          ▼
                           file        slack       telegram    command
                         (always)                 (signed n8n)
+                                                                 ┊
+                          supervising session gone? ┄┄┄┄┄┄┄┄┄┄┄┄▶ headless
+                                                                 claude -p
 ```
 
 Each tick: fetch → classify → enroll anything newly terminal → drain the
@@ -96,13 +100,15 @@ signal, fatal error, unhandled crash — emits a report before the process ends.
 | **Liveness is observable from outside** | Heartbeat file + `poller status` (no `ps` needed) |
 | **Two instances cannot double-post** | PID lock with `/proc` liveness and stale reclaim |
 | **A crash mid-write cannot lose state** | Atomic temp-file + rename + fsync |
+| **Losing the launching session is noticed** | Supervisor liveness probe; `supervisor_lost` event |
+| **Reports still get acted on after that** | Optional `claude_code` fallback rail |
 | **No secret reaches a log, argv or URL** | Redacting formatter; stdin for commands |
 
 ## Commands
 
 | Command | Does | Exit codes |
 |---|---|---|
-| `run` | The watch. `--once`, `--dry-run`, `--no-seed`, `--force` | 0 clean · 2 fatal · 3 already running |
+| `run` | The watch. `--once`, `--dry-run`, `--no-seed`, `--force`, `--supervisor-pid` | 0 clean · 2 fatal · 3 already running |
 | `check` | Validates config, resolves credentials, calls the source, prints what it *would* report. Sends nothing, writes nothing | 0 ok · 2 problem |
 | `status` | ALIVE / STALE / STOPPED / NEVER_RAN from the heartbeat. `--json` | 0 alive · 1 not |
 | `test` | Pushes a synthetic event through every rail. Dry unless `--live` | 0 ok · 1 a rail failed |
@@ -117,15 +123,17 @@ Packages/Poller/
 ├── IMPLEMENTATIONS.md     how to plug in a new source
 ├── bin/poller             executable entry point (no install needed)
 ├── run-tests.sh           the whole suite, offline
-├── examples/              kaggle · github-actions · generic-http
+├── examples/              kaggle · kaggle-with-fallback · github-actions · generic-http
 ├── poller/
 │   ├── engine.py          the loop, delivery, heartbeat, lifecycle
 │   ├── state.py           durable dedup + per-sink delivery ledger
-│   ├── sinks.py           file · stdout · slack · notify_webhook · webhook · command
+│   ├── sinks.py           file · stdout · slack · notify_webhook · webhook ·
+│   │                      command · claude_code
 │   ├── sources/           base · http_json (declarative) · kaggle (preset)
 │   ├── http.py            retrying HTTPS client (transient vs fatal)
 │   ├── config.py          config schema, defaults, validation
 │   ├── lock.py            single-instance lock without `ps`
+│   ├── supervisor.py      liveness of the session that launched the watch
 │   ├── clock.py           injectable time; interruptible sleep
 │   ├── envfile.py         read .env without sourcing it
 │   ├── render.py          total templating
@@ -146,6 +154,32 @@ twelve-hour watch runs in milliseconds, and HTTP backoff is asserted exactly
 because the jitter source is injected too. The suite includes a frozen vector
 generated from the reference Node notify client — if the Python envelope ever
 drifts, a test fails instead of a delivery.
+
+## Surviving the session that launched it
+
+A poller is a detached OS process: it already outlives the Claude Code session,
+terminal or cron job that started it. What does *not* survive is the
+**attention** — reports keep landing with nobody reading them.
+
+Name a supervisor and the poller notices:
+
+```json
+"supervisor": { "pid": "@env:CLAUDE_PID", "on_loss": "fallback" }
+```
+
+Inside a Claude Code session `$CLAUDE_PID` needs no setup; `--supervisor-pid`
+and a `heartbeat_file` are the alternatives. When that process goes away the
+poller emits `supervisor_lost` once and activates any rail marked
+`"when": "fallback"` — typically the `claude_code` sink, which spawns
+`claude -p` so a successor session can post the result, update a board, or open
+an issue. It is off unless configured, bounded by `max_spawns_per_run`, limited
+to the tools you name, and it treats item fields as untrusted data. See
+`IMPLEMENTATIONS.md` and KI-19/KI-20/KI-21.
+
+**The poller does not run on n8n**, and should not: it needs a durable dedup
+ledger and per-sink delivery state. n8n is the *delivery* rail (the signed
+Telegram seam) and the right place for the outer dead-man's-switch that watches
+the watcher.
 
 ## Adding to the package
 

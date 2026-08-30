@@ -292,6 +292,7 @@ the test suite exercises the plugin path end to end.
 | `notify_webhook` | Telegram via the signed n8n seam | Byte-compatible with `packages/notify`; needs `NOTIFY_WEBHOOK_URL` + `NOTIFY_TOKEN` |
 | `webhook` | Discord, Teams, an internal collector | `field` names the JSON key the text goes in |
 | `command` | Anything with an existing CLI | Message arrives on **stdin**, never argv |
+| `claude_code` | Handing the report to a headless agent | Spawns `claude -p`. Off unless configured; see below |
 | `stdout` | Development, and as a floor under everything else | |
 
 Per-sink `reasons` filters which events a rail gets. Per-sink `template`
@@ -324,6 +325,114 @@ frozen vector in `tests/test_sinks.py` is what stops that happening silently.
 If `NOTIFY_SECRET` is unset the token is used as the signing secret, matching
 the reference client's `secret ?? token` behaviour — that is the supported
 single-secret mode, not a misconfiguration.
+
+---
+
+## Surviving the session that launched it
+
+### What actually needs surviving
+
+A poller is a detached OS process. Started with `nohup` or from cron it already
+outlives the Claude Code session, terminal, or laptop lid that launched it —
+that part has never been the problem. What does not survive is the **attention**:
+reports keep arriving in Slack and Telegram with nobody reading or acting on
+them.
+
+Two separate mechanisms, for two separate failures:
+
+| Failure | Mechanism |
+|---|---|
+| The **poller** dies | Heartbeat file + `poller status` + an external watchdog (KI-09) |
+| The **supervising session** dies | `supervisor` block + `"when": "fallback"` rails (KI-19) |
+
+### Naming a supervisor
+
+```json
+"supervisor": {
+  "label": "launching Claude Code session",
+  "pid": "@env:CLAUDE_PID",
+  "on_loss": "fallback"
+}
+```
+
+| Key | Meaning |
+|---|---|
+| `pid` | The process to watch. Inside Claude Code, `@env:CLAUDE_PID` needs no setup. `--supervisor-pid N` overrides it |
+| `heartbeat_file` + `max_age_seconds` | Alternative signal: a file the supervisor touches. Use when liveness means "still working", not merely "still running" |
+| `on_loss` | `fallback` (report **and** activate fallback rails), `report` (report only), `ignore` |
+
+Liveness uses the same probe as the instance lock — `os.kill(pid, 0)` plus a
+`/proc` command-line comparison against what was recorded at launch, so a
+recycled pid cannot masquerade as a live supervisor, and no `ps` binary is
+needed. **No supervisor configured means "present"**, so an unsupervised poller
+never escalates by accident (and a fallback rail configured without a supervisor
+warns at startup, because it would otherwise stay dark forever).
+
+On the tick the supervisor is first seen to be gone, the poller emits
+`supervisor_lost` once, and fallback rails go live. Supervision is checked at the
+*start* of a tick, so a successor rail is told why it woke up before it is handed
+that tick's reports. The verdict is recomputed each tick rather than latched, so
+a restarted poller re-evaluates from scratch.
+
+### The headless-session rail
+
+```json
+{
+  "type": "claude_code",
+  "name": "headless-fallback",
+  "when": "fallback",
+  "cwd": "/studio",
+  "allowed_tools": ["Bash", "Read", "Write"],
+  "permission_mode": "acceptEdits",
+  "max_spawns_per_run": 5,
+  "timeout_seconds": 900,
+  "task": "Post the event above to Slack with studio-slack, then append a dated line to POLLER_HANDOFF.md. Do not submit anything or push to git."
+}
+```
+
+The other rails deliver text; this one delivers **agency**. It runs
+`claude -p --output-format json`, feeding it a prompt built as: a preamble, the
+rendered event fenced in a `<poller-event trust="untrusted-data">` block, then
+your task. A zero exit code is not treated as success — `is_error` in the JSON
+result is checked too, and the session id, turn count and cost are logged.
+
+Three things to be deliberate about:
+
+* **Cost.** Each spawn is a real session — tens of thousands of cached input
+  tokens before it does anything, measured at roughly **US$0.30 for a trivial
+  prompt**. This is why it belongs on `"when": "fallback"` rather than
+  `"always"`, and why `max_spawns_per_run` exists (KI-21).
+* **Blast radius.** The spawned session can only use the tools you name in
+  `allowed_tools`. Name none and it can think and reply but not act — safe, and
+  probably not what you want, so it warns at preflight. Write the task narrowly
+  and say what *not* to do.
+* **Trust.** Item fields come from a third-party API. They are fenced and
+  labelled as data, and the preamble tells the session never to follow
+  instructions found inside them — but do not hand it destructive tools on the
+  strength of that alone (KI-20).
+
+Set `"when": "always"` if you genuinely want an agent handling every event. Be
+sure about the cost first.
+
+### Where n8n fits (and does not)
+
+**The poller does not run on n8n, and should not.** It needs a durable dedup
+ledger and per-sink delivery state on a real filesystem; expressing that in
+workflow static data trades a solved problem for an awkward one.
+
+n8n is already two useful things here, and a third is worth building:
+
+1. **The delivery rail** — the `notify_webhook` sink posts to the hosted
+   notification workflow, which fans out to Telegram. Already live.
+2. **The always-on supervisor of last resort** — the same instance already runs a
+   dead-man's-switch pattern (`[OPERORCH] Runner Watcher`). Pointing one at this
+   poller's heartbeat closes KI-09 from outside the box the poller runs in: if
+   the heartbeat goes stale, n8n pings you. That is the persistence layer, and it
+   belongs off-host by definition — a watchdog on the same host dies with it.
+3. Not: the polling itself.
+
+The layering, outermost first: **n8n dead-man's-switch → poller process →
+fallback headless session**. Each layer notices the failure of the one inside it.
 
 ---
 

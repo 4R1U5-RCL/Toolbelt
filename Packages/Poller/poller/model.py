@@ -109,7 +109,9 @@ class EventReason:
     WATCH_STARTED = "watch_started"
     WATCH_ENDED = "watch_ended"  # clean exit: duration reached, or signal
     WATCH_FAILED = "watch_failed"  # fatal error: auth, unparseable source
+    SUPERVISOR_LOST = "supervisor_lost"  # the session that launched the watch is gone
     DEGRADED = "degraded"        # N consecutive fetch failures, still trying
     HEARTBEAT = "heartbeat"      # periodic "still watching" ping
 
-    LIFECYCLE = (WATCH_STARTED, WATCH_ENDED, WATCH_FAILED, DEGRADED, HEARTBEAT)
+    LIFECYCLE = (WATCH_STARTED, WATCH_ENDED, WATCH_FAILED, DEGRADED, HEARTBEAT,
+                 SUPERVISOR_LOST)

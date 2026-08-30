@@ -89,8 +89,8 @@ class RecordingSink(Sink):
 
     type_name = "recording"
 
-    def __init__(self, name: str = "recording", reasons=None):
-        super().__init__({"name": name, "reasons": reasons}, resolver=None)
+    def __init__(self, name: str = "recording", reasons=None, when: str = "always"):
+        super().__init__({"name": name, "reasons": reasons, "when": when}, resolver=None)
         self.messages: List[str] = []
         self.events: List[object] = []
 
