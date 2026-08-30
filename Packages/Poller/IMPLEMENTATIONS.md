@@ -414,25 +414,34 @@ Three things to be deliberate about:
 Set `"when": "always"` if you genuinely want an agent handling every event. Be
 sure about the cost first.
 
-### Where n8n fits (and does not)
+### Where n8n fits
 
-**The poller does not run on n8n, and should not.** It needs a durable dedup
-ledger and per-sink delivery state on a real filesystem; expressing that in
-workflow static data trades a solved problem for an awkward one.
+**Correction to an earlier version of this guide.** It argued the poll loop
+should not run on n8n, because the engine needs a durable ledger and per-sink
+delivery state. That reasoning was about *state*, and it missed the binding
+constraint: **availability**. A poller in a container on a laptop dies when that
+laptop does, and nothing is left to restart it — a dead-man's-switch can tell
+you the watch died, but not bring it back. For a watch that must not lapse, the
+clock belongs on hardware you are not carrying around.
 
-n8n is already two useful things here, and a third is worth building:
+n8n solves state adequately — `$getWorkflowStaticData('global')` persists across
+executions in the workflow record, which is exactly how the existing
+`[OPERORCH] Runner Watcher` keeps its episode state — and solves availability
+completely. So there are two tiers, and the choice between them is about what
+you are protecting against:
 
-1. **The delivery rail** — the `notify_webhook` sink posts to the hosted
-   notification workflow, which fans out to Telegram. Already live.
-2. **The always-on supervisor of last resort** — the same instance already runs a
-   dead-man's-switch pattern (`[OPERORCH] Runner Watcher`). Pointing one at this
-   poller's heartbeat closes KI-09 from outside the box the poller runs in: if
-   the heartbeat goes stale, n8n pings you. That is the persistence layer, and it
-   belongs off-host by definition — a watchdog on the same host dies with it.
-3. Not: the polling itself.
+| | Local engine | n8n workflow |
+|---|---|---|
+| Survives the host going down | No | **Yes** |
+| Per-sink delivery ledger, staleness SLA, degraded alarms | **Yes** | No |
+| Headless-session fallback | **Yes** | No |
+| Changing it | Edit a JSON config | Edit a workflow |
 
-The layering, outermost first: **n8n dead-man's-switch → poller process →
-fallback headless session**. Each layer notices the failure of the one inside it.
+A ready-made n8n-resident poller for the Kaggle source lives in
+[`n8n/`](n8n/), with its classification deliberately mirroring
+`poller/sources/kaggle.py` — keeping the two in parity is a maintenance
+obligation, and generating the workflow from a poller config is a known gap.
+
 
 ---
 

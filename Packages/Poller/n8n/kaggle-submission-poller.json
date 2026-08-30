@@ -1,0 +1,148 @@
+{
+  "name": "[STUDIO] Kaggle Submission Poller (always-on)",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Every 3 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/3 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch",
+      "name": "Fetch Submissions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.kaggle.com/api/v1/competitions/submissions/list/ai-agent-security-multi-step-tool-attacks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "diff",
+      "name": "Classify + Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "\n// Kaggle submission poller \u2014 classify, dedup, emit only what is new.\n// Mirrors poller/sources/kaggle.py + poller/engine.py semantics.\nconst sd = $getWorkflowStaticData('global');\nif (!sd.seen || typeof sd.seen !== 'object') sd.seen = {};\n\nconst FAILED  = ['error', 'failed', 'cancel'];\nconst SETTLED = ['complete', 'success'];\nconst PENDING = ['pending', 'running', 'queued', 'submitting'];\n\n// The response is a bare array; some sibling endpoints wrap it.\nlet rows = $input.first().json;\nif (rows && !Array.isArray(rows)) rows = rows.body || rows.submissions || rows.items || [];\nif (!Array.isArray(rows)) rows = [];\n\nconst blank = (v) => v === null || v === undefined || v === '';\n\nfunction classify(r) {\n  const s = String(r.status ?? '').toLowerCase();\n  // Checked failed-first on purpose: a false alarm is recoverable, a missed\n  // failure is not.\n  if (FAILED.some((p) => s.includes(p))) return 'failed';\n  if (SETTLED.some((p) => s.includes(p))) {\n    // \"complete\" can precede publicScore by a few seconds. Reporting then would\n    // announce a settle with no score AND burn the dedup key (KI-04).\n    return blank(r.publicScore) ? 'pending' : 'settled';\n  }\n  if (PENDING.some((p) => s.includes(p))) return 'pending';\n  return 'pending';   // unknown status = keep watching, never \"done\"\n}\n\nconst firstRun = !sd.seeded;\nconst out = [];\nlet seeded = 0;\n\nfor (const r of rows) {\n  const key = String(r.ref ?? '');\n  if (!key) continue;                       // cannot dedup what we cannot name\n  const state = classify(r);\n  if (state !== 'settled' && state !== 'failed') continue;\n  const dedup = key + ':' + state;\n  if (sd.seen[dedup]) continue;\n  sd.seen[dedup] = new Date().toISOString();\n  if (firstRun) { seeded++; continue; }     // seed: remember, do not report\n\n  const score = blank(r.publicScore) ? '' : String(r.publicScore);\n  const desc = String(r.description ?? '').replace(/\\s+/g, ' ').trim();\n  const when = String(r.date ?? '');\n  const text = state === 'settled'\n    ? `:bar_chart: *Kaggle settled: ${score}*\\n*${desc}*\\nscore *${score}*  \u00b7  ref \\`${key}\\`  \u00b7  ${when}\\n\u2014 Chiron (n8n poller)`\n    : `:x: *Kaggle submission FAILED*\\n\\`${desc}\\` did not score (status ${r.status}).\\nError: ${r.errorDescription || 'none'}\\nA submission slot was spent \u2014 read the run log before resubmitting.\\n\u2014 Chiron (n8n poller)`;\n  const telegram = state === 'settled'\n    ? `Kaggle settled: ${score}\\n${desc}\\nref ${key} \u00b7 ${when}`\n    : `Kaggle submission FAILED\\n${desc}\\nstatus ${r.status} \u00b7 ${r.errorDescription || 'no detail'}`;\n\n  out.push({ json: { key, state, score, description: desc, date: when,\n                     status: String(r.status ?? ''), slack_text: text,\n                     telegram_text: telegram } });\n}\n\nif (firstRun) {\n  sd.seeded = new Date().toISOString();\n  sd.seed_count = seeded;\n}\n\n// Bound the state file: keep the most recent 500 dedup keys.\nconst keys = Object.keys(sd.seen);\nif (keys.length > 500) {\n  keys.sort((a, b) => String(sd.seen[a]).localeCompare(String(sd.seen[b])));\n  for (const k of keys.slice(0, keys.length - 500)) delete sd.seen[k];\n}\n\nreturn out;\n"
+      }
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        -100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ ($env.TELEGRAM_DEFAULT_CHAT || '8859170398') }}",
+        "text": "={{ $json.telegram_text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $env.SLACK_ARIUS_CHANNEL_ID || 'C0BRE9369KL', text: $json.slack_text }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 3 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Submissions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Submissions": {
+      "main": [
+        [
+          {
+            "node": "Classify + Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify + Dedup": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

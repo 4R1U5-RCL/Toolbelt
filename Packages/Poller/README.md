@@ -124,6 +124,7 @@ Packages/Poller/
 ├── bin/poller             executable entry point (no install needed)
 ├── run-tests.sh           the whole suite, offline
 ├── examples/              kaggle · kaggle-with-fallback · github-actions · generic-http
+├── n8n/                   always-on tier: workflow that runs the loop on n8n
 ├── poller/
 │   ├── engine.py          the loop, delivery, heartbeat, lifecycle
 │   ├── state.py           durable dedup + per-sink delivery ledger
@@ -176,10 +177,21 @@ an issue. It is off unless configured, bounded by `max_spawns_per_run`, limited
 to the tools you name, and it treats item fields as untrusted data. See
 `IMPLEMENTATIONS.md` and KI-19/KI-20/KI-21.
 
-**The poller does not run on n8n**, and should not: it needs a durable dedup
-ledger and per-sink delivery state. n8n is the *delivery* rail (the signed
-Telegram seam) and the right place for the outer dead-man's-switch that watches
-the watcher.
+### The tier above that: surviving the host
+
+Everything above still dies with its host. A poller in a container on a laptop
+is gone the moment that laptop is — and nothing is left to restart it.
+
+So the poll loop can also run **on n8n**, on an always-on VPS, with dedup state
+in `$getWorkflowStaticData`. It is the less capable tier — no per-sink ledger,
+no staleness SLA, no fallback rail — and that is the right trade for the layer
+whose only job is to not be absent. See [`n8n/`](n8n/).
+
+```
+n8n schedule (VPS, always on)  ──▶ the watch itself, immune to your laptop
+   └── local poller process    ──▶ richer engine: SLA, degraded alarms, ledger
+         └── headless fallback ──▶ agency when the launching session ends
+```
 
 ## Adding to the package
 

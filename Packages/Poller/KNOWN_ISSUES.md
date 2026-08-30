@@ -32,6 +32,7 @@ poller/` finds the code that exists because of an incident.
 | [KI-19](#ki-19) | The watch survived its launching session; the attention did not | Supervisor probe + fallback rails | Name a supervisor, or accept nobody is reading |
 | [KI-20](#ki-20) | Item text from a third-party API reaching an agent's prompt | Untrusted-data fence + preamble | Keep `allowed_tools` narrow; write the task narrowly |
 | [KI-21](#ki-21) | An unattended process spawning agents costs real money | `max_spawns_per_run`, fallback-only by default | Budget it; do not set `when: always` casually |
+| [KI-22](#ki-22) | The host went down and took the watch with it | An n8n-resident tier on an always-on VPS | Put deadline-critical watches on that tier |
 
 ---
 
@@ -516,6 +517,36 @@ about paying for, keep `timeout_seconds` finite, and think twice before
 
 **Code.** `poller/sinks.py` (`ClaudeCodeSink.send`).
 **Test.** `tests/test_sinks.py::test_the_spawn_budget_is_enforced`
+
+---
+
+<a name="ki-22"></a>
+## KI-22 — The host went down and took the watch with it
+
+**Signature.** No reports, no heartbeat, no poller — and no way to tell from the
+outside whether the watch ever ran, because the thing that would have told you
+died with it.
+
+**Cause.** A poller inherits the availability of whatever it runs on. In a
+container on a laptop, a flat battery or a crash stops the container, and
+nothing restarts it. Every other guard in this document assumes a running
+process; this is the failure where there is none.
+
+Note this is *not* KI-09 (heartbeat) or KI-19 (supervisor). Both of those detect
+a loss from somewhere still alive. If the whole host is down, the heartbeat file
+is unreachable and the fallback rail has no process to run in.
+
+**Prevented by.** A second, always-on tier: the poll loop as an n8n workflow on
+the VPS, with dedup state in `$getWorkflowStaticData('global')`. It is
+deliberately less capable than the Python engine — no per-sink ledger, no
+staleness SLA, no fallback rail — because its only job is to not be absent. See
+[`n8n/README.md`](n8n/README.md).
+
+**Still your job.** Decide which watches are deadline-critical enough to put on
+that tier, and keep the two classifications in parity — two implementations of
+"what counts as settled" can drift, and a drift means the tiers disagree.
+
+**Code.** `n8n/kaggle-submission-poller.json`, `n8n/build_kaggle_workflow.py`.
 
 ---
 
