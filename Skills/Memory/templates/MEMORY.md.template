@@ -1,0 +1,16 @@
+# Memory Index
+
+<!-- One line per memory file. Format: - [Title](file.md) — one-line hook (under ~150 chars) -->
+<!-- Types: user | feedback | project | reference -->
+
+## User
+<!-- Who the user is, their role, expertise, preferences -->
+
+## Feedback
+<!-- How Claude should behave in this project — corrections and confirmed approaches -->
+
+## Project
+<!-- Ongoing work, decisions, deadlines, goals -->
+
+## Reference
+<!-- Pointers to external systems, dashboards, docs, channels -->

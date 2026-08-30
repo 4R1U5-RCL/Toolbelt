@@ -1,0 +1,14 @@
+---
+name: {{short-kebab-case-slug}}
+description: {{one-line summary — used to decide relevance in future conversations}}
+metadata:
+  type: {{user | feedback | project | reference}}
+---
+
+{{Memory content.}}
+
+<!-- For feedback/project types, use this structure: -->
+<!-- Lead with the rule or fact. -->
+<!-- **Why:** The reason or motivation behind it. -->
+<!-- **How to apply:** When/where this kicks in. -->
+<!-- Link related memories with [[their-name]]. -->
