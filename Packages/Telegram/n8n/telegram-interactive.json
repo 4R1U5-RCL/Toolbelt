@@ -1,0 +1,422 @@
+{
+  "name": "[STUDIO] Telegram Interactive (message or poll)",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "hook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-interactive",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "studio-telegram-interactive"
+    },
+    {
+      "id": "verify",
+      "name": "Verify HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "\n// Verify the studio notify envelope. Byte-for-byte the same contract as\n// telegram/seam.py and packages/notify/src/client.mjs: HMAC-SHA256 over\n// `${timestamp}.${rawBody}`, five-minute skew, both header families accepted.\nconst crypto = require('crypto');\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst SECRET = readSecret('NOTIFY_FANOUT_SECRET');\nconst MAX_SKEW_MS = 300000;\nconst hmac = (d) => crypto.createHmac('sha256', SECRET).update(d).digest('hex');\nconst safeEq = (a, b) => {\n  if (!a || !b) return false;\n  const x = Buffer.from(String(a)), y = Buffer.from(String(b));\n  return x.length === y.length && crypto.timingSafeEqual(x, y);\n};\n// TE-16: recover the EXACT signed bytes, or the signature cannot match.\nconst rawOf = (j) => (j.rawBody != null) ? j.rawBody.toString() : JSON.stringify(j.body);\n\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const h = j.headers || {};\n  let ok = false;\n  // Fail-closed: an unconfigured secret can never verify, and never throws.\n  if (SECRET) {\n    const sig = h['x-n8n-signature'] || h['x-notify-signature'];\n    const ts = h['x-n8n-timestamp'] || h['x-notify-timestamp'];\n    const n = Number(ts);\n    if (sig && ts && Number.isFinite(n) && Math.abs(Date.now() - n) <= MAX_SKEW_MS) {\n      ok = safeEq(hmac(ts + '.' + rawOf(j)), sig);\n    }\n  }\n  // TG-07 (IN-25): n8n freezes Code-node input items \u2014 an in-place write is\n  // silently dropped and the next node reads an item without the field.\n  // Always RETURN new items.\n  out.push({ json: Object.assign({}, j, { __authok: ok }) });\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "gate",
+      "name": "Auth Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "authok",
+              "leftValue": "={{ $json.__authok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "route",
+      "name": "Shape",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "\n// Decide whether this envelope is a poll or a message, and shape it for the\n// delivery node. Mirrors telegram/template.py's `Message.meta()`.\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const b = j.body || j;\n  const meta = b.meta || {};\n  const poll = meta.poll;\n  const isPoll = !!(poll && Array.isArray(poll.options) && poll.options.length >= 2);\n\n  const item = { json: Object.assign({}, j, {\n    __isPoll: isPoll,\n    // TG-12: the literal is a last-resort fallback. If TELEGRAM_DEFAULT_CHAT is\n    // unset, messages go THERE rather than failing \u2014 set it deliberately.\n    __chatId: b.chat_id || readSecret('TELEGRAM_DEFAULT_CHAT') || '8859170398',\n    __text: b.message || b.text || '(no message)',\n    __question: isPoll ? String(poll.question || b.message || '').slice(0, 300) : '',\n    // The Telegram node wants options as a newline-joined string.\n    __options: isPoll ? poll.options.map((o) => String(o).slice(0, 100)).join('\\n') : '',\n    __multiple: isPoll ? !!poll.allows_multiple_answers : false,\n    __anonymous: isPoll ? poll.is_anonymous !== false : true,\n  }) };\n\n  const rm = meta.reply_markup;\n  if (rm && Array.isArray(rm.inline_keyboard)) {\n    item.json.__kb = { rows: rm.inline_keyboard.map((r) => ({\n      row: { buttons: r.map((btn) => ({\n        text: btn.text,\n        additionalFields: { callback_data: btn.callback_data },\n      })) },\n    })) };\n    item.json.__hasKb = true;\n  } else {\n    item.json.__hasKb = false;\n  }\n  if (it.binary) item.binary = it.binary;\n  out.push(item);\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "switch",
+      "name": "Poll or Message",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ispoll",
+              "leftValue": "={{ $json.__isPoll }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "sendpoll",
+      "name": "Send Poll",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -180
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendPoll",
+        "chatId": "={{ $json.__chatId }}",
+        "question": "={{ $json.__question }}",
+        "options": "={{ $json.__options }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "allows_multiple_answers": "={{ $json.__multiple }}",
+          "is_anonymous": "={{ $json.__anonymous }}"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "haskb",
+      "name": "Has Buttons?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        60
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "haskb",
+              "leftValue": "={{ $json.__hasKb }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "sendkb",
+      "name": "Send With Buttons",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        -20
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.__chatId }}",
+        "text": "={{ $json.__text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "None"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": "={{ $json.__kb }}"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "sendmsg",
+      "name": "Send Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        160
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.__chatId }}",
+        "text": "={{ $json.__text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "None"
+        },
+        "replyMarkup": "none"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "sign",
+      "name": "Sign Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        -80
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "\n// Sign the reply, so a caller can tell this workflow from anything else that\n// happens to answer 200 on that path.\nconst crypto = require('crypto');\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst SECRET = readSecret('NOTIFY_FANOUT_SECRET');\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const b = j.body || j;\n  const body = { ok: true, request_id: b.request_id || null, poll: !!j.__isPoll };\n  const payload = JSON.stringify(body);\n  out.push({ json: Object.assign({}, j, {\n    __body: body,\n    // Fail-open to UNSIGNED rather than signing with an empty key.\n    __sig: SECRET ? crypto.createHmac('sha256', SECRET).update(payload).digest('hex') : '',\n  }) });\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond Delivered",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        -80
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.__body }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "x-n8n-signature",
+                "value": "={{ $json.__sig }}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "reject",
+      "name": "Reject 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        140
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": false, \"error\": \"invalid or missing signature\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify HMAC": {
+      "main": [
+        [
+          {
+            "node": "Auth Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Gate": {
+      "main": [
+        [
+          {
+            "node": "Shape",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape": {
+      "main": [
+        [
+          {
+            "node": "Poll or Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll or Message": {
+      "main": [
+        [
+          {
+            "node": "Send Poll",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Has Buttons?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Buttons?": {
+      "main": [
+        [
+          {
+            "node": "Send With Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Poll": {
+      "main": [
+        [
+          {
+            "node": "Sign Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send With Buttons": {
+      "main": [
+        [
+          {
+            "node": "Sign Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Message": {
+      "main": [
+        [
+          {
+            "node": "Sign Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Delivered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

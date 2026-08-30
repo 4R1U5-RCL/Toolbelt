@@ -1,0 +1,18 @@
+{
+  "id": "poller.failed",
+  "group": "input",
+  "kind": "alert",
+  "severity": "error",
+  "description": "A watched item reached an error terminal state. Distinct from a settle on purpose: an errored submission is news, not noise.",
+  "requires": [
+    "key"
+  ],
+  "defaults": {
+    "source": "poller",
+    "status": "",
+    "error": "none reported"
+  },
+  "title": "🔴 {source} FAILED",
+  "body": "{description} did not complete (status {status}).\nError: {error}\nref {key}",
+  "footer": "A slot was spent — read the run log before retrying."
+}

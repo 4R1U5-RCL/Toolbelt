@@ -1,0 +1,18 @@
+{
+  "id": "poller.settled",
+  "group": "input",
+  "kind": "complete",
+  "severity": "info",
+  "description": "A watched item reached a successful terminal state. `score` is required: a settle with no result is the KI-04 case the Poller holds as pending, and a source with genuinely no result should use generic.event.",
+  "requires": [
+    "key",
+    "score"
+  ],
+  "defaults": {
+    "source": "poller",
+    "date": "",
+    "description": ""
+  },
+  "title": "🟢 {source} settled — {score}",
+  "body": "{description}\nref {key} · {date}"
+}

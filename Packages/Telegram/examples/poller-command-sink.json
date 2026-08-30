@@ -1,0 +1,27 @@
+{
+  "_comment": "Drop these sinks into a Poller config to route its events through the Telegram catalogue. No coupling between the packages: the Poller shells out with the event on stdin, and each reason maps to its own template.",
+
+  "sinks": [
+    {
+      "type": "command",
+      "name": "telegram-settled",
+      "reasons": ["settled"],
+      "command": ["../Telegram/bin/telegram", "send", "poller.settled",
+                  "--data", "-", "--source", "kaggle-poller"]
+    },
+    {
+      "type": "command",
+      "name": "telegram-failed",
+      "reasons": ["failed"],
+      "command": ["../Telegram/bin/telegram", "send", "poller.failed",
+                  "--data", "-", "--source", "kaggle-poller"]
+    },
+    {
+      "type": "command",
+      "name": "telegram-stopped",
+      "reasons": ["watch_ended", "watch_failed"],
+      "command": ["../Telegram/bin/telegram", "send", "poller.stopped",
+                  "--data", "-", "--source", "kaggle-poller", "--lenient"]
+    }
+  ]
+}

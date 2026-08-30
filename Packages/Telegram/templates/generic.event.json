@@ -1,0 +1,15 @@
+{
+  "id": "generic.event",
+  "group": "input",
+  "kind": null,
+  "severity": "info",
+  "description": "Any source at all: pass a title and a body and it renders. The escape hatch, so an unmapped payload still gets through rather than being dropped.",
+  "requires": [
+    "title"
+  ],
+  "defaults": {
+    "body": ""
+  },
+  "title": "{emoji} {title}",
+  "body": "{body}"
+}

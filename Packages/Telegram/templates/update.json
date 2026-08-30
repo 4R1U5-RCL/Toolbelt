@@ -1,0 +1,17 @@
+{
+  "id": "update",
+  "group": "output",
+  "kind": null,
+  "severity": "info",
+  "description": "Progress on work still running. Deliberately quiet: no emoji escalation, because an update is not an event.",
+  "requires": [
+    "title"
+  ],
+  "defaults": {
+    "body": "",
+    "progress": ""
+  },
+  "title": "{title}",
+  "body": "{body}",
+  "footer": "{progress}"
+}

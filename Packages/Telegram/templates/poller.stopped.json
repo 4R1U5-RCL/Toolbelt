@@ -1,0 +1,14 @@
+{
+  "id": "poller.stopped",
+  "group": "input",
+  "kind": "alert",
+  "severity": "error",
+  "description": "The watch ended. The single most important message the rail carries: silence after this point means nothing is watching, not that nothing happened.",
+  "defaults": {
+    "source": "poller",
+    "stop_reason": "not stated"
+  },
+  "title": "🔴 {source} stopped",
+  "body": "reason: {stop_reason}",
+  "footer": "NOTHING is watching now. Arm a new watch before the next thing you care about."
+}

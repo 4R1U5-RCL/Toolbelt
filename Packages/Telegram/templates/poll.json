@@ -1,0 +1,21 @@
+{
+  "id": "poll",
+  "group": "interactive",
+  "kind": "attention",
+  "severity": "info",
+  "description": "A native Telegram poll. Needs n8n/telegram-interactive.json — the live fan-out's Telegram node only does sendMessage, so against that workflow this arrives as plain text (TG-18).",
+  "requires": [
+    "question"
+  ],
+  "defaults": {
+    "body": ""
+  },
+  "title": "📊 {question}",
+  "body": "{body}",
+  "poll": {
+    "question": "{question}",
+    "options_field": "options",
+    "is_anonymous": false,
+    "multiple": false
+  }
+}

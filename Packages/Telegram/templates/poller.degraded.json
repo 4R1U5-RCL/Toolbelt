@@ -1,0 +1,13 @@
+{
+  "id": "poller.degraded",
+  "group": "input",
+  "kind": "attention",
+  "severity": "warn",
+  "description": "Consecutive fetch failures. Still watching, but no longer trusted.",
+  "defaults": {
+    "source": "poller",
+    "body": ""
+  },
+  "title": "🟡 {source} degraded",
+  "body": "{body}\nStill retrying, but the last few fetches failed. Check credentials before assuming the upstream is quiet."
+}

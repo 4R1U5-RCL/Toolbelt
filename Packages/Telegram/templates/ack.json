@@ -1,0 +1,39 @@
+{
+  "id": "ack",
+  "group": "interactive",
+  "kind": "attention",
+  "severity": "warn",
+  "description": "The triage vocabulary already in use across the studio: attended, deferred, mute. Action codes match the existing receivers deliberately.",
+  "requires": [
+    "title",
+    "id"
+  ],
+  "defaults": {
+    "body": "",
+    "entity": ""
+  },
+  "title": "{emoji} {title}",
+  "body": "{body}",
+  "buttons": [
+    [
+      {
+        "text": "✅ Attended",
+        "action": "att",
+        "entity": "{entity}",
+        "id": "{id}"
+      },
+      {
+        "text": "⏳ Deferred",
+        "action": "def",
+        "entity": "{entity}",
+        "id": "{id}"
+      },
+      {
+        "text": "🔕 Mute",
+        "action": "mute",
+        "entity": "{entity}",
+        "id": "{id}"
+      }
+    ]
+  ]
+}

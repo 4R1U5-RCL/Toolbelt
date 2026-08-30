@@ -1,0 +1,13 @@
+{
+  "id": "poller.supervisor_lost",
+  "group": "input",
+  "kind": "attention",
+  "severity": "warn",
+  "description": "The session that launched the watch is gone. The watch survived; the attention did not.",
+  "defaults": {
+    "source": "poller"
+  },
+  "title": "🟡 {source} lost its supervisor",
+  "body": "The session that started this watch has ended. The watch is still running and still reporting — but nobody is reading it.",
+  "footer": "Reports will keep arriving here. Act on them yourself, or hand the watch to a successor."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "alert",
+  "group": "output",
+  "kind": "alert",
+  "severity": "error",
+  "description": "Something is wrong and wants eyes now.",
+  "requires": [
+    "title"
+  ],
+  "defaults": {
+    "body": "",
+    "action": ""
+  },
+  "title": "🚨 {title}",
+  "body": "{body}",
+  "footer": "{action}"
+}

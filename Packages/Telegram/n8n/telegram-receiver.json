@@ -1,0 +1,164 @@
+{
+  "name": "[STUDIO] Telegram Receiver (callbacks + poll answers)",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "hook",
+      "name": "Telegram Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-receiver",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "studio-telegram-receiver"
+    },
+    {
+      "id": "decode",
+      "name": "Decode + Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "\n// Decode a Telegram update. Deliberately the mirror of telegram/inbound.py and\n// telegram/keyboard.py: `<action>:<entity>:<id>`, everything after the second\n// colon is the id. IN-30 is what happens when these two drift apart.\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\n\n// Telegram signs nothing, but setWebhook accepts a secret_token which it then\n// echoes in this header. That is the real gate on this endpoint.\nconst EXPECTED = readSecret('TELEGRAM_WEBHOOK_SECRET');\n// Comma-separated chat ids. Empty means \"allow any\", which is only safe on a\n// bot nobody else knows about \u2014 set it.\nconst ALLOWED = readSecret('TELEGRAM_ALLOWED_CHATS').split(',').map((s) => s.trim()).filter(Boolean);\n\nconst sd = $getWorkflowStaticData('global');\nif (!sd.answers || typeof sd.answers !== 'object') sd.answers = {};\n\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const h = j.headers || {};\n  const u = j.body || j;\n\n  let trusted = true;\n  let note = '';\n\n  const presented = h['x-telegram-bot-api-secret-token'] || '';\n  if (EXPECTED && presented !== EXPECTED) { trusted = false; note = 'webhook secret mismatch'; }\n\n  let kind = 'unknown', action = '', entity = '', id = '', chatId = '', userId = '';\n  let username = '', queryId = '', options = [], text = '';\n\n  if (u.callback_query) {\n    const q = u.callback_query;\n    const parts = String(q.data || '').split(':');\n    while (parts.length < 3) parts.push('');\n    kind = 'callback';\n    action = parts[0];\n    entity = parts[1];\n    id = parts.slice(2).join(':');\n    queryId = String(q.id || '');\n    chatId = String(((q.message || {}).chat || {}).id || '');\n    userId = String((q.from || {}).id || '');\n    username = String((q.from || {}).username || '');\n    if (!action) { trusted = false; note = note || 'callback_data carried no action'; }\n  } else if (u.poll_answer) {\n    kind = 'poll_answer';\n    id = String(u.poll_answer.poll_id || '');\n    userId = String((u.poll_answer.user || {}).id || '');\n    username = String((u.poll_answer.user || {}).username || '');\n    options = u.poll_answer.option_ids || [];\n    // Telegram sends no chat id on a poll answer, so a chat allow-list cannot\n    // admit it. Say so rather than admitting it by accident.\n    if (ALLOWED.length) { trusted = false; note = note || 'poll answers carry no chat id'; }\n  } else if (u.message) {\n    kind = 'message';\n    chatId = String((u.message.chat || {}).id || '');\n    userId = String((u.message.from || {}).id || '');\n    text = String(u.message.text || '');\n  } else {\n    trusted = false;\n    note = note || 'no callback_query, poll_answer or message';\n  }\n\n  if (trusted && ALLOWED.length && chatId && ALLOWED.indexOf(chatId) === -1) {\n    trusted = false;\n    note = 'chat ' + chatId + ' is not on the allow-list';\n  }\n\n  if (trusted && kind !== 'unknown') {\n    // Durable enough for a v1: the answer survives restarts in the workflow\n    // record. A real answer store is the next version's job.\n    sd.answers[(entity || '-') + ':' + (id || '-')] = {\n      action: action, kind: kind, options: options,\n      user: userId, at: new Date().toISOString(),\n    };\n    const keys = Object.keys(sd.answers);\n    if (keys.length > 500) for (const k of keys.slice(0, keys.length - 500)) delete sd.answers[k];\n  }\n\n  out.push({ json: {\n    kind: kind, action: action, entity: entity, id: id,\n    chat_id: chatId, user_id: userId, username: username,\n    callback_query_id: queryId, options: options, text: text,\n    trusted: trusted, note: note,\n    __toast: trusted ? ('Recorded: ' + (action || kind)) : 'Not permitted',\n    __hasQuery: !!queryId,\n  } });\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "hasquery",
+      "name": "Was A Button?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "hasq",
+              "leftValue": "={{ $json.__hasQuery }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "answer",
+      "name": "Answer Callback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "resource": "callback",
+        "operation": "answerQuery",
+        "queryId": "={{ $json.callback_query_id }}",
+        "additionalFields": {
+          "text": "={{ $json.__toast }}"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true } }}"
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Webhook": {
+      "main": [
+        [
+          {
+            "node": "Decode + Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode + Gate": {
+      "main": [
+        [
+          {
+            "node": "Was A Button?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Was A Button?": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer Callback": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
