@@ -106,9 +106,36 @@ fourth.)*
    tracker inside entries; it is **not** part of this registry. Don't conflate external trackers with
    the `PAT/AA` IDs.
 
+## Adapting it
+
+The IDs and area names here (`HC-*` harness, `IN-*` infra, `/studio/...`) are the **studio's**
+instance — pick your own short per-area prefixes and paths. What transfers is the two-tier shape and
+the signature-first entry format.
+
+## Quickstart — one incident's lifecycle
+
+```sh
+# 1. hit an error → GREP the registry FIRST (hub + area files)
+grep -rn "ECONNREFUSED" ERRORS_AND_FINDINGS.md errors/
+
+# 2. not found? copy templates/incident-entry.md.template to the bottom of the
+#    matching topical section in errors/<area>.md — Signature line FIRST
+
+# 3. close the loop: Status: FIXED <sha>, and add a Guard so the class can't recur
+
+# 4. if it has now bitten twice across areas, mint a PAT-* in the hub and list
+#    this incident as a member
+```
+
+Lifecycle: **grep → (miss) → add entry (signature-first) → fix + guard → mark FIXED → promote to a
+`PAT-*` on the second occurrence.**
+
 ## Provenance
 
 Mirrors the live studio registry: `/studio/ERRORS_AND_FINDINGS.md` (hub, `PAT-1…15`) + `errors/*.md`
 (`HC-*` harness, `IN-*` infra, `TE-*`/`MO-*`/`EL-*` clients), wired into `harness/triage.ts` for
 verify-time known-fix matching. The templates here are the generic, drift-corrected distillation of
 that system.
+
+
+**Committed self-check:** `bash tests/verify.sh` — **32/32**. It checks the template structure and the drift-fixes, then on a fixture registry verifies signature greppability, the compact-grep-vs-`ID-[0-9]+` fragmentation caveat (live), index↔catalog consistency, and a duplicate-ID guard that reproduces the live `IN-38` bug.

@@ -78,3 +78,6 @@ Rule of thumb: **true only for this thread → handoff; true across threads → 
 The live skill, in daily use — every `handoff_*.md` under `~/.claude/data/handoffs/` is its output,
 including the handoffs produced during the session that authored this package. The fail-closed
 template check and the incremental/full scope switch are both exercised in normal operation.
+
+
+**Committed self-check:** `bash tests/verify.sh` — **15/15** (install, fail-closed template guard, the 4h scope rule across all three cases, filename convention, and end-to-end section conformance).

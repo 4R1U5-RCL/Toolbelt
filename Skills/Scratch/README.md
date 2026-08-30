@@ -83,6 +83,32 @@ Scratch is the **untracked** side; its counterparts are the tracked / durable ra
 Rule of thumb: **throwaway or in-flight → scratch; a record someone reads later → logs / memory /
 handoff.**
 
+## Adapting it
+
+The paths here (`/studio`, `~/.claude`, `clients/<slug>/`) are the **studio's** concrete instance —
+treat them as examples and map them to your own tree. What transfers is the *shape*: one ignore block
+covering every working surface + every secret, and the durable-vs-ephemeral split.
+
+## Quickstart
+
+A realistic scratch session:
+
+```sh
+# 1. append the ignore block once, per repo
+cat path/to/scratch.gitignore >> .gitignore
+
+# 2. do throwaway work in scratch/ — probe scripts, dumps, a diagram
+mkdir -p scratch && node scratch/try-thing.mjs > scratch/out.json
+
+# 3. git never sees it
+git status                 # scratch/ does not appear
+
+# 4. promote only the durable result out of scratch, into the tracked tree
+cp scratch/out.json logs/decision-input.json && git add logs/decision-input.json
+```
+
+The rule in one line: **work in `scratch/`, commit from the tracked tree.**
+
 ## Known issues / caveats
 
 1. **Same-filesystem only.** Repo `scratch/` is shared between sessions (and container↔host on a
@@ -96,6 +122,7 @@ handoff.**
    and never assume a file there is current or authoritative.
 5. **Peer registration is unreliable** — the scratch-hosted mailbox exists precisely because
    session-to-session messaging can't be trusted; recipients poll, they don't rely on a wake.
+6. **`.gitignore` is advisory, not a technical barrier.** It can be bypassed — `git add -f`, `commit -a`, copying a file into a tracked path, a symlink, a stray editor temp — so the ignore block enforces the *common* case while the never-commit rule stays a **discipline kept by habit**. If you need hard enforcement, add a pre-commit secret scan (e.g. gitleaks) on top.
 
 ## Provenance
 
@@ -104,3 +131,6 @@ Mirrors the live studio discipline: `/studio/.gitignore` ignores `scratch/`, `cl
 per-client run artifacts persist under `clients/<slug>/` as the recovery trail. The `.gitignore` block
 shipped here is lifted from that tree (plus the `anthro-bugbounty` secrets wall). Nothing here is
 executed — it is a discipline + a droppable ignore file.
+
+
+**Committed self-check:** `bash tests/verify.sh` — **29/29**. It stands up a real throwaway git repo, applies the shipped `scratch.gitignore`, and proves every surface + secret is ignored (`git check-ignore`) while normal source stays trackable and `git add -A` never stages a secret.
