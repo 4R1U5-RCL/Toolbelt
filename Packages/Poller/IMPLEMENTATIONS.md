@@ -136,7 +136,7 @@ told about (KI-02).
 ### 5. Arm it
 
 ```bash
-cd Poller
+cd Packages/Poller
 
 # 1. Prove the credentials and the endpoint. Sends nothing, writes nothing.
 ./bin/poller check --config examples/kaggle-submissions.json
