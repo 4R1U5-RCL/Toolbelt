@@ -1,0 +1,41 @@
+{
+  "id": "approval",
+  "group": "interactive",
+  "kind": "attention",
+  "severity": "warn",
+  "description": "The human gate. Approve, reject, or defer, with the verdict routed back by callback.",
+  "requires": [
+    "title",
+    "id"
+  ],
+  "defaults": {
+    "body": "",
+    "entity": "approval"
+  },
+  "title": "🔐 Approval needed — {title}",
+  "body": "{body}",
+  "buttons": [
+    [
+      {
+        "text": "✅ Approve",
+        "action": "ok",
+        "entity": "{entity}",
+        "id": "{id}"
+      },
+      {
+        "text": "❌ Reject",
+        "action": "no",
+        "entity": "{entity}",
+        "id": "{id}"
+      }
+    ],
+    [
+      {
+        "text": "⏳ Later",
+        "action": "def",
+        "entity": "{entity}",
+        "id": "{id}"
+      }
+    ]
+  ]
+}

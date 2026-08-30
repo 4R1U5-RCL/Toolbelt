@@ -1,0 +1,17 @@
+{
+  "id": "report",
+  "group": "output",
+  "kind": "complete",
+  "severity": "info",
+  "description": "A finished result. One glance line, then the detail.",
+  "requires": [
+    "title"
+  ],
+  "defaults": {
+    "body": "",
+    "source": ""
+  },
+  "title": "{emoji} {title}",
+  "body": "{body}",
+  "footer": "{source}"
+}

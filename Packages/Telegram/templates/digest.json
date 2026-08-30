@@ -1,0 +1,18 @@
+{
+  "id": "digest",
+  "group": "output",
+  "kind": "complete",
+  "severity": "info",
+  "description": "Many items rolled into one message. Use this instead of N sends — a rail that fires per item trains its reader to ignore it.",
+  "requires": [
+    "title",
+    "body"
+  ],
+  "defaults": {
+    "count": "",
+    "window": ""
+  },
+  "title": "⚙️ {title} — {count}",
+  "body": "{body}",
+  "footer": "{window}"
+}

@@ -1,0 +1,11 @@
+{
+  "key": "55881637",
+  "state": "settled",
+  "reason": "settled",
+  "severity": "info",
+  "source": "kaggle",
+  "score": "51.210",
+  "description": "challenger-2arm slot-1",
+  "date": "2026-08-30T12:00:00Z",
+  "status": "SubmissionStatus.COMPLETE"
+}

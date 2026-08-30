@@ -1,0 +1,17 @@
+{
+  "id": "handoff",
+  "group": "output",
+  "kind": "attention",
+  "severity": "info",
+  "description": "A session or agent transition, with what the successor needs.",
+  "requires": [
+    "title"
+  ],
+  "defaults": {
+    "body": "",
+    "next_step": ""
+  },
+  "title": "🔔 Handoff — {title}",
+  "body": "{body}",
+  "footer": "Next: {next_step}"
+}

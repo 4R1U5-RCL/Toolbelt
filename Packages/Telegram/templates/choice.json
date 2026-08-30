@@ -1,0 +1,36 @@
+{
+  "id": "choice",
+  "group": "interactive",
+  "kind": "attention",
+  "severity": "info",
+  "description": "Pick one of three named options. Beyond three, use a poll — a keyboard of eight buttons is unreadable on a phone.",
+  "requires": [
+    "title",
+    "id",
+    "option_a",
+    "option_b"
+  ],
+  "defaults": {
+    "body": "",
+    "entity": "choice",
+    "option_c": ""
+  },
+  "title": "🔔 {title}",
+  "body": "{body}",
+  "buttons": [
+    [
+      {
+        "text": "{option_a}",
+        "action": "a",
+        "entity": "{entity}",
+        "id": "{id}"
+      },
+      {
+        "text": "{option_b}",
+        "action": "b",
+        "entity": "{entity}",
+        "id": "{id}"
+      }
+    ]
+  ]
+}

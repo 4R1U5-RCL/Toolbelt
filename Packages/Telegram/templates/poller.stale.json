@@ -1,0 +1,15 @@
+{
+  "id": "poller.stale",
+  "group": "input",
+  "kind": "attention",
+  "severity": "warn",
+  "description": "An item has been pending past its SLA. The distinction that matters: this says the watched thing is slow, not that the watch is broken.",
+  "requires": [
+    "key"
+  ],
+  "defaults": {
+    "source": "poller"
+  },
+  "title": "🟡 {source} still pending",
+  "body": "{description} (ref {key}) has been pending past its SLA.\nThe watch is healthy; the upstream is slow."
+}
