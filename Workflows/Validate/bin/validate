@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""
+validate — OpenRouter cross-model validation (parallel panel + synthesis).
+
+Stress-tests a plan/analysis/proposal across GPT-5 + Gemini 2.5 Pro + Grok 4.6 (independent,
+parallel), reports a confidence label derived from inter-model AGREEMENT, and writes a structured
+doc. Perplexity Sonar web fact-check is opt-in (--web). Pure stdlib; needs OPENROUTER_API_KEY.
+
+Usage:
+  validate "the plan text..."                 # content as an argument
+  validate --input plan.md --subject "..."    # content from a file
+  cat plan.md | validate --input -            # content on stdin
+  validate --input plan.md --web              # + Perplexity web fact-check (external hop)
+  validate --input plan.md --panel gpt5,grok  # subset of the panel
+Options: --topic <slug> --out <path|dir> --max-tokens N --config <panel.json> --print
+"""
+import argparse, os, sys, re, datetime, pathlib
+
+HERE = pathlib.Path(__file__).resolve().parent
+PKG = HERE.parent
+sys.path.insert(0, str(PKG / "lib"))
+import validate_core as vc  # noqa: E402
+
+
+def slugify(s, fallback="validation"):
+    s = re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")
+    return (s[:48] or fallback)
+
+
+def main():
+    ap = argparse.ArgumentParser(prog="validate", description="OpenRouter cross-model validation")
+    ap.add_argument("content", nargs="?", help="content to validate (or use --input)")
+    ap.add_argument("--input", help="file with the content, or '-' for stdin")
+    ap.add_argument("--subject", default="", help="one-line subject of what's being validated")
+    ap.add_argument("--topic", help="kebab-case topic for the filename")
+    ap.add_argument("--web", action="store_true", help="also run the Perplexity web fact-check (external)")
+    ap.add_argument("--panel", help="comma keys to restrict the panel, e.g. gpt5,gemini,grok")
+    ap.add_argument("--out", help="output file or directory")
+    ap.add_argument("--max-tokens", type=int)
+    ap.add_argument("--timeout", type=int)
+    ap.add_argument("--config", default=str(PKG / "config" / "panel.json"))
+    ap.add_argument("--print", dest="do_print", action="store_true", help="also print the doc")
+    a = ap.parse_args()
+
+    api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if not api_key:
+        sys.exit("ERROR: OPENROUTER_API_KEY not set. `set -a; . /studio/.env; set +a` first, or export it.")
+
+    if a.input == "-":
+        content = sys.stdin.read()
+    elif a.input:
+        content = pathlib.Path(a.input).read_text()
+    elif a.content:
+        content = a.content
+    else:
+        sys.exit("ERROR: no content. Pass it as an argument, --input <file>, or --input - (stdin).")
+    if not content.strip():
+        sys.exit("ERROR: content is empty.")
+
+    reasoners, web_model, defaults = vc.load_panel(a.config)
+    if a.panel:
+        keep = {k.strip() for k in a.panel.split(",")}
+        reasoners = [m for m in reasoners if m["key"] in keep]
+        if not reasoners:
+            sys.exit("ERROR: --panel matched no reasoners in the config.")
+    max_tokens = a.max_tokens or defaults.get("max_tokens", 6000)
+    timeout = a.timeout or defaults.get("timeout", 220)
+
+    topic = slugify(a.topic or a.subject or "validation")
+    created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H-%MZ")
+    subject_source = "file:" + a.input if (a.input and a.input != "-") else "inline"
+
+    print("validating across: %s%s ..." % (
+        ", ".join(m["label"] for m in reasoners), " + web" if a.web else ""), file=sys.stderr)
+
+    result = vc.run_validation(a.subject, content, reasoners, api_key,
+                               web=a.web, web_model=web_model,
+                               max_tokens=max_tokens, timeout=timeout)
+    doc = vc.render_doc(result, topic, created, subject_source)
+
+    # resolve output path
+    if a.out and (os.path.isdir(a.out) or a.out.endswith("/")):
+        out_dir = a.out
+    elif a.out:
+        out_dir = None
+    else:
+        home_v = os.path.expanduser("~/.claude/data/validate")
+        out_dir = home_v if os.path.isdir(home_v) else os.getcwd()
+    if a.out and out_dir is None:
+        out_path = a.out
+    else:
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.join(out_dir, "validate_%s_%s.md" % (topic, created))
+    pathlib.Path(out_path).write_text(doc)
+
+    responded = sum(1 for r in result["reviews"] if r["ok"])
+    print("\nConfidence: %s — %s" % (result["confidence"], result["confidence_why"]))
+    print("Panel: %d/%d reasoners responded%s" % (
+        responded, len(result["reviews"]),
+        " · web fact-check " + ("ok" if result["web"] and result["web"]["ok"] else "n/a") if a.web else ""))
+    if result["disagreements"]:
+        print("Disagreements: " + "; ".join(result["disagreements"]))
+    print("Saved: %s" % out_path)
+    if a.do_print:
+        print("\n" + doc)
+
+
+if __name__ == "__main__":
+    main()

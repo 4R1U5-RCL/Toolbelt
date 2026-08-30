@@ -1,0 +1,93 @@
+<title>Validate — cross-model topology</title>
+<style>
+  :root{ --ground:#f5f7fa; --surface:#fff; --surface-2:#eef1f6; --ink:#191f2b; --muted:#5b6675;
+    --hair:#d3dae4; --accent:#5b53c6; --good:#1f924f; --warn:#a4640c;
+    --gpt:#0c8a86; --gem:#6146d6; --ds:#b5480c; --web:#8a6d0c; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --ground:#0e131d; --surface:#161d2a; --surface-2:#1b2433; --ink:#e7ecf5; --muted:#98a3b4;
+    --hair:#2a3345; --accent:#a79bff; --good:#48d17d; --warn:#e5a94a;
+    --gpt:#33cfc4; --gem:#a793ff; --ds:#e79a5a; --web:#e2c65a; } }
+  :root[data-theme="dark"]{ --ground:#0e131d; --surface:#161d2a; --surface-2:#1b2433; --ink:#e7ecf5;
+    --muted:#98a3b4; --hair:#2a3345; --accent:#a79bff; --good:#48d17d; --warn:#e5a94a;
+    --gpt:#33cfc4; --gem:#a793ff; --ds:#e79a5a; --web:#e2c65a; }
+  *{box-sizing:border-box} body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55}
+  .wrap{max-width:940px;margin:0 auto;padding:48px 24px 80px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  h1{font-size:clamp(24px,3.4vw,34px);letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+  .dek{color:var(--muted);font-size:16px;margin:0 0 26px;max-width:64ch}
+  figure{margin:0;padding:22px 20px 16px;background:var(--surface);border:1px solid var(--hair);
+    border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 24px rgba(20,30,50,.06)}
+  .scroll{overflow-x:auto} svg{display:block;width:100%;height:auto;min-width:660px;color:var(--ink)}
+  figcaption{margin-top:14px;font-size:13.5px;color:var(--muted);max-width:82ch;text-wrap:pretty}
+  figcaption b{color:var(--ink)}
+  .node{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+  .n2{fill:var(--surface-2);stroke:var(--hair);stroke-width:1.2}
+  .dash{fill:var(--surface);stroke:var(--web);stroke-width:1.5;stroke-dasharray:6 5}
+  text{fill:var(--ink)} .t{font:640 14px ui-sans-serif,system-ui,sans-serif}
+  .s{font:12px ui-monospace,Menlo,monospace;fill:var(--muted)}
+  .l{font:12px ui-sans-serif,system-ui,sans-serif;fill:var(--muted)}
+  .honest{margin-top:20px;padding:12px 16px;border:1px solid var(--hair);border-left:3px solid var(--warn);
+    border-radius:10px;background:var(--surface);font-size:14px;color:var(--ink)}
+</style>
+<div class="wrap">
+  <h1>Validate — OpenRouter cross-model panel</h1>
+  <p class="dek">A plan is stress-tested by several independent frontier models in parallel; the
+    verdict is how much they <b>agree</b>, not any one model's opinion.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 900 380" role="img" aria-label="The input goes in parallel to three independent reasoners (GPT-5, Gemini, Grok 4.6 with a DeepSeek R1 fallback), each returning strengths, risks and a stance; a synthesis step computes a confidence label from their agreement and lists disagreements, writing a doc; an opt-in Perplexity web fact-check reviews the input separately and does not vote.">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker>
+        <marker id="w" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="var(--web)"/></marker>
+      </defs>
+      <!-- input -->
+      <rect class="node" x="16" y="150" width="150" height="66" rx="9"/>
+      <text class="t" x="91" y="180" text-anchor="middle">input</text>
+      <text class="s" x="91" y="198" text-anchor="middle">plan to test</text>
+      <!-- reasoners -->
+      <rect class="node" x="250" y="40"  width="200" height="58" rx="9" style="stroke:var(--gpt)"/>
+      <text class="t" x="350" y="64" text-anchor="middle">GPT-5</text><text class="s" x="350" y="82" text-anchor="middle">openai/gpt-5</text>
+      <rect class="node" x="250" y="154" width="200" height="58" rx="9" style="stroke:var(--gem)"/>
+      <text class="t" x="350" y="178" text-anchor="middle">Gemini 2.5 Pro</text><text class="s" x="350" y="196" text-anchor="middle">google/gemini-2.5-pro</text>
+      <rect class="node" x="250" y="268" width="200" height="58" rx="9" style="stroke:var(--ds)"/>
+      <text class="t" x="350" y="290" text-anchor="middle">Grok 4.6 (xAI)</text><text class="s" x="350" y="308" text-anchor="middle">x-ai/grok-4.6 · ↳ DeepSeek R1</text>
+      <!-- input -> reasoners -->
+      <line class="l" x1="166" y1="183" x2="248" y2="69"  stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <line class="l" x1="166" y1="183" x2="248" y2="183" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <line class="l" x1="166" y1="183" x2="248" y2="297" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <text class="l" x="205" y="120" text-anchor="middle">blind · parallel</text>
+      <!-- synth -->
+      <rect class="node" x="520" y="120" width="190" height="128" rx="11"/>
+      <text class="t" x="615" y="150" text-anchor="middle">synthesize</text>
+      <text class="s" x="615" y="170" text-anchor="middle">consensus vs</text>
+      <text class="s" x="615" y="186" text-anchor="middle">disagreements</text>
+      <text class="s" x="615" y="210" text-anchor="middle" style="fill:var(--good)">confidence =</text>
+      <text class="s" x="615" y="226" text-anchor="middle" style="fill:var(--good)">agreement</text>
+      <line x1="450" y1="69"  x2="518" y2="150" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <line x1="450" y1="183" x2="518" y2="184" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <line x1="450" y1="297" x2="518" y2="218" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <text class="l" x="484" y="120" text-anchor="middle">stance+risks</text>
+      <!-- doc -->
+      <rect class="node" x="762" y="150" width="122" height="66" rx="9"/>
+      <text class="t" x="823" y="180" text-anchor="middle">doc</text>
+      <text class="s" x="823" y="198" text-anchor="middle">+ summary</text>
+      <line x1="710" y1="184" x2="760" y2="184" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#a)"/>
+      <!-- web (opt-in) -->
+      <rect class="dash" x="300" y="344" width="360" height="30" rx="8"/>
+      <text class="s" x="480" y="363" text-anchor="middle" style="fill:var(--web)">Perplexity Sonar · web fact-check · --web opt-in · does not vote</text>
+      <path d="M91,216 L91,359 L298,359" fill="none" stroke="var(--web)" stroke-width="1.4" stroke-dasharray="6 5" marker-end="url(#w)"/>
+      <path d="M660,359 L823,359 L823,218" fill="none" stroke="var(--web)" stroke-width="1.4" stroke-dasharray="6 5" marker-end="url(#w)"/>
+    </svg>
+    </div>
+    <figcaption><b>Agreement, not authority.</b> Each reasoner reviews the input independently
+      (blind to the others) and returns STRENGTHS / RISKS / ALTERNATIVES plus a machine-readable
+      STANCE. The synthesis step is <b>deterministic</b>: confidence is computed from the stances
+      (all concur → HIGH · any dissent → LOW · fewer than two responders → <span class="mono">unknown</span>),
+      never from a single model's say-so. The Perplexity web tier is opt-in and checks external facts
+      only — it doesn't cast a vote. A model that errors is marked FAILED; the run still completes.</figcaption>
+  </figure>
+  <div class="honest"><b>Carry this into every read:</b> a <span class="mono">HIGH</span> means the
+    models concurred — <b>not</b> that the answer is correct. Model output is non-deterministic; this
+    is a disagreement detector and a blind-spot spreader, not a truth oracle.</div>
+</div>
