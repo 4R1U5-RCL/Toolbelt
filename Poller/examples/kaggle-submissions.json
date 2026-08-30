@@ -1,0 +1,65 @@
+{
+  "name": "kaggle-agentsec",
+  "env_file": "/studio/.env",
+
+  "interval_seconds": 180,
+  "jitter_seconds": 15,
+  "max_duration_hours": 24,
+  "stale_after_seconds": 21600,
+  "notify_states": ["settled", "failed"],
+  "degraded_after_failures": 3,
+
+  "state_dir": "/studio/scratch/kaggle/.poller",
+
+  "source": {
+    "type": "kaggle_submissions",
+    "competition": "ai-agent-security-multi-step-tool-attacks"
+  },
+
+  "templates": {
+    "settled": {
+      "title": "Kaggle settled: {score}",
+      "body": "*{description}*\nscore *{score}*  ·  ref `{key}`  ·  {date}"
+    },
+    "failed": {
+      "title": "Kaggle submission FAILED",
+      "body": "`{description}` did not score (status {status}).\nError: {error}\nA submission slot was spent — read the run log before resubmitting."
+    },
+    "stale": {
+      "title": "Kaggle submission still pending",
+      "body": "`{description}` (ref {key}) has been pending past its SLA. The poller is fine; Kaggle is slow."
+    },
+    "watch_ended": {
+      "title": "Kaggle poller stopped",
+      "body": "reason: {stop_reason}\nNOTHING is watching {source} now — arm a new watch before the next submission."
+    },
+    "watch_failed": {
+      "title": "Kaggle poller FAILED",
+      "body": "{stop_reason}\nNothing is watching the competition. Check KAGGLE_API_TOKEN first (Bearer, not Basic)."
+    }
+  },
+
+  "sinks": [
+    {
+      "type": "file",
+      "name": "findings",
+      "path": "/studio/scratch/kaggle/FINDINGS_poller_{key}.md",
+      "template": "{title}\n\n{body}"
+    },
+    {
+      "type": "slack",
+      "name": "slack",
+      "token_env": "SLACK_BOT_TOKEN",
+      "channel_env": "SLACK_KAGGLE_CHANNEL_ID",
+      "template": ":bar_chart: *{title}*\n{body}\n— Chiron (poller)"
+    },
+    {
+      "type": "notify_webhook",
+      "name": "telegram",
+      "source": "kaggle-poller",
+      "reasons": ["settled", "failed", "watch_failed", "watch_ended", "degraded"],
+      "title_template": "{title}",
+      "body_template": "{body}"
+    }
+  ]
+}

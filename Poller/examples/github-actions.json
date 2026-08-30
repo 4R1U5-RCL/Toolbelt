@@ -1,0 +1,48 @@
+{
+  "name": "gh-actions",
+  "env_file": "~/.config/poller.env",
+
+  "interval_seconds": 60,
+  "max_duration_hours": 4,
+  "notify_states": ["settled", "failed"],
+
+  "source": {
+    "type": "http_json",
+    "url": "https://api.github.com/repos/OWNER/REPO/actions/runs",
+    "params": { "per_page": "20", "branch": "main" },
+    "headers": { "Accept": "application/vnd.github+json" },
+    "auth": { "scheme": "bearer", "token": "@env:GITHUB_TOKEN" },
+
+    "items_path": "workflow_runs",
+    "key_field": "id",
+    "title_template": "{name} #{run_number} ({head_branch})",
+
+    "state": {
+      "field": "conclusion",
+      "match": "exact",
+      "default": "pending",
+      "map": {
+        "settled": ["success"],
+        "failed": ["failure", "cancelled", "timed_out", "startup_failure"]
+      }
+    },
+
+    "fields": {
+      "name": "name",
+      "run_number": "run_number",
+      "head_branch": "head_branch",
+      "url": "html_url",
+      "actor": "actor.login"
+    }
+  },
+
+  "templates": {
+    "settled": { "title": "CI green: {name}", "body": "{url}\nby {actor}" },
+    "failed": { "title": "CI FAILED: {name}", "body": "{url}\nby {actor} on {head_branch}" }
+  },
+
+  "sinks": [
+    { "type": "stdout" },
+    { "type": "file", "path": "~/ci-reports.md" }
+  ]
+}

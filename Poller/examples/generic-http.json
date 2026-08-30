@@ -1,0 +1,37 @@
+{
+  "name": "example",
+  "env_file": "~/.config/poller.env",
+
+  "interval_seconds": 120,
+  "max_duration_hours": 0,
+
+  "source": {
+    "type": "http_json",
+    "url": "https://api.example.com/v1/jobs",
+    "auth": { "scheme": "header", "header": "X-API-Key", "token": "@env:EXAMPLE_API_KEY" },
+
+    "items_path": "data.jobs",
+    "key_field": "job_id",
+    "title_template": "{label}",
+
+    "state": {
+      "field": "state",
+      "match": "icontains",
+      "default": "pending",
+      "map": {
+        "settled": ["finished", "done"],
+        "failed": ["error", "aborted"],
+        "pending": ["queued", "running"]
+      },
+      "settled_requires": ["result"]
+    },
+
+    "fields": { "label": "label", "result": "result.value", "finished_at": "finished_at" },
+    "filter": [{ "field": "owner", "equals": "me" }]
+  },
+
+  "sinks": [
+    { "type": "file", "path": "~/poller/example.md" },
+    { "type": "webhook", "url": "@env:EXAMPLE_WEBHOOK_URL", "field": "content" }
+  ]
+}
