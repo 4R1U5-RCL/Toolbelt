@@ -31,7 +31,9 @@ rediscover them the hard way.
 | [TG-16](#tg-16) | A secret could reach a log through a careless format | Redacting formatter; query strings stripped from URLs | Never put a token in a config file — use `@env:` |
 | [TG-17](#tg-17) | A blank where data should be looked like a quiet success | `requires` separates a data bug from a template bug | Declare the fields a template cannot do without |
 | [TG-18](#tg-18) | An interactive feature degraded silently to plain text | `render` says which workflow a template needs | Deploy the interactive workflow before using polls |
-| [TG-19](#tg-19) | Inline keyboards were silently discarded — on the live rail, always | A literal `replyMarkup` behind an IF branch, in the new workflow | Send interactive templates with `--url-env NOTIFY_INTERACTIVE_URL` |
+| [TG-19](#tg-19) | Inline keyboards were silently discarded — on the live rail, always | A literal `replyMarkup`, plus TG-20 | Send interactive templates with `--url-env NOTIFY_INTERACTIVE_URL` |
+| [TG-20](#tg-20) | A `fixedCollection` cannot be filled from an expression | Literal keyboard structure, expressions only at the leaves | Keep to three buttons; overflow is counted, not silent |
+| [TG-21](#tg-21) | Every inbound callback was rejected 401, then retried into a storm | A Telegram Trigger, which owns its endpoint and answers correctly | Only one receiver can own the bot — decide which |
 
 ---
 
@@ -437,11 +439,103 @@ mismatch, and that mismatch was real, but on the current configuration those
 buttons would not have rendered at all.
 
 **What the package does.** `[STUDIO] Telegram Interactive` branches on `__hasKb`
-with an **IF node** and routes to one of two Telegram nodes, each with a
-**literal** `replyMarkup` — `"inlineKeyboard"` on one, `"none"` on the other.
-Two nodes instead of one conditional, because the conditional is the bug.
+and routes to Telegram nodes with a **literal** `replyMarkup` — `"inlineKeyboard"`
+or `"none"`. Nodes instead of one conditional, because the conditional is the bug.
 
-**Still your job.** Two things. Send interactive templates with `--url-env
-NOTIFY_INTERACTIVE_URL` so they reach the workflow that can carry them. And when
-adding any Telegram node anywhere: **`replyMarkup` is a literal, never an
-expression.** Branch instead. The failure mode gives you nothing to notice.
+**This fix alone was not enough.** Making `replyMarkup` literal and leaving the
+keyboard itself as an expression produced exactly the same silent failure — see
+TG-20, which is the other half and was found by hard-coding a keyboard to see
+whether anything could render at all.
+
+**Still your job.** Send interactive templates with `--url-env
+NOTIFY_INTERACTIVE_URL`. And when adding any Telegram node anywhere:
+**`replyMarkup` is a literal, never an expression.** The failure mode gives you
+nothing to notice.
+
+---
+
+<a name="tg-20"></a>
+## TG-20 — A `fixedCollection` cannot be filled from an expression
+
+**What you see.** Identical to TG-19, and reached immediately after fixing it: a
+literal `replyMarkup: "inlineKeyboard"`, a correct keyboard object in the item,
+`Send With Buttons` running green — and Telegram's response with no
+`reply_markup`. Plain text again.
+
+**How it was found.** By replacing the whole keyboard with a **hard-coded** one
+and sending it. That message arrived with buttons. So the structure was fine and
+the *expression* was the problem, which is a one-experiment answer to a question
+that could otherwise have absorbed an afternoon.
+
+**Why.** `inlineKeyboard` is a `fixedCollection` parameter. n8n resolves the
+declared nested shape — `rows` → `row` → `buttons` → `{text, additionalFields}` —
+from the node's own parameter tree. Handing it `={{ $json.__kb }}` gives it an
+expression where it expects that tree, and it finds no rows to walk. As with
+TG-19: no error, no warning, message delivered.
+
+**What the package does.** The structure is literal in the node and only the
+leaves are expressions:
+
+```
+"inlineKeyboard": {"rows": [{"row": {"buttons": [
+    {"text": "={{ $json.__b1text }}",
+     "additionalFields": {"callback_data": "={{ $json.__b1data }}"}}, …]}}]}
+```
+
+Which makes the button count **structural**. So the `Shape` node flattens the
+template's keyboard into `__b1text`/`__b1data`…, sets `__btnCount`, and a Switch
+routes to `Send 1 Button`, `Send 2 Buttons` or `Send 3 Buttons`. One row of up
+to three, which is also as many as reads well on a phone.
+
+**Still your job.** Keep interactive templates to three buttons. A fourth is
+**counted, not silently dropped** — `__btnDropped` records it — because a button
+that never appears is a decision the human was never offered. If you need more,
+add a fourth node and a Switch rule, or use a poll.
+
+---
+
+<a name="tg-21"></a>
+## TG-21 — Every inbound callback was rejected 401, then retried into a storm
+
+**What you see.** Buttons that do nothing when pressed. On the n8n side, a
+receiver workflow with executions — so it *looks* like traffic is arriving and
+being handled.
+
+**How it was found.** A real button press during this package's round-trip test.
+The callback `ok:tgpkg:proof-3` reached n8n and ended at `Reject 401`. Checking
+the history: **every execution of `dirnotif-feedback` and `triage-receiver`, for
+as far back as the API returns, ends at `Reject 401`.** Neither has ever
+successfully processed a callback.
+
+**Why, twice.**
+
+*The gate.* Both are generic Webhook nodes guarded by an HMAC verify. **Telegram
+does not sign its updates** — it has no shared secret with the receiver and no
+signature header. The check can never pass. The intent was there: `setWebhook`
+accepts a `secret_token` echoed back as `X-Telegram-Bot-Api-Secret-Token`, and
+`/studio/.env` even holds a `DIRNOTIF_TG_WEBHOOK_SECRET`. The receiver just
+checks the wrong thing.
+
+*The storm.* Telegram retries any non-2xx. One press produced **ten executions
+in seventy seconds**, all 401. A receiver that refuses with an error code earns
+traffic rather than stopping it.
+
+**What the package does.** `[STUDIO] Telegram Receiver` is built on a **Telegram
+Trigger**, not a generic Webhook node, which changes three things at once:
+
+* n8n calls `setWebhook` itself on activation, so pointing the bot at it needs no
+  bot token in anyone's hands (TG-08) and no manual API call;
+* n8n owns the endpoint and answers Telegram correctly, so there is no path to
+  returning a non-2xx and no retry storm;
+* the gate that remains is a **chat allow-list that fails closed** — unset, it
+  admits only the owner's chat, because an unconfigured allow-list on a bot
+  anyone can find is not a gate.
+
+That last point is a deliberate divergence from `inbound.decode_update`, which
+hard-codes nothing and takes its allow-list from the caller — right for a
+library, wrong for a public endpoint. `tests/test_n8n_parity.py` asserts both
+behaviours so the difference stays intentional.
+
+**Still your job.** A bot has one webhook URL (TG-09), so activating this takes
+it from the incumbent. Here that cost nothing, because the incumbent had never
+worked — but check the execution history before assuming the same elsewhere.

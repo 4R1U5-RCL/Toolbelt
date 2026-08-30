@@ -24,7 +24,7 @@ this package should make on its own.
 | **Send a native poll** | Its Telegram node is hard-wired to `sendMessage`. An envelope carrying `meta.poll` is delivered as plain text, successfully, with no error (TG-18) |
 | **Receive an answer** | It is send-only. Button presses arrive as Telegram *updates* on the bot's webhook, which is a different endpoint entirely |
 
-So this directory adds two workflows, both deployed **inactive**:
+So this directory adds two workflows, both now deployed and **ACTIVE**:
 
 ```
 [STUDIO] Telegram Interactive          — sendMessage OR sendPoll, from one envelope
@@ -41,8 +41,11 @@ So this directory adds two workflows, both deployed **inactive**:
   for n8n to expose the keyboard parameter at all (TG-19).
 
 [STUDIO] Telegram Receiver             — callback_query AND poll_answer
-  Telegram Webhook → Decode + Gate → Was A Button? ─┬→ Answer Callback ─┐
-                                                    └───────────────────┴→ Respond 200
+  Telegram Trigger → Decode + Gate → Was A Button? ─→ Answer Callback
+
+  A Telegram TRIGGER, not a webhook: n8n calls setWebhook itself (no bot token
+  needed anywhere) and answers Telegram correctly, so there is no way to return
+  a non-2xx and earn a retry storm (TG-21).
 ```
 
 `build_workflows.py` regenerates both:
@@ -95,40 +98,40 @@ since the fan-out uses it).
 buttons. Callers reach it with
 `./bin/telegram send <template> --url-env NOTIFY_INTERACTIVE_URL`.
 
-### `[STUDIO] Telegram Receiver` — read TG-09 before activating
+### `[STUDIO] Telegram Receiver` — now owns the bot's webhook
 
-Path `/webhook/telegram-receiver`.
+It is a **Telegram Trigger**, so activation *is* the wiring: n8n calls
+`setWebhook` itself using the stored credential. No bot token passes through
+anyone's hands (TG-08), and there is no manual API call to get wrong.
 
-**A Telegram bot has exactly one webhook URL.** Two receivers already exist —
-`triage-receiver` and `dirnotif-feedback` — on different paths, so at most one
-of them is currently receiving anything. Pointing the bot at this one *takes the
-URL away* from whichever holds it.
+**A Telegram bot has exactly one webhook URL** (TG-09), so activating this took
+it from `dirnotif-feedback`. That cost nothing, and the evidence is worth
+keeping: **every execution `dirnotif-feedback` and `triage-receiver` have ever
+run ends at `Reject 401`.** Both are generic webhooks guarded by an HMAC check,
+and Telegram does not sign its updates, so the check can never pass. The inbound
+half of this rail had never worked (TG-21).
 
-That is deliberate: this receiver is meant to **replace** the bespoke ones. It
-decodes the same `<action>:<entity>:<id>` scheme, and its `att` / `def` / `mute`
-action codes are the same vocabulary they route on. But it does not yet perform
-their side effects (their Supabase writes), so swapping the webhook over would
-record the answer without doing what those workflows do with it.
+That also means this receiver does not yet carry those workflows' side effects
+(their Supabase writes) — but there were no working side effects to preserve. If
+you want them, port them onto this receiver rather than switching back.
 
-Before activating:
+Configuration, both optional:
 
-1. Check what the bot's webhook currently points at (`getWebhookInfo` — needs
-   the bot token, so run it from n8n, not from here: TG-08).
-2. Decide whether this receiver replaces the incumbent or waits until it can
-   carry the incumbent's side effects too.
-3. Set `TELEGRAM_WEBHOOK_SECRET` in n8n and pass the same value as
-   `secret_token` to `setWebhook`. **Telegram signs nothing** — that echoed
-   header is the only real gate this endpoint has.
-4. Set `TELEGRAM_ALLOWED_CHATS` (comma-separated). Empty means allow any chat,
-   which is only safe on a bot nobody else knows about, and you cannot know
-   that (TG-15).
+* `TELEGRAM_ALLOWED_CHATS` — comma-separated. **Unset, it fails closed to the
+  owner's chat**, because an unconfigured allow-list on a bot anyone can find is
+  not a gate. Set it to widen.
+* `TELEGRAM_WEBHOOK_SECRET` — only meaningful on a generic-webhook deployment,
+  where `setWebhook` was given a `secret_token`. On the trigger path n8n owns the
+  endpoint and there are no headers to check. The check discriminates on the
+  transport, not on whether the header is present, so it cannot be bypassed by
+  omitting it.
 
-### Why it answers 200 to a hostile update
+### Why a refusal is never a status code
 
-Telegram retries any non-2xx. Answering 401 to a crafted update earns a retry
-loop rather than stopping one, so the receiver always responds 200 and records
-the refusal in the `trusted` field instead. The refusal is in the data, not the
-status code.
+Telegram retries any non-2xx — one press against the old receiver produced ten
+executions in seventy seconds. The trigger answers Telegram itself, so this
+workflow has no way to return an error at all. A refused update is recorded in
+the `trusted` field and goes no further.
 
 ## Where answers go, for now
 

@@ -109,17 +109,28 @@ for (const it of $input.all()) {
     __anonymous: isPoll ? poll.is_anonymous !== false : true,
   }) };
 
+  // TG-20: the keyboard is flattened into FLAT LEAF FIELDS, not a nested object.
+  // n8n cannot populate a fixedCollection parameter from an expression — the
+  // structure must be literal in the node, with expressions only at the leaves.
+  // Passing the whole object was discarded silently, which is why buttons never
+  // appeared. Hence one row of up to three buttons, and a Switch on the count.
   const rm = meta.reply_markup;
+  const flat = [];
   if (rm && Array.isArray(rm.inline_keyboard)) {
-    item.json.__kb = { rows: rm.inline_keyboard.map((r) => ({
-      row: { buttons: r.map((btn) => ({
-        text: btn.text,
-        additionalFields: { callback_data: btn.callback_data },
-      })) },
-    })) };
-    item.json.__hasKb = true;
-  } else {
-    item.json.__hasKb = false;
+    for (const row of rm.inline_keyboard) {
+      for (const btn of row || []) {
+        if (btn && btn.text) flat.push(btn);
+      }
+    }
+  }
+  const MAX_BUTTONS = 3;
+  item.json.__btnDropped = Math.max(0, flat.length - MAX_BUTTONS);
+  const shown = flat.slice(0, MAX_BUTTONS);
+  item.json.__btnCount = shown.length;
+  item.json.__hasKb = shown.length > 0;
+  for (let i = 0; i < MAX_BUTTONS; i++) {
+    item.json['__b' + (i + 1) + 'text'] = shown[i] ? String(shown[i].text) : '';
+    item.json['__b' + (i + 1) + 'data'] = shown[i] ? String(shown[i].callback_data) : '';
   }
   if (it.binary) item.binary = it.binary;
   out.push(item);
@@ -205,24 +216,81 @@ INTERACTIVE = {
                              "rightValue": "",
                              "operator": {"type": "boolean", "operation": "true"}}],
              "combinator": "and"}, "options": {}}},
-        # TG-19: `replyMarkup` MUST be a literal, never an expression. The
-        # `inlineKeyboard` parameter is gated by displayOptions on this value, and
-        # n8n evaluates displayOptions against the RAW parameter — so an
-        # expression never equals 'inlineKeyboard', the keyboard is skipped, and
-        # the message is delivered as plain text with no error anywhere. That is
-        # why the live fan-out has never actually attached a keyboard. Hence two
-        # nodes behind an IF instead of one node with a conditional.
-        {"id": "sendkb", "name": "Send With Buttons", "type": "n8n-nodes-base.telegram",
-         "typeVersion": 1.2, "position": [1340, -20],
+        {"id": "howmany", "name": "How Many Buttons", "type": "n8n-nodes-base.switch",
+         "typeVersion": 3, "position": [1340, -140],
+         "parameters": {"rules": {"values": [
+             {"conditions": {"options": {"caseSensitive": True,
+                                         "typeValidation": "loose", "version": 2},
+                             "conditions": [{"id": "one",
+                                             "leftValue": "={{ $json.__btnCount }}",
+                                             "rightValue": 1,
+                                             "operator": {"type": "number",
+                                                          "operation": "equals"}}],
+                             "combinator": "and"},
+              "outputKey": "1"},
+             {"conditions": {"options": {"caseSensitive": True,
+                                         "typeValidation": "loose", "version": 2},
+                             "conditions": [{"id": "two",
+                                             "leftValue": "={{ $json.__btnCount }}",
+                                             "rightValue": 2,
+                                             "operator": {"type": "number",
+                                                          "operation": "equals"}}],
+                             "combinator": "and"},
+              "outputKey": "2"},
+             {"conditions": {"options": {"caseSensitive": True,
+                                         "typeValidation": "loose", "version": 2},
+                             "conditions": [{"id": "three",
+                                             "leftValue": "={{ $json.__btnCount }}",
+                                             "rightValue": 3,
+                                             "operator": {"type": "number",
+                                                          "operation": "equals"}}],
+                             "combinator": "and"},
+              "outputKey": "3"}]},
+             "options": {}}},
+        # TG-19 + TG-20: `replyMarkup` is a LITERAL, and the `inlineKeyboard`
+        # structure is LITERAL too — only the leaf values are expressions. Both
+        # were needed. An expression in either place is discarded in silence, and
+        # the message goes out as plain text with every node green. That is why
+        # there is one node per button count instead of one node that adapts.
+        {"id": "sendkb1", "name": "Send 1 Button", "type": "n8n-nodes-base.telegram",
+         "typeVersion": 1.2, "position": [1560, -210],
          "parameters": {"resource": "message", "operation": "sendMessage",
                         "chatId": "={{ $json.__chatId }}",
                         "text": "={{ $json.__text }}",
-                        # parse_mode None deliberately: the package emits plain
-                        # text and markup here would be transmitted, not rendered.
                         "additionalFields": {"appendAttribution": False,
                                              "parse_mode": "None"},
                         "replyMarkup": "inlineKeyboard",
-                        "inlineKeyboard": "={{ $json.__kb }}"},
+                        "inlineKeyboard": {"rows": [{"row": {"buttons": [{"text": "={{ $json.__b1text }}", "additionalFields": {"callback_data": "={{ $json.__b1data }}"}}]}}]}},
+         "credentials": TELEGRAM_CREDENTIAL},
+        # TG-19 + TG-20: `replyMarkup` is a LITERAL, and the `inlineKeyboard`
+        # structure is LITERAL too — only the leaf values are expressions. Both
+        # were needed. An expression in either place is discarded in silence, and
+        # the message goes out as plain text with every node green. That is why
+        # there is one node per button count instead of one node that adapts.
+        {"id": "sendkb2", "name": "Send 2 Buttons", "type": "n8n-nodes-base.telegram",
+         "typeVersion": 1.2, "position": [1560, -120],
+         "parameters": {"resource": "message", "operation": "sendMessage",
+                        "chatId": "={{ $json.__chatId }}",
+                        "text": "={{ $json.__text }}",
+                        "additionalFields": {"appendAttribution": False,
+                                             "parse_mode": "None"},
+                        "replyMarkup": "inlineKeyboard",
+                        "inlineKeyboard": {"rows": [{"row": {"buttons": [{"text": "={{ $json.__b1text }}", "additionalFields": {"callback_data": "={{ $json.__b1data }}"}}, {"text": "={{ $json.__b2text }}", "additionalFields": {"callback_data": "={{ $json.__b2data }}"}}]}}]}},
+         "credentials": TELEGRAM_CREDENTIAL},
+        # TG-19 + TG-20: `replyMarkup` is a LITERAL, and the `inlineKeyboard`
+        # structure is LITERAL too — only the leaf values are expressions. Both
+        # were needed. An expression in either place is discarded in silence, and
+        # the message goes out as plain text with every node green. That is why
+        # there is one node per button count instead of one node that adapts.
+        {"id": "sendkb3", "name": "Send 3 Buttons", "type": "n8n-nodes-base.telegram",
+         "typeVersion": 1.2, "position": [1560, -30],
+         "parameters": {"resource": "message", "operation": "sendMessage",
+                        "chatId": "={{ $json.__chatId }}",
+                        "text": "={{ $json.__text }}",
+                        "additionalFields": {"appendAttribution": False,
+                                             "parse_mode": "None"},
+                        "replyMarkup": "inlineKeyboard",
+                        "inlineKeyboard": {"rows": [{"row": {"buttons": [{"text": "={{ $json.__b1text }}", "additionalFields": {"callback_data": "={{ $json.__b1data }}"}}, {"text": "={{ $json.__b2text }}", "additionalFields": {"callback_data": "={{ $json.__b2data }}"}}, {"text": "={{ $json.__b3text }}", "additionalFields": {"callback_data": "={{ $json.__b3data }}"}}]}}]}},
          "credentials": TELEGRAM_CREDENTIAL},
         {"id": "sendmsg", "name": "Send Message", "type": "n8n-nodes-base.telegram",
          "typeVersion": 1.2, "position": [1340, 160],
@@ -260,10 +328,16 @@ INTERACTIVE = {
             [{"node": "Send Poll", "type": "main", "index": 0}],
             [{"node": "Has Buttons?", "type": "main", "index": 0}]]},
         "Has Buttons?": {"main": [
-            [{"node": "Send With Buttons", "type": "main", "index": 0}],
+            [{"node": "How Many Buttons", "type": "main", "index": 0}],
             [{"node": "Send Message", "type": "main", "index": 0}]]},
+        "How Many Buttons": {"main": [
+            [{"node": "Send 1 Button", "type": "main", "index": 0}],
+            [{"node": "Send 2 Buttons", "type": "main", "index": 0}],
+            [{"node": "Send 3 Buttons", "type": "main", "index": 0}]]},
         "Send Poll": {"main": [[{"node": "Sign Response", "type": "main", "index": 0}]]},
-        "Send With Buttons": {"main": [[{"node": "Sign Response", "type": "main", "index": 0}]]},
+        "Send 1 Button": {"main": [[{"node": "Sign Response", "type": "main", "index": 0}]]},
+        "Send 2 Buttons": {"main": [[{"node": "Sign Response", "type": "main", "index": 0}]]},
+        "Send 3 Buttons": {"main": [[{"node": "Sign Response", "type": "main", "index": 0}]]},
         "Send Message": {"main": [[{"node": "Sign Response", "type": "main", "index": 0}]]},
         "Sign Response": {"main": [[{"node": "Respond Delivered", "type": "main", "index": 0}]]},
     },
@@ -272,10 +346,21 @@ INTERACTIVE = {
 # ---------------------------------------------------------------------------
 # [STUDIO] Telegram Receiver — one generic decoder for every interactive send
 #
-# TG-09: a bot has exactly ONE webhook URL. Activating this receiver means
-# taking that URL from whatever holds it now (`triage-receiver`,
-# `dirnotif-feedback`), so it is a decision about which receiver owns the bot,
-# not an addition alongside them.
+# Built on a **Telegram Trigger**, not a generic Webhook node. That choice is
+# load-bearing twice over:
+#
+#   * n8n calls `setWebhook` itself on activation, using the stored bot
+#     credential — so pointing the bot here needs no bot token in anyone's hands
+#     (TG-08), and no manual API call.
+#   * Telegram signs nothing. The incumbent receivers (`triage-receiver`,
+#     `dirnotif-feedback`) are generic webhooks guarded by an HMAC check, which
+#     an update can never satisfy — so they reject 100% of what they receive and
+#     Telegram retries each one into a storm (TG-21). The trigger owns its own
+#     endpoint and answers correctly.
+#
+# TG-09 still applies: a bot has exactly ONE webhook URL, so activating this
+# takes it from whatever holds it now. That is the intent — those receivers have
+# never once succeeded — but it is a decision, not a side effect.
 # ---------------------------------------------------------------------------
 
 DECODE_JS = r"""
@@ -291,12 +376,17 @@ const readSecret = (k) => {
   return (v === null || v === undefined) ? '' : String(v);
 };
 
-// Telegram signs nothing, but setWebhook accepts a secret_token which it then
-// echoes in this header. That is the real gate on this endpoint.
+// Only meaningful on a generic-webhook deployment, where setWebhook was given a
+// secret_token that Telegram echoes back in this header. On the Telegram Trigger
+// n8n owns the endpoint and there are no headers to check, so this is skipped —
+// the chat allow-list below is the gate that actually runs.
 const EXPECTED = readSecret('TELEGRAM_WEBHOOK_SECRET');
-// Comma-separated chat ids. Empty means "allow any", which is only safe on a
-// bot nobody else knows about — set it.
-const ALLOWED = readSecret('TELEGRAM_ALLOWED_CHATS').split(',').map((s) => s.trim()).filter(Boolean);
+// Comma-separated chat ids. TG-21: this defaults to the owner's chat rather than
+// to "allow any". An unset allow-list on a reachable bot is an open door, and
+// this endpoint's other gate (the webhook secret) is also skipped when unset —
+// so failing open on both would mean no gate at all. Set the env var to widen it.
+const ALLOWED = (readSecret('TELEGRAM_ALLOWED_CHATS') || '8859170398')
+  .split(',').map((s) => s.trim()).filter(Boolean);
 
 const sd = $getWorkflowStaticData('global');
 if (!sd.answers || typeof sd.answers !== 'object') sd.answers = {};
@@ -310,8 +400,15 @@ for (const it of $input.all()) {
   let trusted = true;
   let note = '';
 
+  // Discriminate on the TRANSPORT, not on whether the header happens to be
+  // present. The Telegram Trigger hands over a bare update with no headers at
+  // all; a generic webhook always has them. Skipping merely because the header
+  // is missing would let anyone bypass the gate by omitting it.
+  const viaTrigger = !j.headers;
   const presented = h['x-telegram-bot-api-secret-token'] || '';
-  if (EXPECTED && presented !== EXPECTED) { trusted = false; note = 'webhook secret mismatch'; }
+  if (EXPECTED && !viaTrigger && presented !== EXPECTED) {
+    trusted = false; note = 'webhook secret mismatch';
+  }
 
   let kind = 'unknown', action = '', entity = '', id = '', chatId = '', userId = '';
   let username = '', queryId = '', options = [], text = '';
@@ -380,10 +477,12 @@ RECEIVER = {
     "name": "[STUDIO] Telegram Receiver (callbacks + poll answers)",
     "settings": {"executionOrder": "v1"},
     "nodes": [
-        {"id": "hook", "name": "Telegram Webhook", "type": "n8n-nodes-base.webhook",
-         "typeVersion": 2, "position": [0, 0],
-         "parameters": {"httpMethod": "POST", "path": "telegram-receiver",
-                        "responseMode": "responseNode", "options": {"rawBody": True}},
+        {"id": "hook", "name": "Telegram Trigger",
+         "type": "n8n-nodes-base.telegramTrigger", "typeVersion": 1.2,
+         "position": [0, 0],
+         "parameters": {"updates": ["callback_query", "poll_answer", "message"],
+                        "additionalFields": {}},
+         "credentials": TELEGRAM_CREDENTIAL,
          "webhookId": "studio-telegram-receiver"},
         {"id": "decode", "name": "Decode + Gate", "type": "n8n-nodes-base.code",
          "typeVersion": 2, "position": [220, 0],
@@ -402,22 +501,15 @@ RECEIVER = {
                         "queryId": "={{ $json.callback_query_id }}",
                         "additionalFields": {"text": "={{ $json.__toast }}"}},
          "credentials": TELEGRAM_CREDENTIAL},
-        {"id": "respond", "name": "Respond 200",
-         "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1,
-         "position": [880, 0],
-         # Always 200, even when untrusted. Telegram retries a non-2xx, so
-         # answering 401 to a hostile update earns a retry loop instead of
-         # stopping one; the refusal is recorded in `trusted`, not in the status.
-         "parameters": {"respondWith": "json",
-                        "responseBody": '={{ { "ok": true } }}'}},
     ],
     "connections": {
-        "Telegram Webhook": {"main": [[{"node": "Decode + Gate", "type": "main", "index": 0}]]},
+        "Telegram Trigger": {"main": [[{"node": "Decode + Gate", "type": "main", "index": 0}]]},
         "Decode + Gate": {"main": [[{"node": "Was A Button?", "type": "main", "index": 0}]]},
+        # The trigger answers Telegram itself, so there is no respond node and no
+        # way to accidentally return a non-2xx and earn a retry storm (TG-21).
+        # A refusal is recorded in `trusted`, never in the status code.
         "Was A Button?": {"main": [
-            [{"node": "Answer Callback", "type": "main", "index": 0}],
-            [{"node": "Respond 200", "type": "main", "index": 0}]]},
-        "Answer Callback": {"main": [[{"node": "Respond 200", "type": "main", "index": 0}]]},
+            [{"node": "Answer Callback", "type": "main", "index": 0}], []]},
     },
 }
 

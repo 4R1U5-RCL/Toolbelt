@@ -80,7 +80,7 @@
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "\n// Decide whether this envelope is a poll or a message, and shape it for the\n// delivery node. Mirrors telegram/template.py's `Message.meta()`.\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const b = j.body || j;\n  const meta = b.meta || {};\n  const poll = meta.poll;\n  const isPoll = !!(poll && Array.isArray(poll.options) && poll.options.length >= 2);\n\n  const item = { json: Object.assign({}, j, {\n    __isPoll: isPoll,\n    // TG-12: the literal is a last-resort fallback. If TELEGRAM_DEFAULT_CHAT is\n    // unset, messages go THERE rather than failing \u2014 set it deliberately.\n    __chatId: b.chat_id || readSecret('TELEGRAM_DEFAULT_CHAT') || '8859170398',\n    __text: b.message || b.text || '(no message)',\n    __question: isPoll ? String(poll.question || b.message || '').slice(0, 300) : '',\n    // The Telegram node wants options as a newline-joined string.\n    __options: isPoll ? poll.options.map((o) => String(o).slice(0, 100)).join('\\n') : '',\n    __multiple: isPoll ? !!poll.allows_multiple_answers : false,\n    __anonymous: isPoll ? poll.is_anonymous !== false : true,\n  }) };\n\n  const rm = meta.reply_markup;\n  if (rm && Array.isArray(rm.inline_keyboard)) {\n    item.json.__kb = { rows: rm.inline_keyboard.map((r) => ({\n      row: { buttons: r.map((btn) => ({\n        text: btn.text,\n        additionalFields: { callback_data: btn.callback_data },\n      })) },\n    })) };\n    item.json.__hasKb = true;\n  } else {\n    item.json.__hasKb = false;\n  }\n  if (it.binary) item.binary = it.binary;\n  out.push(item);\n}\nreturn out;\n"
+        "jsCode": "\n// Decide whether this envelope is a poll or a message, and shape it for the\n// delivery node. Mirrors telegram/template.py's `Message.meta()`.\nconst readSecret = (k) => {\n  let v = null;\n  try { v = $env[k]; } catch (e) {}\n  if (v === null || v === undefined || v === '') {\n    try { v = typeof $vars !== 'undefined' ? $vars[k] : null; } catch (e) {}\n  }\n  return (v === null || v === undefined) ? '' : String(v);\n};\nconst out = [];\nfor (const it of $input.all()) {\n  const j = it.json;\n  const b = j.body || j;\n  const meta = b.meta || {};\n  const poll = meta.poll;\n  const isPoll = !!(poll && Array.isArray(poll.options) && poll.options.length >= 2);\n\n  const item = { json: Object.assign({}, j, {\n    __isPoll: isPoll,\n    // TG-12: the literal is a last-resort fallback. If TELEGRAM_DEFAULT_CHAT is\n    // unset, messages go THERE rather than failing \u2014 set it deliberately.\n    __chatId: b.chat_id || readSecret('TELEGRAM_DEFAULT_CHAT') || '8859170398',\n    __text: b.message || b.text || '(no message)',\n    __question: isPoll ? String(poll.question || b.message || '').slice(0, 300) : '',\n    // The Telegram node wants options as a newline-joined string.\n    __options: isPoll ? poll.options.map((o) => String(o).slice(0, 100)).join('\\n') : '',\n    __multiple: isPoll ? !!poll.allows_multiple_answers : false,\n    __anonymous: isPoll ? poll.is_anonymous !== false : true,\n  }) };\n\n  // TG-20: the keyboard is flattened into FLAT LEAF FIELDS, not a nested object.\n  // n8n cannot populate a fixedCollection parameter from an expression \u2014 the\n  // structure must be literal in the node, with expressions only at the leaves.\n  // Passing the whole object was discarded silently, which is why buttons never\n  // appeared. Hence one row of up to three buttons, and a Switch on the count.\n  const rm = meta.reply_markup;\n  const flat = [];\n  if (rm && Array.isArray(rm.inline_keyboard)) {\n    for (const row of rm.inline_keyboard) {\n      for (const btn of row || []) {\n        if (btn && btn.text) flat.push(btn);\n      }\n    }\n  }\n  const MAX_BUTTONS = 3;\n  item.json.__btnDropped = Math.max(0, flat.length - MAX_BUTTONS);\n  const shown = flat.slice(0, MAX_BUTTONS);\n  item.json.__btnCount = shown.length;\n  item.json.__hasKb = shown.length > 0;\n  for (let i = 0; i < MAX_BUTTONS; i++) {\n    item.json['__b' + (i + 1) + 'text'] = shown[i] ? String(shown[i].text) : '';\n    item.json['__b' + (i + 1) + 'data'] = shown[i] ? String(shown[i].callback_data) : '';\n  }\n  if (it.binary) item.binary = it.binary;\n  out.push(item);\n}\nreturn out;\n"
       }
     },
     {
@@ -176,13 +176,96 @@
       }
     },
     {
-      "id": "sendkb",
-      "name": "Send With Buttons",
+      "id": "howmany",
+      "name": "How Many Buttons",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        -140
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "one",
+                    "leftValue": "={{ $json.__btnCount }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "two",
+                    "leftValue": "={{ $json.__btnCount }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "three",
+                    "leftValue": "={{ $json.__btnCount }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "3"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "sendkb1",
+      "name": "Send 1 Button",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1340,
-        -20
+        1560,
+        -210
       ],
       "parameters": {
         "resource": "message",
@@ -194,7 +277,126 @@
           "parse_mode": "None"
         },
         "replyMarkup": "inlineKeyboard",
-        "inlineKeyboard": "={{ $json.__kb }}"
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.__b1text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.__b1data }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "sendkb2",
+      "name": "Send 2 Buttons",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1560,
+        -120
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.__chatId }}",
+        "text": "={{ $json.__text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "None"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.__b1text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.__b1data }}"
+                    }
+                  },
+                  {
+                    "text": "={{ $json.__b2text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.__b2data }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "pojHLD8xi2lxHgNp",
+          "name": "[STUDIO] Telegram Bot"
+        }
+      }
+    },
+    {
+      "id": "sendkb3",
+      "name": "Send 3 Buttons",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1560,
+        -30
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.__chatId }}",
+        "text": "={{ $json.__text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "None"
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.__b1text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.__b1data }}"
+                    }
+                  },
+                  {
+                    "text": "={{ $json.__b2text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.__b2data }}"
+                    }
+                  },
+                  {
+                    "text": "={{ $json.__b3text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.__b3data }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -360,7 +562,7 @@
       "main": [
         [
           {
-            "node": "Send With Buttons",
+            "node": "How Many Buttons",
             "type": "main",
             "index": 0
           }
@@ -368,6 +570,31 @@
         [
           {
             "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "How Many Buttons": {
+      "main": [
+        [
+          {
+            "node": "Send 1 Button",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send 2 Buttons",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send 3 Buttons",
             "type": "main",
             "index": 0
           }
@@ -385,7 +612,29 @@
         ]
       ]
     },
-    "Send With Buttons": {
+    "Send 1 Button": {
+      "main": [
+        [
+          {
+            "node": "Sign Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send 2 Buttons": {
+      "main": [
+        [
+          {
+            "node": "Sign Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send 3 Buttons": {
       "main": [
         [
           {

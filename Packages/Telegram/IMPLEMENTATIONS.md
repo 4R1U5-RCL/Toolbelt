@@ -98,15 +98,19 @@ RUN_ID="run-$(date +%s)"
   --source "harness" --verify
 ```
 
-Add `--url-env NOTIFY_INTERACTIVE_URL` for the buttons to actually arrive. The
-live fan-out drops an inline keyboard silently and delivers plain text (TG-19),
-so without that flag this reads as a notification with no way to answer it.
+`--url-env NOTIFY_INTERACTIVE_URL` is not optional here. The live fan-out drops
+an inline keyboard silently and delivers plain text (TG-19, TG-20), so without
+that flag this reads as a notification with no way to answer it.
 
-What v1 does *not* do is block until the answer comes back. The press is decoded
-and recorded by `[STUDIO] Telegram Receiver`, which ships inactive; a blocking
-`telegram await` needs a durable answer store and is deliberately deferred.
-Until then, an approval is a notification with a recorded verdict, not a gate a
-script can wait on. Say that plainly to whoever is relying on it.
+The press comes back: `[STUDIO] Telegram Receiver` decodes it, records the
+verdict under `entity:id`, and answers the callback so the button stops
+spinning.
+
+What v1 does *not* do is **block** until that happens. A blocking `telegram
+await` needs a durable answer store — three plausible ones, so it is a decision
+rather than a detail — and is deliberately deferred. Until then an approval is a
+notification with a recorded verdict, not a gate a script can wait on. Say that
+plainly to whoever is relying on it.
 
 ---
 
@@ -210,17 +214,17 @@ is why everything rides the webhook and not the Bot API (TG-08).
 
 ## Choosing a destination workflow
 
-| You need | Point at | `--url-env` | Deployed? |
+| You need | Point at | `--url-env` | State |
 |---|---|---|---|
-| Plain text | `[TEMPLATE] Notification Fan-out` | *(default)* | **live** — proven |
-| Buttons | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | inactive |
-| A native poll | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | inactive |
-| To receive a press or a vote | `[STUDIO] Telegram Receiver` | — | inactive |
+| Plain text | `[TEMPLATE] Notification Fan-out` | *(default)* | live — proven |
+| Buttons | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | live — proven |
+| A native poll | `[STUDIO] Telegram Interactive` | `NOTIFY_INTERACTIVE_URL` | live — built, not fired |
+| To receive a press or a vote | `[STUDIO] Telegram Receiver` | — | live — proven |
 
 **Buttons are not free on the default rail.** The live fan-out cannot attach an
-inline keyboard at all — it builds one correctly and then discards it, silently,
-because of how its delivery node is configured (TG-19). Everything interactive
-goes through `[STUDIO] Telegram Interactive`.
+inline keyboard at all — it builds one correctly and then discards it, silently
+(TG-19, TG-20). Everything interactive goes through
+`[STUDIO] Telegram Interactive`.
 
 See [n8n/README.md](n8n/README.md) for what activating each costs — particularly
 TG-09, since a bot has exactly one webhook URL and two other receivers already

@@ -66,7 +66,7 @@ you can see that.
                             ┌─────────────────┴──────────────────┐
                             ▼                                    ▼
                   [TEMPLATE] Notification Fan-out    [STUDIO] Telegram Interactive
-                  live · text ONLY (TG-19)           new · buttons + sendPoll
+                  live · text ONLY (TG-19/20)        live · buttons + sendPoll
                             │                                    │
                             └──────────── delivered ─────────────┘
                                               │
@@ -74,7 +74,7 @@ you can see that.
                                                        execution record
 
    a button press ──▶ [STUDIO] Telegram Receiver ──▶ inbound.decode_update
-                      new · inactive                 same <action>:<entity>:<id>
+                      live · Telegram Trigger        same <action>:<entity>:<id>
 ```
 
 ## The three template groups
@@ -104,15 +104,16 @@ encoder refuses rather than truncating, because a truncated key produces a
 perfectly normal-looking button that acts on the wrong record — which is exactly
 what IN-30 was. (TG-03)
 
-**Buttons do not work on the live fan-out, and never have.** Measured, not
-assumed: its delivery node sets `replyMarkup` from an expression, which n8n's
-`displayOptions` cannot match, so the keyboard is discarded and the message
-arrives as plain text with no error anywhere. `n8n/telegram-interactive.json`
-fixes it with a static value behind an IF branch. (TG-19)
+**Buttons and the return path both need the new workflows.** Measured during
+this package's own smoke test: the live fan-out discards an inline keyboard
+silently (TG-19, TG-20), and the two incumbent receivers reject **every** inbound
+callback 401 because they check an HMAC Telegram never sends — then Telegram
+retries each refusal into a storm (TG-21). Neither half of the interactive rail
+had ever worked. Both are fixed in `n8n/`.
 
 ## What is proven, and how
 
-`./run-tests.sh` runs 178 offline tests. Three of them are the ones that matter
+`./run-tests.sh` runs 181 offline tests. Three of them are the ones that matter
 most, and each **skips loudly** rather than passing quietly if it cannot run:
 
 - **Envelope conformance against `client.mjs`** — the real file, executed in
@@ -126,12 +127,20 @@ most, and each **skips loudly** rather than passing quietly if it cannot run:
 
 ## Status
 
-v1.0.0. Plain-text sending is **proven live** end to end — three sends, one per
-group, each confirmed by execution record rather than by status code.
+v1.0.0, **proven live end to end** — every claim below confirmed from execution
+records, not status codes.
 
-Buttons and polls need `[STUDIO] Telegram Interactive`, which is deployed
-**inactive** (`tpke3idOSDgGAA1X`) pending activation, because the live fan-out
-cannot attach a keyboard at all (TG-19). `[STUDIO] Telegram Receiver`
-(`h2IF63cRYxQYUBFW`) is also inactive; activating it is a decision about which
-receiver owns the bot (TG-09). The blocking `telegram await` loop is
-deliberately not in v1.
+| | Proof |
+|---|---|
+| Plain text, all three groups | executions 15034 / 15035 / 15036 |
+| Buttons, template-driven | execution 15075 — three buttons, correct callbacks |
+| **Round trip** workflow → human → workflow | a real press decoded to `att:loop:rt-1`, recorded, callback answered (15097 out, 15098 back) |
+
+Both workflows are now **ACTIVE**: `[STUDIO] Telegram Interactive`
+(`tpke3idOSDgGAA1X`) and `[STUDIO] Telegram Receiver` (`h2IF63cRYxQYUBFW`), the
+latter now owning the bot's webhook (TG-09) — taken from an incumbent that had
+never once succeeded.
+
+Not in v1: the blocking `telegram await` loop, which needs a durable answer store
+and is a decision rather than a detail. Polls are built and unit-proven but have
+not been fired live.
