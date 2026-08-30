@@ -1,0 +1,7 @@
+{
+  "backend": "firecrawl",
+  "formats": ["markdown"],
+  "clean": true,
+  "out_format": "markdown",
+  "max_chars": 40000
+}

@@ -1,0 +1,7 @@
+{
+  "clean": true,
+  "chunk": true,
+  "max_tokens": 1200,
+  "overlap": 100,
+  "out_format": "json"
+}

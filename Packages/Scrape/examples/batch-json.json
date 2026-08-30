@@ -1,0 +1,6 @@
+{
+  "out_format": "json",
+  "clean": true,
+  "timeout": 90,
+  "retries": 3
+}
