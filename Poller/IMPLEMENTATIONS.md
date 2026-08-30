@@ -298,6 +298,33 @@ Per-sink `reasons` filters which events a rail gets. Per-sink `template`
 overrides the report text for that rail — useful when Slack wants markdown and
 Telegram wants one line.
 
+### Proving a rail end to end
+
+`poller test --live` reports `SENT` when the rail accepted the message. For the
+`notify_webhook` rail that is an honest but incomplete claim: a 2xx from the n8n
+webhook means the workflow **accepted** the call, not that Telegram delivered
+it. To close that gap, check the execution:
+
+```bash
+curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" \
+  "$N8N_BASE_URL/api/v1/executions?limit=3" |
+  python3 -c 'import json,sys; [print(e["id"], e["status"], e["startedAt"]) for e in json.load(sys.stdin)["data"]]'
+
+# then, for the execution whose timestamp matches your test:
+curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" \
+  "$N8N_BASE_URL/api/v1/executions/<id>?includeData=true" |
+  python3 -c 'import json,sys; d=json.load(sys.stdin); print(list((d["data"]["resultData"]["runData"] or {}).keys()))'
+```
+
+A delivered ping shows the whole chain having run —
+`Webhook → Verify HMAC → Auth Gate → Format → Deliver`. If `Verify HMAC` is
+absent or errored, the envelope has drifted from the signing contract; the
+frozen vector in `tests/test_sinks.py` is what stops that happening silently.
+
+If `NOTIFY_SECRET` is unset the token is used as the signing secret, matching
+the reference client's `secret ?? token` behaviour — that is the supported
+single-secret mode, not a misconfiguration.
+
 ---
 
 ## Running it
