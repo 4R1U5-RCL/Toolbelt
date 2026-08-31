@@ -265,11 +265,20 @@ class Seam:
                               "unreachable: {0}".format(exc), request_id)
 
         raw = response.body.decode("utf-8", "replace")
+        signature_ok = verify_response(response, secret)
+        if signature_ok is False:
+            # Reached the endpoint and got a 2xx, but the reply is not from
+            # something holding the secret. Refusing to call that "accepted" is
+            # the whole point of checking (TG-24).
+            return SendResult(
+                False, response.status,
+                "REJECTED: the response carried a signature that does not verify "
+                "(TG-24)", request_id, body=raw, response_signature_ok=False)
         return SendResult(
             accepted=True, status=response.status,
             note="accepted by the n8n webhook — not yet proof of delivery (TG-02)",
             request_id=request_id, body=raw,
-            response_signature_ok=verify_response(response, secret),
+            response_signature_ok=signature_ok,
         )
 
 
@@ -280,10 +289,16 @@ def verify_response(response, secret: str) -> Optional[bool]:
     nothing in the studio has ever checked it. Verified here so a hijacked or
     misrouted endpoint cannot answer a confident 200.
 
-    **Advisory, never fatal.** n8n serialises the response body itself, so a
-    difference in its JSON spacing would break byte-equality without any
-    security meaning. A mismatch is logged and reported; it does not turn an
-    accepted send into a rejected one. Returns None when unsigned.
+    **A present-but-wrong signature is fatal** (TG-24). An earlier version
+    tolerated a mismatch on the reasoning that n8n re-serialises its own reply,
+    so a spacing difference would break byte-equality with no security meaning.
+    Measured against the live workflow, that premise is simply false: the
+    signature matches. "Verify, then ignore the result" is the worst of both —
+    it looks like a check and defends nothing.
+
+    An **absent** signature stays non-fatal and returns None, because "unsigned"
+    and "signed wrongly" are different facts and some receivers do not sign at
+    all.
     """
     signature = ""
     for name in SIG_HEADERS:
@@ -293,9 +308,10 @@ def verify_response(response, secret: str) -> Optional[bool]:
     expected = sign(response.body.decode("utf-8", "replace"), secret)
     ok = hmac.compare_digest(expected, signature)
     if not ok:
-        get_logger().warning(
-            "response signature did not match — this is advisory (n8n re-serialises "
-            "the reply), but a persistent mismatch is worth investigating")
+        get_logger().error(
+            "response signature did not match — the reply did not come from a "
+            "holder of the shared secret, or the receiver changed how it "
+            "serialises its response (TG-24)")
     return ok
 
 

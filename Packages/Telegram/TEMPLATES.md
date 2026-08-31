@@ -294,7 +294,9 @@ built-in id overrides it rather than colliding.
 
 Four rules, each bought by an entry in `KNOWN_ISSUES.md`:
 
-1. **Plain prose, no markup.** It would be transmitted, not rendered (TG-01).
+1. **Plain prose, no markup.** It is transmitted, not rendered (TG-01) — and
+   not stripped either, so `**bold**` shows its asterisks. Content passed in
+   from a payload is never edited (TG-23).
 2. **Declare `requires`.** It is the only thing separating a data bug from a
    design choice (TG-17).
 3. **Keep `entity` and `id` short.** 64 bytes total, including the action and

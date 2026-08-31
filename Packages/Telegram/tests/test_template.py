@@ -64,11 +64,18 @@ class TestRendering(unittest.TestCase):
         template = make(defaults={"name": "there"})
         self.assertEqual(template.render({"name": "you"}).title, "Hello you")
 
-    def test_markup_in_a_template_is_converted_not_transmitted(self):
-        # The rail cannot render markdown, so a template written with it must
-        # still arrive readable (TG-01).
-        template = make(title="**{name}** done")
-        self.assertEqual(template.render({"name": "build"}).title, "build done")
+    def test_template_structure_is_flattened_but_content_is_not(self):
+        # Headings and bullets are structure and go; inline delimiters are inert
+        # on this rail and are left exactly as written (TG-01, TG-23).
+        self.assertEqual(make(title="## {name}").render({"name": "build"}).title, "build")
+        self.assertEqual(make(title="**{name}**").render({"name": "build"}).title,
+                         "**build**")
+
+    def test_payload_content_is_never_altered_by_rendering(self):
+        # Third-party field values are data. A description containing markdown
+        # characters must arrive as the source sent it.
+        rendered = make(title="{name}").render({"name": "build __v2__ `ok`"}).title
+        self.assertEqual(rendered, "build __v2__ `ok`")
 
     def test_an_undeclared_missing_field_renders_blank_rather_than_raising(self):
         # Total rendering: a delivery must not fail six hours in over a field

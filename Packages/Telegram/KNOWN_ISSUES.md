@@ -35,6 +35,8 @@ rediscover them the hard way.
 | [TG-20](#tg-20) | A `fixedCollection` cannot be filled from an expression | Literal keyboard structure, expressions only at the leaves | Keep to three buttons; overflow is counted, not silent |
 | [TG-21](#tg-21) | Every inbound callback was rejected 401, then retried into a storm | A Telegram Trigger, which owns its endpoint and answers correctly | Only one receiver can own the bot — decide which |
 | [TG-22](#tg-22) | A poll errored `Not Found` — n8n's Telegram node has no `sendPoll` | A direct Bot API call, degrading to readable text without a token | Set `TELEGRAM_BOT_TOKEN` in n8n for real polls |
+| [TG-23](#tg-23) | Stripping inert markdown silently corrupted content | `plain()` flattens structure only; inline delimiters are left alone | Write templates in plain prose — the rail cannot render markup |
+| [TG-24](#tg-24) | The response signature was verified and then ignored | A present-but-wrong signature now fails the send | Nothing — but do not re-soften it without measuring first |
 
 ---
 
@@ -49,9 +51,10 @@ the asterisks visible. It looks like the sender is broken.
 is transmitted verbatim. The Slack rail *does* render `*bold*`, so a format
 string copied from a Slack sink looks correct right up until it arrives.
 
-**What the package does.** `text.plain()` converts markup to the text a reader
-meant — `**done**` becomes `done`, a link becomes `label (url)` — rather than
-escaping it or passing it through. Every template renders through it.
+**What the package does.** `text.plain()` flattens line-level *structure* —
+heading hashes, blockquote markers, fence lines, rules — and turns a link into
+`label (url)` so both halves survive. It deliberately does **not** touch inline
+delimiters; see TG-23 for why removing them was a mistake.
 
 **Still your job.** Write templates in plain prose, and run `telegram render`
 before shipping one. The preview is exactly what arrives.
@@ -588,3 +591,68 @@ this whole package exists to remove, so a deliberate one has to announce itself.
 environment — the same token as the `[STUDIO] Telegram Bot` credential. Until
 then polls are legible, not native. Note this is the one place a bot token is
 needed anywhere; every other path avoids it (TG-08).
+
+---
+
+<a name="tg-23"></a>
+## TG-23 — Stripping inert markdown silently corrupted content
+
+**What you see.** A message that reads fine and is quietly wrong. A password
+hint sent as `pw: __secret__` arrives as `pw: secret`. Quoted code loses its
+backticks. Nothing errors, and the message looks deliberate.
+
+**Why.** TG-01 establishes that the rail sends `parse_mode: "None"`, so markup
+is transmitted rather than rendered. The first fix drew the wrong conclusion
+from that: if the markers cannot render, remove them. But the same fact cuts the
+other way — **because they are inert, removing them buys nothing**. There is no
+rendering benefit to trade against the loss, and the loss is real: any content
+that legitimately contains `*`, `_` or a backtick pair gets rewritten.
+
+The blast radius was *delimited* content specifically. `part_number_1` and
+`2*3=6` survived, because the emphasis pattern required non-word boundaries.
+What did not survive was exactly the content most worth protecting: secrets,
+quoted code, anything a third-party API put between delimiters.
+
+**How it was found.** A cross-model review of the design, which pointed out that
+`parse_mode` being `None` already prevents interpretation, so the conversion is
+pure data loss. The claim was then verified against the real function rather
+than taken on trust.
+
+**What the package does.** `plain()` now flattens **structure only** — heading
+hashes, blockquote markers, fence lines, horizontal rules, bullets, and links
+(which become `label (url)`). Inline delimiters are returned exactly as they
+arrived. Template authors write plain prose by convention; text flowing through
+from an API is **data**, and data is not edited on its way to a human.
+
+**Still your job.** Keep writing templates in plain prose. A template containing
+`**bold**` will now show the asterisks, which is the honest outcome — the rail
+genuinely cannot render it.
+
+---
+
+<a name="tg-24"></a>
+## TG-24 — The response signature was verified and then ignored
+
+**What you see.** Nothing. That is the problem.
+
+**Why.** The fan-out signs its own reply, and this package verified that
+signature — then treated a mismatch as advisory, on the reasoning that n8n
+re-serialises its response body, so a difference in JSON spacing would break
+byte-equality without meaning anything.
+
+**That premise was never measured, and it is false.** Checked against the live
+workflow: `response_signature_ok: True`. The signature matches, every time.
+
+Which makes the old behaviour the worst available option. A check that runs,
+fails, and is ignored is not a weaker check — it is a **misleading** one. It
+appears in the result object, it reads like a guarantee, and it defends nothing.
+
+**What the package does.** A **present-but-wrong** signature now fails the send:
+the result is `accepted=False` with a note naming this entry. An **absent**
+signature is still fine and returns `None` — "unsigned" and "signed wrongly" are
+different facts, and only the second is evidence of anything.
+
+**Still your job.** If this ever starts failing in bulk, the receiver changed how
+it serialises its reply. Measure before concluding — that is the mistake this
+entry records. Do not re-soften it back to advisory without checking whether the
+signature actually matches.
