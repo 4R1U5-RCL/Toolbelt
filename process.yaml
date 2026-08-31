@@ -1,0 +1,375 @@
+# =============================================================================
+# Toolbelt — fix procedure, machine-readable spec
+#
+# Authoritative for PROCESS.md §6. Conventions:
+#   needs      = AND. Every id listed must have succeeded.
+#   needs_any  = OR.  Any one of the listed ids having succeeded is enough.
+#   gate       = `requires` (runs only if predecessors succeeded)
+#                `after`    (runs regardless of predecessor outcome)
+#   status     = succeeded | failed | skipped
+#   <TOOL>     = the tool directory this run operates on, e.g. Packages/Poller
+# =============================================================================
+
+meta:
+  applies_to: every tool directory under Packages/, Skills/, Workflows/
+  version:    1.0
+
+# ---------- SECTION 0: TRIGGER ----------------------------------------------
+trigger:
+  error_detected:
+    fires_when:  a tool produces an incorrect result, fails to run, or a session
+                 must iterate on a tool before it can continue its work
+    detected_by: agent
+    carries:     [summary, source, occurred_at, tool]
+    root_of:     [capture_error, verify_rollback_point]
+
+# ---------- SECTION 1: THE GRAPH --------------------------------------------
+tasks:
+
+  # --- record: KNOWN_ISSUES.md + CHANGE_LOG.md -------------------------------
+  capture_error:
+    needs:     []
+    consumes:  trigger.error_detected payload
+    produces:  error_draft
+    gate:      —
+    actor:     agent
+    done_when: error_draft holds summary, source, occurred_at and tool
+
+  check_existing:
+    needs:     [capture_error]
+    consumes:  error_draft
+    produces:  existing_verdict
+    gate:      requires
+    actor:     agent
+    done_when: existing_verdict is `known` or `new`; if `known` it names the
+               matching issue-id in <TOOL>/KNOWN_ISSUES.md
+    branches:  existing_check
+
+  attach_occurrence:
+    needs:     [check_existing]
+    consumes:  existing_verdict
+    produces:  <TOOL>/KNOWN_ISSUES.md#<issue-id>
+    gate:      requires
+    actor:     agent
+    done_when: the existing entry gained one occurrence row; no new entry created
+
+  determine_outcome:
+    needs:     [check_existing]
+    consumes:  error_draft
+    produces:  outcome_statement            # "X" — what the error resulted in
+    gate:      requires
+    actor:     agent
+    done_when: outcome_statement describes the observable effect of the error
+
+  determine_cause:
+    needs:     [check_existing]
+    consumes:  error_draft
+    produces:  cause_statement              # "Y" — why it happened
+    gate:      requires
+    actor:     agent
+    done_when: cause_statement names the mechanism, not the symptom
+
+  propose_iteration:
+    needs:     [determine_cause, determine_outcome]
+    consumes:  [cause_statement, outcome_statement]
+    produces:  iteration_statement          # "Z" — the planned iteration
+    gate:      requires
+    actor:     agent
+    done_when: iteration_statement names one planned iteration
+
+  state_expected_result:
+    needs:     [propose_iteration]
+    consumes:  iteration_statement
+    produces:  expected_result              # "V" — what Z should achieve
+    gate:      requires
+    actor:     agent
+    done_when: expected_result is stated checkably
+
+  state_change:
+    needs:     [state_expected_result]
+    consumes:  expected_result
+    produces:  change_statement             # "W" — what is being changed
+    gate:      requires
+    actor:     agent
+    done_when: change_statement names what changes, where, and how it is verified
+
+  write_issue:
+    needs:     [determine_outcome, determine_cause, propose_iteration]
+    consumes:  [outcome_statement, cause_statement, iteration_statement]
+    produces:  <TOOL>/KNOWN_ISSUES.md#<issue-id>
+    gate:      requires
+    actor:     agent
+    done_when: an append-only entry exists with a new issue-id and every
+               `required` field of issue-entry populated
+    invariant: PROCESS.md §5.1 — append only, never overwrite
+
+  write_change:
+    needs:     [write_issue, state_change]
+    consumes:  [cause_statement, outcome_statement, iteration_statement,
+                expected_result, change_statement]
+    produces:  <TOOL>/CHANGE_LOG.md#<change-id>
+    gate:      requires
+    actor:     agent
+    done_when: an entry exists whose `resolves` field cites the issue-id from
+               write_issue, and that issue entry cites this change-id back
+
+  # --- safeguard 1 and 2 -----------------------------------------------------
+  verify_rollback_point:
+    needs:     []
+    consumes:  <TOOL>/Tooling/v<current>/
+    produces:  rollback_ref
+    gate:      —
+    actor:     agent
+    done_when: the current version directory exists, is complete, and its version
+               is recorded as the rollback point for this iteration
+    invariant: PROCESS.md §5 safeguard 1 / §4 — a released version directory is
+               immutable and IS the rollback point; no separate copy is taken
+
+  create_branch:
+    needs:     [verify_rollback_point, write_change]
+    consumes:  rollback_ref
+    produces:  branch_ref
+    gate:      requires
+    actor:     agent
+    done_when: a branch exists off main at the last known-good commit and the
+               working tree is on it
+    invariant: PROCESS.md §5.4 — no commits to main
+
+  open_version_dir:
+    needs:     [create_branch]
+    consumes:  <TOOL>/Tooling/v<current>/
+    produces:  <TOOL>/Tooling/v<next>/
+    gate:      requires
+    actor:     agent
+    done_when: the next version directory exists, seeded from the current one,
+               and no file under the current version directory was modified
+    invariant: PROCESS.md §5 safeguard 2 / §4 — iteration never edits a released
+               version; all work happens in the new version directory
+
+  # --- iterate ---------------------------------------------------------------
+  load_change_entry:
+    needs:     [write_change]
+    consumes:  <TOOL>/CHANGE_LOG.md#<change-id>
+    produces:  loaded_plan
+    gate:      requires
+    actor:     agent
+    done_when: loaded_plan carries the iteration, expected_result and change
+               fields of the entry
+
+  load_branch:
+    needs:     [create_branch]
+    consumes:  branch_ref
+    produces:  loaded_branch
+    gate:      requires
+    actor:     agent
+    done_when: the branch is checked out and clean
+
+  run_fix_loop:
+    needs:     [load_change_entry, load_branch, open_version_dir]
+    consumes:  [loaded_plan, loaded_branch, <TOOL>/Tooling/v<next>/]
+    invokes:   fix_loop
+    produces:  fix_version
+    gate:      requires
+    actor:     agent
+    done_when: fix_loop exited via `approve` and returned a fix-version-id
+
+  # --- merge and record ------------------------------------------------------
+  merge_pr:
+    needs:     [run_fix_loop]
+    consumes:  fix_version
+    produces:  merge_commit
+    gate:      requires
+    actor:     agent
+    done_when: the PR is merged into main and the branch is deleted
+    invariant: PROCESS.md §5.4 / §8 — the only path to main, and only after a
+               recorded human approval; the agent never merges without one
+
+  record_test_results:
+    needs:     [run_fix_loop]
+    consumes:  fix_version
+    produces:  <TOOL>/Tests/v<version>/
+    gate:      requires
+    actor:     agent
+    done_when: the run's actual output is stored under the version directory
+    invariant: PROCESS.md §5.6 — recorded verbatim, never falsified
+
+  write_version:
+    needs:     [merge_pr]
+    consumes:  [merge_commit, fix_version]
+    produces:  <TOOL>/CHANGE_LOG.md#<change-id> (version recorded)
+    gate:      requires
+    actor:     agent
+    done_when: the change entry names the merged fix-version-id and merge commit
+
+  close_issue:
+    needs:     [write_version]
+    consumes:  merge_commit
+    produces:  <TOOL>/KNOWN_ISSUES.md#<issue-id> (resolved)
+    gate:      requires
+    actor:     agent
+    done_when: the issue entry's status reads `resolved` and cites the
+               fix-version-id
+    invariant: PROCESS.md §5.1 — appended with the version, never overwritten
+
+# ---------- SECTION 2: THE LOOPS --------------------------------------------
+loops:
+  fix_loop:
+    inputs:  [loaded_plan, loaded_branch, <TOOL>/Tooling/v<next>/]
+    states:  [planning, executing, reviewing, testing, awaiting_human]
+    entry:   planning
+    transitions:
+      - "planning       --plan validated--> executing"
+      - "executing      --change written--> reviewing"
+      - "reviewing      --review_decision accept--> testing"
+      - "reviewing      --review_decision iterate--> planning"
+      - "testing        --test_decision pass--> awaiting_human"
+      - "testing        --test_decision fail--> planning"
+      - "awaiting_human --human_decision approve--> EXIT"
+      - "awaiting_human --human_decision reject--> planning"
+    on_reentry:     append the failure to <TOOL>/KNOWN_ISSUES.md before replanning
+                    (PROCESS.md §7 Track A step 6, §5.7 same-turn rule)
+    round_produces: fix-version-id
+    exit_when:      human_decision returns `approve`
+    max_rounds:     3                        # PROCESS.md §10.2 — settled
+    on_exhaustion:  escalate; do not continue iterating
+    returns:        fix_version              # the approved version only
+
+# ---------- SECTION 3: THE BRANCHES -----------------------------------------
+branches:
+  existing_check:
+    at:           check_existing
+    evaluated_by: agent
+    test:         an entry in <TOOL>/KNOWN_ISSUES.md carries the issue-id derived
+                  from error_draft.summary
+    on_true:      attach_occurrence
+    on_false:     determine_outcome
+    on_unknown:   treat as new, and flag the entry for review
+
+  review_decision:
+    at:           reviewing
+    evaluated_by: agent
+    test:         every item of loaded_plan.expected_result is demonstrably met
+                  by the change on the branch
+    on_true:      testing
+    on_false:     planning
+    on_unknown:   escalate
+
+  test_decision:
+    at:           testing
+    evaluated_by: ci
+    test:         "`./run-tests.sh` exits 0 AND the suite includes an end-to-end
+                  test that exercises the logged failure"
+    on_true:      awaiting_human
+    on_false:     planning
+    on_unknown:   escalate                   # suite crashed, timed out, never ran
+    invariant:    PROCESS.md §5.5, §7 — a green suite that does not exercise the
+                  failure is not corroboration
+
+  human_decision:
+    at:           awaiting_human
+    evaluated_by: human
+    test:         the owner approves or rejects the PR
+    on_true:      EXIT
+    on_false:     planning
+    on_unknown:   leave the PR open for the user and wait; never auto-advance
+                  # PROCESS.md §10.4 — settled
+
+# ---------- SECTION 4: THE CONSTRAINTS --------------------------------------
+constraints:
+  - "task status is one of: succeeded | failed | skipped"
+  - "`gate: requires` passes on succeeded only; a skipped task's dependents are
+     themselves skipped, never blocked"
+  - "KNOWN_ISSUES.md and IMPLEMENTATIONS.md are append-only; no task may
+     overwrite either"
+  - "only write_issue, attach_occurrence and close_issue may append to
+     KNOWN_ISSUES.md; only write_change and write_version may append to
+     CHANGE_LOG.md"
+  - "no task may write to main; merge_pr is the sole path"
+  - "record_test_results stores actual output; a failing or unrun test is
+     recorded as failing or unrun"
+  - "identity fields of an issue entry are write-once; editing one yields a
+     different issue-id, i.e. a different entry"
+  - "if a session iterates on a tool mid-work, write_issue completes in the same
+     turn as the iteration"
+
+# ---------- SECTION 5: DEFINITIONS ------------------------------------------
+definitions:
+  issue-id:
+    format:      <description>_<hash8>
+    example:     poller-timeout-on-empty-body_2f43103c
+    assigned_by: agent
+    segments:
+      description:
+        charset:        a-z, 0-9, hyphen
+        case:           lowercase only
+        word_separator: single hyphen; never doubled, never leading or trailing
+        length:         3-40 characters
+        forbidden:      underscore (reserved as the segment divider); whitespace
+        source:         derived from the entry's summary field by slug_rule
+        slug_rule:
+          - lowercase everything
+          - replace every run of non-alphanumeric characters with a single hyphen
+          - strip leading and trailing hyphens
+          - truncate to 40 characters
+          - strip any trailing hyphen created by the truncation
+        regex:          ^[a-z0-9]+(-[a-z0-9]+)*$
+      hash8:
+        charset:   "[0-9a-f], exactly 8"
+        source:    first 8 hex chars of sha256 over the canonical identity string
+        identity:  the summary field alone — PROCESS.md §10.3, settled. Two errors
+               are the same error when described the same way. Cause is not part
+               of identity: the id must be computable at check_existing, which
+               runs before determine_cause. occurred_at is excluded (it would
+               never dedupe); tool is redundant (the file is already per-tool)
+        canonical: trim, lowercase, collapse whitespace runs to a single space
+    unique_in:   one tool's KNOWN_ISSUES.md — at most one entry per id. A repeated
+                 identity yields a repeated id; existing_check routes that to
+                 attach_occurrence rather than a duplicate entry
+    stable:      yes — derived from write-once identity fields; a retry recomputes
+                 the same id and no-ops
+    cited_as:    KNOWN_ISSUES.md#poller-timeout-on-empty-body_2f43103c
+
+  change-id:
+    format:      <description>_<hash8>
+    example:     retry-backoff-on-empty-body_9c1a44be
+    assigned_by: agent
+    unique_in:   one tool's CHANGE_LOG.md
+    stable:      yes
+    cited_as:    CHANGE_LOG.md#retry-backoff-on-empty-body_9c1a44be
+
+  fix-version-id:
+    format:      v<major>.<minor>
+    example:     v2.1
+    assigned_by: agent
+    source:      increments the tool's current version; minor for a fix, major
+                 for a breaking change. A tool with no prior version starts at
+                 v1.0 (PROCESS.md §10.6 — settled)
+    unique_in:   one tool — never reused
+    stable:      yes — a released version is immutable
+    used_by:     <TOOL>/Tooling/v<version>/, <TOOL>/Tests/v<version>/
+
+  escalate:
+    means:       stop the run, make no further changes, and report to the user
+                 with the current state: the issue-id, the change-id, the branch,
+                 the round reached, and why the check could not be answered
+    used_by:     [fix_loop.on_exhaustion, review_decision.on_unknown,
+                  test_decision.on_unknown]
+    not:         "a rejection, and not a failure verdict — it is the absence of a
+                  verdict. The work is left where it stands for the user to judge"
+
+  issue-entry:
+    fields:      [id, summary, outcome, cause, iteration, resolved_by, status,
+                  occurrences]
+    required:    [id, summary, outcome, cause, iteration, status]
+    immutable:   [id, summary]
+    appended_to: <TOOL>/KNOWN_ISSUES.md
+    note:        "`resolved_by` cites a change-id and the fix-version-id"
+
+  change-entry:
+    fields:      [id, resolves, cause, outcome, iteration, expected_result,
+                  change, version, merge_commit]
+    required:    [id, resolves, cause, outcome, iteration, expected_result,
+                  change]
+    immutable:   [id, resolves]
+    appended_to: <TOOL>/CHANGE_LOG.md
+    note:        "`resolves` cites the issue-id in KNOWN_ISSUES.md"
