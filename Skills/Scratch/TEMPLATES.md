@@ -8,6 +8,11 @@ forms in which this tool is applied. Each entry names the implementation in
 defines none for template or implementation entries. The anchors below are
 therefore plain slugs of the entry name, not `<description>_<hash8>` ids.
 
+Entry headings are the bare id and nothing else (`process.yaml:
+definitions.entry`, PROCESS.md §10.13) — the heading text *is* the anchor a
+`FILE.md#<id>` citation resolves against. The two closing sections below carry
+no heading at all, so nothing that is not an entry can be mistaken for one.
+
 **This tool ships exactly one template.** It is a file, not a snippet — the
 entry below documents what is actually in
 `Tooling/v1.0.0/templates/`, which contains one item.
@@ -15,7 +20,9 @@ entry below documents what is actually in
 ---
 
 <a name="scratch-gitignore"></a>
-## `scratch-gitignore` — the drop-in ignore block
+## scratch-gitignore
+
+**the drop-in ignore block**
 
 | Field | Value |
 |---|---|
@@ -44,7 +51,7 @@ are covered by section membership rather than by a named check.
 
 ---
 
-## Templates that do not exist
+**Templates that do not exist** — prose, not an entry:
 
 Stated explicitly so their absence is not read as an oversight:
 

@@ -4,24 +4,45 @@ Every entry here answers an entry in [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) and
 cites its id, per PROCESS.md §3 (reciprocal pair) and §6. Newest last; entries
 are appended, never rewritten.
 
-Ids follow `process.yaml: definitions.change-id` — `<description>_<hash8>`, the
-hash being the first 8 hex characters of `sha256` over the canonical (trimmed,
-lowercased, whitespace-collapsed) summary.
+
+> **Correction, 2026-09-01 (branch `smoke/fix-skills-scratch`).** The entry below
+> was written by the 2026-08-31 migration and has never been merged or released.
+> An audit found it non-conformant, so it was corrected in place: the `id` was
+> **recomputed** from the `iteration` field under the amended identity rule
+> (§10.8) — the old id derived from the `summary`, which is no longer the
+> identity — `merge_commit` was made an honest empty, and the heading was put in
+> bare-id form. `resolves` and `iteration` are unchanged, so the recomputed id is
+> stable. `id` is normally immutable; it is rewritten here only because this
+> entry has never been merged or released and its old value cannot be reproduced
+> under the current rule. Correcting an unreleased entry is not an append-only
+> violation; overwriting a released one would be.
+
+Ids follow `process.yaml: definitions.change-id` — `<description>_<hash8>`. Both
+segments derive from the **`iteration` field alone** (PROCESS.md §10.8): the
+description is that field slugified and truncated to 40 characters, and the hash
+is the first 8 hex characters of `sha256` over its canonical form. **Canonical**
+= trim → lowercase → collapse whitespace runs to a single space → strip trailing
+punctuation (`. , ; : ! ?`) (§10.14). The identity string is the field's literal
+markdown text as written below, backticks included — the spec defines no markdown
+normalisation step. The id below was recomputed with `sha256sum` on 2026-09-01
+and reproduces.
 
 ---
 
-<a name="migrate-skills-scratch-to-the-tooling-te_96add0eb"></a>
-## `migrate-skills-scratch-to-the-tooling-te_96add0eb`
+<a name="move-the-implementation-into-tooling-v1_c96a11ad"></a>
+## move-the-implementation-into-tooling-v1_c96a11ad
 
 | Field | Value |
 |---|---|
-| **id** | `migrate-skills-scratch-to-the-tooling-te_96add0eb` |
+| **id** | `move-the-implementation-into-tooling-v1_c96a11ad` |
 | **resolves** | [`KNOWN_ISSUES.md#skills-scratch-failed-track-b-conformanc_5a423163`](KNOWN_ISSUES.md#skills-scratch-failed-track-b-conformanc_5a423163) |
 | **version** | `v1.0.0` — current version, **no bump**. The code did not change, it moved (PROCESS.md §9: a tool that has never been versioned starts at `Tooling/v1.0.0/`) |
-| **merge_commit** | not recorded — this working copy runs no git operations; the branch, commit and PR belong to the orchestrator (PROCESS.md §8) |
+| **merge_commit** | *(empty — nothing has merged)*. The work is committed on branch `smoke/fix-skills-scratch`, which is not pushed and has no PR. Because this field is empty the issue it resolves stays `in-progress`, not `resolved` (`process.yaml: definitions.issue-status`) |
 
 **summary.** Migrate Skills/Scratch to the Tooling/Tests versioned layout at
-v1.0.0 and create the four missing canonical documents.
+v1.0.0 and create the four missing canonical documents. *(A one-line gloss, not a
+`change-entry` field and not the id source — the id derives from the `iteration`
+field below.)*
 
 **cause (Y).** The tool predates `PROCESS.md` (both the process document and
 `process.yaml` are dated 2026-08-31, and their own §9 backlog lists

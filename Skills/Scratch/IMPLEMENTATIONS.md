@@ -3,6 +3,11 @@
 Per PROCESS.md §3, each entry describes one use case and links to the template it
 applies in [`TEMPLATES.md`](TEMPLATES.md). Append-only (§5 invariant 2).
 
+Entry headings are the bare id and nothing else (`process.yaml:
+definitions.entry`, PROCESS.md §10.13) — the heading text *is* the anchor a
+`FILE.md#<id>` citation resolves against. The two closing sections below carry
+no heading at all, so nothing that is not an entry can be mistaken for one.
+
 Everything below is derived from what is in this tool directory: `README.md`,
 `Tooling/v1.0.0/templates/scratch.gitignore` and
 `Tooling/v1.0.0/tests/verify.sh`. This tool has **no `bin/`, no commands, no
@@ -12,7 +17,9 @@ as its README says. Nothing here is executed in normal use except the self-check
 ---
 
 <a name="append-the-ignore-block"></a>
-## `append-the-ignore-block` — enforce the discipline in a repository
+## append-the-ignore-block
+
+**enforce the discipline in a repository**
 
 **Template:** [`TEMPLATES.md#scratch-gitignore`](TEMPLATES.md#scratch-gitignore)
 
@@ -55,7 +62,9 @@ common case only. This is caveat 6 of the README and is recorded again in
 ---
 
 <a name="prove-the-block-in-a-throwaway-repo"></a>
-## `prove-the-block-in-a-throwaway-repo` — the committed self-check
+## prove-the-block-in-a-throwaway-repo
+
+**the committed self-check**
 
 **Template:** [`TEMPLATES.md#scratch-gitignore`](TEMPLATES.md#scratch-gitignore)
 
@@ -86,7 +95,7 @@ entrypoint does not exist here. Recorded as an open point in
 
 ---
 
-## Uses this tool does not support
+**Uses this tool does not support** — prose, not an entry:
 
 - **No cross-host coordination.** Repo `scratch/` is shared between sessions on
   one filesystem (including container↔host across a bind mount) but not between

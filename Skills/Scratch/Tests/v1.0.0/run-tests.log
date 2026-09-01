@@ -1,3 +1,51 @@
+=== RUN 2 — current record ===
+Re-run on branch smoke/fix-skills-scratch during the conformance correction of
+2026-09-01. Captured verbatim; nothing below this banner is edited.
+
+$ cd /studio/scratch/tb-wt/skills-scratch/Skills/Scratch/Tooling/v1.0.0
+$ bash tests/verify.sh
+  PASS · template present + non-empty
+  PASS · gitignore covers: scratch/
+  PASS · gitignore covers: .runstate/
+  PASS · gitignore covers: .claude/worktrees/
+  PASS · gitignore covers: clients/
+  PASS · gitignore covers: labs/
+  PASS · gitignore covers: .env
+  PASS · gitignore covers: \*.key
+  PASS · gitignore covers: \*.pem
+  PASS · gitignore covers: _token
+  PASS · README points at the shipped template
+  PASS · IGNORED: scratch/note.txt
+  PASS · IGNORED: .runstate/state
+  PASS · IGNORED: clients/acme/run-1.log
+  PASS · IGNORED: .claude/worktrees/wt/f
+  PASS · IGNORED: labs/proj/z
+  PASS · IGNORED: node_modules/x/i.js
+  PASS · IGNORED: .env
+  PASS · IGNORED: api.key
+  PASS · IGNORED: secret.pem
+  PASS · IGNORED: service_token
+  PASS · TRACKABLE: src/app.ts
+  PASS · TRACKABLE: README.md
+  PASS · TRACKABLE: .gitignore
+  PASS · add: src/app.ts staged
+  PASS · add: README.md staged
+  PASS · add: .env NOT staged
+  PASS · add: no secret/token staged
+  PASS · add: no scratch/clients staged
+
+== scratch smoke: 29 passed, 0 failed ==
+
+exit code: 0
+run at: 2026-09-01T04:35:07+00:00
+bash: GNU bash, version 5.2.15(1)-release (x86_64-pc-linux-gnu)
+git: git version 2.39.5
+
+
+=== RUN 1 — preserved, as recorded by the 2026-08-31 migration ===
+Kept byte-for-byte from the migration commit. It was captured at the tool's
+pre-worktree path (/studio/scratch/tb/...), which is why the paths differ.
+
 $ cd /studio/scratch/tb/Skills/Scratch/Tooling/v1.0.0
 $ bash tests/verify.sh
 
