@@ -1,0 +1,77 @@
+# Workflows/Audit — Track B conformance run
+# Captured: 2026-09-01T04:38:41Z
+# Working directory: /studio/scratch/tb-wt/workflows-audit/Workflows/Audit
+# Branch: smoke/fix-workflows-audit  HEAD: 51d7ae8
+# Every block below is the verbatim command and its verbatim output.
+
+=== CHECK 1 — Canonical files: all five of PROCESS.md §3 exist and are non-empty ===
+$ for f in README.md IMPLEMENTATIONS.md TEMPLATES.md KNOWN_ISSUES.md CHANGE_LOG.md; do [ -s "$f" ] && echo "PRESENT non-empty  $(wc -c <"$f") bytes  $f" || echo "MISSING or EMPTY   $f"; done
+PRESENT non-empty  3517 bytes  README.md
+PRESENT non-empty  2464 bytes  IMPLEMENTATIONS.md
+PRESENT non-empty  1705 bytes  TEMPLATES.md
+PRESENT non-empty  13271 bytes  KNOWN_ISSUES.md
+PRESENT non-empty  14756 bytes  CHANGE_LOG.md
+exit_code=0
+
+=== CHECK 2 — Reciprocity ===
+$ grep -n "^## " KNOWN_ISSUES.md CHANGE_LOG.md IMPLEMENTATIONS.md TEMPLATES.md
+KNOWN_ISSUES.md:24:## workflows-audit-failed-track-b-conforman_fb119cc2
+KNOWN_ISSUES.md:122:## the-2026-08-31-conformance-migration-of_0b111e47
+CHANGE_LOG.md:22:## a-documents-only-conformance-migration-a_27d16c95
+CHANGE_LOG.md:113:## correct-the-migration-records-in-place-a_531c29b0
+exit_code=0
+
+# For each KNOWN_ISSUES entry id, does CHANGE_LOG cite it, and does the issue cite a change-id back?
+issue  workflows-audit-failed-track-b-conforman_fb119cc2  <- cited by CHANGE_LOG.md 1 time(s)
+issue  the-2026-08-31-conformance-migration-of_0b111e47  <- cited by CHANGE_LOG.md 1 time(s)
+change a-documents-only-conformance-migration-a_27d16c95  <- cited by KNOWN_ISSUES.md 2 time(s)
+change correct-the-migration-records-in-place-a_531c29b0  <- cited by KNOWN_ISSUES.md 2 time(s)
+$ grep -c "^## " IMPLEMENTATIONS.md TEMPLATES.md   # entries on the second pair
+IMPLEMENTATIONS.md:0
+TEMPLATES.md:0
+$ grep -n "status: legacy\|`legacy`" KNOWN_ISSUES.md   # legacy exemptions claimed
+14:No entry in this file is `legacy`: both predate no conformant version, they
+
+=== CHECK 3 — Code layout: what constitutes the tool sits under Tooling/v<version>/ ===
+$ find Tooling -type f | sort
+Tooling/v1.0.0/WORKFLOW.md
+exit_code=0
+$ find . -type f -not -path "./Tooling/*" -not -path "./Tests/*" | sort   # anything constituting the tool left outside
+./CHANGE_LOG.md
+./IMPLEMENTATIONS.md
+./KNOWN_ISSUES.md
+./README.md
+./TEMPLATES.md
+exit_code=0
+
+=== CHECK 4 — Test layout: recorded results exist under Tests/v<version>/ for the current version ===
+$ find Tests -type f | sort
+Tests/v1.0.0/RESULTS.md
+Tests/v1.0.0/id-recompute-2026-09-01.log
+Tests/v1.0.0/run-tests.log
+Tests/v1.0.0/track-b-2026-09-01.log
+exit_code=0
+$ ls Tests/
+v1.0.0
+
+=== CHECK 5 — Version agreement: README, newest Tooling/ dir, newest CHANGE_LOG entry ===
+$ grep -m1 "Current version" README.md
+**Current version: `v1.0.0`** — the document that constitutes this tool is
+$ ls -1 Tooling/ | sort -V | tail -1
+v1.0.0
+$ grep "^| \*\*version\*\*" CHANGE_LOG.md | tail -1
+| **version** | `v1.0.0` — **no bump.** `v1.0.0` has never merged, so it is not a released version directory and §4 immutability does not bind it. Bumping would leave a broken, never-released `v1.0.0` in the tree as a permanent rollback point to a state that never worked |
+
+=== Status vocabulary (process.yaml definitions.issue-status closed set) ===
+$ grep -n "^| \*\*status\*\*" KNOWN_ISSUES.md
+33:| **status** | `in-progress` |
+131:| **status** | `in-progress` |
+$ grep -n "^| \*\*merge_commit\*\*" CHANGE_LOG.md
+34:| **merge_commit** | *(empty)* — not merged. The iteration sits on branch `smoke/fix-workflows-audit`, awaiting the PR and the human gate (PROCESS.md §6 steps 5–6). Recorded here on merge (§6 step 7) |
+125:| **merge_commit** | *(empty)* — not merged. Sits on branch `smoke/fix-workflows-audit` awaiting the PR and the human gate |
+
+=== Executable test suite present? ===
+$ ls run-tests.sh Tooling/v1.0.0/tests 2>&1; echo exit_code=$?
+ls: cannot access 'run-tests.sh': No such file or directory
+ls: cannot access 'Tooling/v1.0.0/tests': No such file or directory
+exit_code=2

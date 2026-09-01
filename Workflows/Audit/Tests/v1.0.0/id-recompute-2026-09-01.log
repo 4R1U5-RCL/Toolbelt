@@ -1,0 +1,71 @@
+# Workflows/Audit — id recomputation
+# Captured: 2026-09-01T04:38:54Z
+# Working directory: /studio/scratch/tb-wt/workflows-audit/Workflows/Audit
+# Method: process.yaml definitions.issue-id / change-id.
+#   canonical = trim -> lowercase -> collapse whitespace runs to one space -> strip trailing . , ; : ! ?
+#   hash8     = first 8 hex chars of sha256sum over the canonical identity string
+#   identity  = the summary field alone (issue-id); the iteration field alone (change-id, PROCESS.md 10.8)
+#   slug      = lowercase, every run of non-alphanumerics -> one hyphen, strip leading/trailing, truncate 40, strip trailing hyphen
+# Field values are read out of the live files, not retyped.
+
+file            : KNOWN_ISSUES.md
+heading id      : workflows-audit-failed-track-b-conforman_fb119cc2
+identity field  : summary
+field value     : Workflows/Audit failed Track B conformance: four of five canonical documents missing, no Tooling/ or Tests/ directories, README states no version and no implementation exists
+canonical       : <<<workflows/audit failed track b conformance: four of five canonical documents missing, no tooling/ or tests/ directories, readme states no version and no implementation exists>>>
+$ printf '%s' "$canonical" | sha256sum | cut -c1-8
+hash8           : fb119cc2
+slug (<=40)     : workflows-audit-failed-track-b-conforman
+recomputed id   : workflows-audit-failed-track-b-conforman_fb119cc2
+VERDICT         : REPRODUCES — matches the heading
+
+file            : KNOWN_ISSUES.md
+heading id      : the-2026-08-31-conformance-migration-of_0b111e47
+identity field  : summary
+field value     : The 2026-08-31 conformance migration of Workflows/Audit produced records that violate the amended spec: an invented Tooling marker file, a change-id derived from the summary instead of the iteration, a prose status outside the closed set of seven, and a branch claim that was untrue when written
+canonical       : <<<the 2026-08-31 conformance migration of workflows/audit produced records that violate the amended spec: an invented tooling marker file, a change-id derived from the summary instead of the iteration, a prose status outside the closed set of seven, and a branch claim that was untrue when written>>>
+$ printf '%s' "$canonical" | sha256sum | cut -c1-8
+hash8           : 0b111e47
+slug (<=40)     : the-2026-08-31-conformance-migration-of
+recomputed id   : the-2026-08-31-conformance-migration-of_0b111e47
+VERDICT         : REPRODUCES — matches the heading
+
+file            : CHANGE_LOG.md
+heading id      : a-documents-only-conformance-migration-a_27d16c95
+identity field  : iteration
+field value     : A documents-only conformance migration at v1.0.0: create the four missing canonical documents as empty-but-valid records, establish the Tooling/v1.0.0 and Tests/v1.0.0 version anchors, state v1.0.0 in the README, and author no workflow logic, script, prompt, template or test
+canonical       : <<<a documents-only conformance migration at v1.0.0: create the four missing canonical documents as empty-but-valid records, establish the tooling/v1.0.0 and tests/v1.0.0 version anchors, state v1.0.0 in the readme, and author no workflow logic, script, prompt, template or test>>>
+$ printf '%s' "$canonical" | sha256sum | cut -c1-8
+hash8           : 27d16c95
+slug (<=40)     : a-documents-only-conformance-migration-a
+recomputed id   : a-documents-only-conformance-migration-a_27d16c95
+VERDICT         : REPRODUCES — matches the heading
+
+file            : CHANGE_LOG.md
+heading id      : correct-the-migration-records-in-place-a_531c29b0
+identity field  : iteration
+field value     : Correct the migration records in place at v1.0.0, which was never released: remove the invented Tooling marker file and place the tool constituting document under Tooling/v1.0.0, recompute the change-id from its iteration field, replace the prose status with a closed-set value, name the real branch, and record the Track-B checks in Tests/v1.0.0/RESULTS.md as the evidence invariant 5 now requires
+canonical       : <<<correct the migration records in place at v1.0.0, which was never released: remove the invented tooling marker file and place the tool constituting document under tooling/v1.0.0, recompute the change-id from its iteration field, replace the prose status with a closed-set value, name the real branch, and record the track-b checks in tests/v1.0.0/results.md as the evidence invariant 5 now requires>>>
+$ printf '%s' "$canonical" | sha256sum | cut -c1-8
+hash8           : 531c29b0
+slug (<=40)     : correct-the-migration-records-in-place-a
+recomputed id   : correct-the-migration-records-in-place-a_531c29b0
+VERDICT         : REPRODUCES — matches the heading
+
+=== Retired id, for traceability ===
+The migration published the first change entry as brought-workflows-audit-into-track-b-con_be1c5a4b,
+hashed over a 'summary' field that change-entry does not define. Reproducing that old basis:
+old basis (summary) hash8 = be1c5a4b   -> be1c5a4b reproduces from the WRONG field
+under the settled rule (iteration field) the same entry is a-documents-only-conformance-migration-a_27d16c95
+
+=== Live citations of any retired id ===
+$ grep -n 'CHANGE_LOG.md#brought-workflows-audit-into-track-b-con_be1c5a4b' $DOCS
+exit_code=1   # 1 = no match: the retired id is cited nowhere as a live anchor
+
+$ grep -c be1c5a4b $DOCS   # remaining mentions, all prose explaining the retirement
+README.md:0
+IMPLEMENTATIONS.md:0
+TEMPLATES.md:0
+KNOWN_ISSUES.md:1
+CHANGE_LOG.md:3
+Tooling/v1.0.0/WORKFLOW.md:0
