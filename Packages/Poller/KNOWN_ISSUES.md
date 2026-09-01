@@ -9,6 +9,13 @@ Read this before writing a new poller config, and add to it when a new failure
 class shows up. The IDs are referenced from the source, so `grep -rn KI-07
 poller/` finds the code that exists because of an incident.
 
+**On `status: legacy`** (added 2026-09-01). Entries `KI-01` – `KI-22` were
+written before PROCESS.md existed. They have no reciprocal `CHANGE_LOG.md` entry and one cannot
+be manufactured without inventing a change history that never happened, so they
+are grandfathered under PROCESS.md §9: each carries `status: legacy` and is
+exempt from the §7 Track-B reciprocity check. Adding that one field is the only
+edit made to them — nothing else in those entries has been touched (§5.1).
+
 | ID | Failure | Prevented by | Still your job |
 |---|---|---|---|
 | [KI-01](#ki-01) | Watch pinned to one hard-coded item; a different item settled unwatched | Collection-wide watching keyed on an immutable id | Pick a `key_field` that is an id, not a description |
@@ -38,6 +45,8 @@ poller/` finds the code that exists because of an incident.
 
 <a name="ki-01"></a>
 ## KI-01 — The watch was pinned to one hard-coded item
+
+**status.** legacy
 
 **Signature.** A result lands. Nothing fires. You find it by hand later, and the
 poller log looks perfectly healthy — it was watching something else.
@@ -69,6 +78,8 @@ narrows *which rows are watched*, and still watches all of them.
 <a name="ki-02"></a>
 ## KI-02 — The watch ended and nobody knew
 
+**status.** legacy
+
 **Signature.** Silence that looks exactly like "nothing has happened yet".
 
 **What happened.** The previous poller was one-shot: it watched until its item
@@ -98,6 +109,8 @@ die in the first place.
 <a name="ki-03"></a>
 ## KI-03 — Two instances, every report twice
 
+**status.** legacy
+
 **Signature.** Duplicate Slack posts and duplicate Telegram pings, seconds apart.
 
 **Cause.** Nobody could tell whether the existing watch was alive, so a second
@@ -118,6 +131,8 @@ launching another one. Use `--force` only when you have decided to take over.
 
 <a name="ki-04"></a>
 ## KI-04 — Reported a settle that had not produced a result yet
+
+**status.** legacy
 
 **Signature.** A report that says "settled" with an empty score.
 
@@ -142,6 +157,8 @@ already sets `["publicScore"]`.
 <a name="ki-05"></a>
 ## KI-05 — A dead credential was retried instead of reported
 
+**status.** legacy
+
 **Signature.** Hours of log lines, no reports, and a 401 buried in every one.
 
 **What happened.** Kaggle's legacy Basic `username:key` token silently expired.
@@ -165,6 +182,8 @@ report on, without sending anything or writing state.
 
 <a name="ki-06"></a>
 ## KI-06 — One rail fired, the other was lost (or duplicated)
+
+**status.** legacy
 
 **Signature.** The Slack post exists, the Telegram ping never came. Or the
 restart re-sent a report that had already gone out.
@@ -193,6 +212,8 @@ next tick will re-deliver recent events to the new name.
 <a name="ki-07"></a>
 ## KI-07 — A truncated state file wiped the watch's memory
 
+**status.** legacy
+
 **Signature.** After a container stop, the poller re-reports things it already
 reported — or reports nothing because it re-seeded.
 
@@ -218,6 +239,8 @@ container's ephemeral layer is a state file you will lose.
 <a name="ki-08"></a>
 ## KI-08 — Errored rows were dropped instead of reported
 
+**status.** legacy
+
 **Signature.** A submission fails, a slot is spent, and nothing says so.
 
 **Cause.** Watchers written around "wait for success" treat everything else as
@@ -241,6 +264,8 @@ in `fields` so the report can say what went wrong.
 <a name="ki-09"></a>
 ## KI-09 — "Is it still running?" had no answer
 
+**status.** legacy
+
 **Signature.** You want to know whether to relaunch. You cannot tell. (In the
 /studio container there is no `ps` binary at all, so the usual reflex fails
 outright.)
@@ -261,6 +286,8 @@ in cron turns a silent death into a message.
 
 <a name="ki-10"></a>
 ## KI-10 — The report rail depended on another repo's file layout
+
+**status.** legacy
 
 **Signature.** The poller works in the container and nowhere else:
 `Cannot find module '/studio/packages/notify/src/client.mjs'`.
@@ -288,6 +315,8 @@ and update it — do not loosen the assertion.
 <a name="ki-11"></a>
 ## KI-11 — Secrets leaking into logs, argv and URLs
 
+**status.** legacy
+
 **Signature.** A token in a log file, a process list, or a pasted traceback.
 
 **Prevented by.** Every credential read through the env resolver is registered
@@ -307,6 +336,8 @@ printing it.
 <a name="ki-12"></a>
 ## KI-12 — Rate limits, and N pollers stampeding one API
 
+**status.** legacy
+
 **Signature.** HTTP 429, or several pollers hitting the same endpoint on the
 same second because they were all started by the same script.
 
@@ -325,6 +356,8 @@ submission list every 5 seconds does not make results arrive sooner.
 <a name="ki-13"></a>
 ## KI-13 — Local time in the evidence trail
 
+**status.** legacy
+
 **Signature.** Two hosts' logs cannot be interleaved; an SLA calculation is off
 by the timezone offset.
 
@@ -339,6 +372,8 @@ staleness arithmetic silently wrong.
 
 <a name="ki-14"></a>
 ## KI-14 — Sleeping through the stop signal
+
+**status.** legacy
 
 **Signature.** `kill` appears to do nothing for three minutes. Or a watch dies
 when a laptop sleeps.
@@ -359,6 +394,8 @@ long-lived process at all. `nohup … &` on a laptop is not a survivable watch.
 <a name="ki-15"></a>
 ## KI-15 — The first run reported the entire history
 
+**status.** legacy
+
 **Signature.** Fifty Slack posts about submissions from three weeks ago.
 
 **Prevented by.** On a first run (no state file) the poller seeds: it records
@@ -377,6 +414,8 @@ wrong every other time.
 
 <a name="ki-16"></a>
 ## KI-16 — Copies of the script drifted
+
+**status.** legacy
 
 **Signature.** Three near-identical `*_poller.sh` files, each with slightly
 different logic, and no way to tell which one is current.
@@ -399,6 +438,8 @@ to the package (or a `python` source) — do not fork the engine.
 <a name="ki-17"></a>
 ## KI-17 — Concurrent pollers overwrote each other's files
 
+**status.** legacy
+
 **Signature.** A report containing another watch's content.
 
 **Cause.** The previous template composed its payloads through fixed paths
@@ -417,6 +458,8 @@ into the file sink path when you want one file per event.
 
 <a name="ki-18"></a>
 ## KI-18 — A slow item looks exactly like a broken poller
+
+**status.** legacy
 
 **Signature.** Six hours of nothing. Is the API slow, or is the watch dead?
 
@@ -437,6 +480,8 @@ Combined with the heartbeat (KI-09), the two silences are now distinguishable.
 
 <a name="ki-19"></a>
 ## KI-19 — The watch survived the session; the attention did not
+
+**status.** legacy
 
 **Signature.** The poller is healthy, the reports are landing, and nothing is
 happening about them.
@@ -469,6 +514,8 @@ outside the host (see the n8n layering in IMPLEMENTATIONS.md).
 <a name="ki-20"></a>
 ## KI-20 — Third-party text reaching an agent's prompt
 
+**status.** legacy
+
 **Signature.** None, until it matters. This is a latent risk, not a past incident.
 
 **Cause.** The `claude_code` sink puts item fields — a submission description, a
@@ -497,6 +544,8 @@ inbound Slack applies here: it is data, not instructions.
 <a name="ki-21"></a>
 ## KI-21 — An unattended process that can spend money
 
+**status.** legacy
+
 **Signature.** A cost line you did not expect.
 
 **Cause.** Every `claude_code` spawn is a real session. Measured here at roughly
@@ -522,6 +571,8 @@ about paying for, keep `timeout_seconds` finite, and think twice before
 
 <a name="ki-22"></a>
 ## KI-22 — The host went down and took the watch with it
+
+**status.** legacy
 
 **Signature.** No reports, no heartbeat, no poller — and no way to tell from the
 outside whether the watch ever ran, because the thing that would have told you
@@ -569,15 +620,16 @@ This file is append-only (PROCESS.md §5.1).
 
 ---
 
-<a name="packages-poller-failed-track-b-conforman_8f776048"></a>
 ## packages-poller-failed-track-b-conforman_8f776048
 
 | Field | Value |
 |---|---|
 | **id** | `packages-poller-failed-track-b-conforman_8f776048` |
 | **summary** | Packages/Poller failed Track B conformance: TEMPLATES.md and CHANGE_LOG.md missing, code not under Tooling/, no results under Tests/, README states no version |
-| **status** | open — iteration executed on this branch; closes on merge per PROCESS.md §6 step 7 |
-| **resolved_by** | [`CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062`](CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062), fix-version `v2.1.0` |
+| **iteration** | Conformance-only migration of the existing v2.1.0 code: relocate, verify, and document. Full statement below under **Iteration (Z)** |
+| **status** | in-progress |
+| **resolved_by** | [`CHANGE_LOG.md#conformance-only-migration-of-the-existi_18d24e7c`](CHANGE_LOG.md#conformance-only-migration-of-the-existi_18d24e7c), fix-version `v2.1.0` |
+| **branch** | `smoke/fix-packages-poller` |
 | **occurrences** | 1 — detected 2026-08-31 during the Track B sweep recorded in PROCESS.md §9 |
 
 **Id derivation.** `hash8` = first 8 hex chars of
@@ -626,12 +678,27 @@ broke, run the suite from the new location and record the real output under
 `Tests/v2.1.0/`, create the two missing canonical documents, and state `v2.1.0`
 in the README. No version bump — the code moved, it did not change. Planned and
 recorded in
-[`CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062`](CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062).
+[`CHANGE_LOG.md#conformance-only-migration-of-the-existi_18d24e7c`](CHANGE_LOG.md#conformance-only-migration-of-the-existi_18d24e7c).
 
-**Still your job.** The status above reads `open` deliberately: this entry is
-appended in the same turn as the iteration (§5.7), before the PR exists. Whoever
-merges it appends the closing entry citing `v2.1.0` and the merge commit — this
-entry is never overwritten.
+**Still your job.** The status above reads `in-progress` deliberately. The entry
+was appended in the same turn as the iteration (§5.7); the iteration is executed
+and committed on branch `smoke/fix-packages-poller`, but no PR exists and nothing
+is merged, so `merge_commit` is empty and `resolved` may not be written
+(`process.yaml` → `definitions.issue-status.note`). Whoever merges it appends the
+closing entry citing `v2.1.0` and the merge commit — this entry is never
+overwritten.
+
+*Correction, 2026-09-01.* Two fields of this entry were wrong when written and
+have been corrected on this branch, before any merge or release. `status` read
+`open — iteration executed on this branch; …`, which is neither a member of the
+closed set of seven statuses (`process.yaml` →
+`definitions.issue-status`) nor accurate — an executed, unmerged iteration is
+`in-progress`. `resolved_by` cited the change-id
+`migrated-packages-poller-code-to-tooling_39621062`, which was derived from a
+`summary` field rather than from `iteration`; the change entry's id was
+recomputed as `conformance-only-migration-of-the-existi_18d24e7c` and the
+citation follows it. The `id` and `summary` fields — the immutable, identity-
+bearing ones — are unchanged, so the issue-id itself did not move.
 
 ---
 

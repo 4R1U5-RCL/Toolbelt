@@ -21,15 +21,19 @@ There is a third, unrelated sense of "template" inside the tool: the
 `poller/render.py`. That is a config field, not a file, and is documented in
 `IMPLEMENTATIONS.md` ("Report text"). It is not catalogued as a template here.
 
-Each entry cites the `IMPLEMENTATIONS.md` section that uses it, per PROCESS.md §3.
+Each entry below is delimited by a level-2 heading whose text is the bare entry
+id (`process.yaml` → `definitions.entry`; PROCESS.md §10.13) — that heading text
+is what an `IMPLEMENTATIONS.md#<id>` citation resolves against. The former
+`TPL-0N` numbering is kept inside each entry for continuity. Each entry cites its
+reciprocal `IMPLEMENTATIONS.md` entry id, per PROCESS.md §3.
 
 ---
 
-<a name="tpl-kaggle-submissions"></a>
-## TPL-01 — Kaggle competition submissions
+## tpl-kaggle-submissions
 
+**Title.** Kaggle competition submissions (was numbered TPL-01)
 **File.** `Tooling/v2.1.0/examples/kaggle-submissions.json`
-**Implementation.** `IMPLEMENTATIONS.md` → "Worked example: Kaggle competition submissions"
+**Implementation.** [`IMPLEMENTATIONS.md#impl-kaggle-submissions`](IMPLEMENTATIONS.md#impl-kaggle-submissions) — guide section "Worked example: Kaggle competition submissions"
 
 Source `kaggle_submissions` against competition
 `ai-agent-security-multi-step-tool-attacks`. Three rails: a `file` sink named
@@ -42,36 +46,37 @@ Copy this one when the watch is a Kaggle submission queue.
 
 ---
 
-<a name="tpl-kaggle-fallback"></a>
-## TPL-02 — Kaggle submissions with a supervised headless fallback
+## tpl-kaggle-fallback
 
+**Title.** Kaggle submissions with a supervised headless fallback (was TPL-02)
 **File.** `Tooling/v2.1.0/examples/kaggle-with-fallback.json`
-**Implementation.** `IMPLEMENTATIONS.md` → "Surviving the session that launched it" / "The headless-session rail"
+**Implementation.** [`IMPLEMENTATIONS.md#impl-kaggle-fallback`](IMPLEMENTATIONS.md#impl-kaggle-fallback) — guide sections "Surviving the session that launched it" / "The headless-session rail"
 
-TPL-01 plus a `supervisor` block and a fourth sink of type `claude_code`, named
-`headless-fallback` and gated `"when": "fallback"` — it fires only after
+`tpl-kaggle-submissions` plus a `supervisor` block and a fourth sink of type
+`claude_code`, named `headless-fallback` and gated `"when": "fallback"` — it fires only after
 `supervisor_lost`. Copy this one when the watch will outlive the session that
 armed it and somebody still has to act on the report (KI-19/KI-20/KI-21).
 
 ---
 
-<a name="tpl-kaggle-v15scar"></a>
-## TPL-03 — Kaggle final-slot watch (v15scar)
+## tpl-kaggle-v15scar
 
+**Title.** Kaggle final-slot watch, v15scar (was TPL-03)
 **File.** `Tooling/v2.1.0/examples/kaggle-v15scar-final.json`
-**Implementation.** `IMPLEMENTATIONS.md` → "Worked example: Kaggle competition submissions" (arming steps)
+**Implementation.** [`IMPLEMENTATIONS.md#impl-kaggle-v15scar`](IMPLEMENTATIONS.md#impl-kaggle-v15scar) — guide section "Worked example: Kaggle competition submissions", step 5 (arming)
 
-A named single-purpose instance of TPL-01 (`"name": "v15scar-final"`) that also
-sets `seed_on_first_run`. It is the worked form of "one config per watch, never
-a second script": the shape is TPL-01's, only the identity and seeding differ.
+A named single-purpose instance of `tpl-kaggle-submissions`
+(`"name": "v15scar-final"`) that also sets `seed_on_first_run`. It is the worked form of "one config per watch, never
+a second script": the shape is `tpl-kaggle-submissions`'s, only the identity
+and seeding differ.
 
 ---
 
-<a name="tpl-github-actions"></a>
-## TPL-04 — GitHub Actions workflow runs
+## tpl-github-actions
 
+**Title.** GitHub Actions workflow runs (was TPL-04)
 **File.** `Tooling/v2.1.0/examples/github-actions.json`
-**Implementation.** `IMPLEMENTATIONS.md` → "Recipe: GitHub Actions runs"
+**Implementation.** [`IMPLEMENTATIONS.md#impl-github-actions`](IMPLEMENTATIONS.md#impl-github-actions) — guide section "Recipe: GitHub Actions runs"
 
 Declarative `http_json` source against
 `https://api.github.com/repos/OWNER/REPO/actions/runs`, with `notify_states` and
@@ -80,11 +85,11 @@ a placeholder to substitute.
 
 ---
 
-<a name="tpl-generic-http"></a>
-## TPL-05 — Generic REST job queue
+## tpl-generic-http
 
+**Title.** Generic REST job queue (was TPL-05)
 **File.** `Tooling/v2.1.0/examples/generic-http.json`
-**Implementation.** `IMPLEMENTATIONS.md` → "Recipe: a generic REST job queue" and "Auth schemes"
+**Implementation.** [`IMPLEMENTATIONS.md#impl-generic-http`](IMPLEMENTATIONS.md#impl-generic-http) — guide sections "Recipe: a generic REST job queue" and "Auth schemes"
 
 The minimum viable shape: `http_json` source against a placeholder
 `https://api.example.com/v1/jobs`, `file` and `webhook` sinks, and only
@@ -93,13 +98,13 @@ for any API that fits the declarative shape.
 
 ---
 
-<a name="tpl-n8n-always-on"></a>
-## TPL-06 — Always-on n8n tier (workflow template)
+## tpl-n8n-always-on
 
+**Title.** Always-on n8n tier, a workflow template (was TPL-06)
 **Files.** `Tooling/v2.1.0/n8n/kaggle-submission-poller.json` (the workflow),
 `Tooling/v2.1.0/n8n/build_kaggle_workflow.py` (the builder that emits it),
 `Tooling/v2.1.0/n8n/README.md` (the tier's own guide)
-**Implementation.** `IMPLEMENTATIONS.md` → "Where n8n fits"
+**Implementation.** [`IMPLEMENTATIONS.md#impl-n8n-always-on`](IMPLEMENTATIONS.md#impl-n8n-always-on) — guide section "Where n8n fits"
 
 The poll loop as an n8n workflow on an always-on VPS, with dedup state in
 `$getWorkflowStaticData('global')`. Deliberately the less capable tier — no
@@ -116,6 +121,7 @@ is its output.
 ## Adding a template
 
 A new API that fits the declarative shape is a new config in
-`Tooling/v<version>/examples/` and an entry here citing the `IMPLEMENTATIONS.md`
-section that explains it — and the reciprocal citation added there. An entry in
+`Tooling/v<version>/examples/` and an entry here — heading = the bare id —
+citing the `IMPLEMENTATIONS.md` entry id that explains it, with the reciprocal
+citation added there. An entry in
 one file that does not cite its counterpart is incomplete (PROCESS.md §3).
