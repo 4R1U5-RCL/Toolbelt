@@ -1,3 +1,10 @@
+================================================================================
+RUN 1 — 2026-08-31T15:25Z · recorded by the migration agent
+Checkout: /studio/scratch/tb (no branch named in the original record)
+Reproduced below exactly as that agent captured it. It is not re-attested by
+the 2026-09-01 correction pass — see RUN 2 for output captured first-hand.
+================================================================================
+
 $ cd /studio/scratch/tb/Workflows/Validate/Tooling/v1.0.0
 $ python3 tests/selftest.py
   PASS · A: all concur → HIGH
@@ -41,3 +48,92 @@ usage: validate [-h] [--input INPUT] [--subject SUBJECT] [--topic TOPIC]
 $ OPENROUTER_API_KEY=x python3 bin/validate --panel nosuchkey hello
 ERROR: --panel matched no reasoners in the config.
 exit_code=1
+
+================================================================================
+RUN 2 — 2026-09-01 · captured first-hand, verbatim
+Worktree: /studio/scratch/tb-wt/workflows-validate
+Branch:   smoke/fix-workflows-validate
+Purpose:  re-verify the suite from the post-move location while correcting the
+          migration entries. Includes a deliberate demonstration of the runner
+          trap (bash vs python3) so the misleading output is on the record.
+================================================================================
+
+$ cd /studio/scratch/tb-wt/workflows-validate/Workflows/Validate/Tooling/v1.0.0   # branch smoke/fix-workflows-validate
+$ python3 -V
+Python 3.11.2
+$ python3 tests/selftest.py
+  PASS · A: all concur → HIGH
+  PASS · A: no disagreements
+  PASS · A: web skipped when web=False
+  PASS · A: all 3 reviewers responded
+  PASS · B: any dissent → LOW
+  PASS · B: disagreements listed (mixed stances)
+  PASS · C: failed model recorded ok=False
+  PASS · C: 2 concurring responders → HIGH
+  PASS · D: <2 responders → unknown
+  PASS · G: fallback answered the slot
+  PASS · G: fallback labelled
+  PASS · G: mixed concur+concerns → MEDIUM
+  PASS · H: slot FAILED when both down
+  PASS · H: error names primary + fallback
+  PASS · E: web fact-check included
+  PASS · F: doc has agreement-not-correctness caveat
+  PASS · F: doc has Panel + Disagreements + Findings
+  PASS · F: doc marks the failed model
+  PASS · F: parse_stance reads STANCE line
+  PASS · I: unparseable stance → ok False
+  PASS · I: error flags unparseable
+  PASS · I: two parseable concur → HIGH
+  PASS · J: unparseable no longer inflates the panel → unknown
+  PASS · K: fenced stance ignored
+  PASS · L: doc has stance counts
+  PASS · L: doc has resolved-model column
+  PASS · M: CRITIC_SYSTEM warns of untrusted content
+  PASS · M: MEDIUM wording dropped 'sound'
+
+== selftest: 28 passed, 0 failed ==
+exit_code=0
+
+--- the runner trap, demonstrated (NOT a suite failure) ---
+$ bash tests/selftest.py
+tests/selftest.py: line 4: Offline orchestration self-test — injects a fake call_model, so it runs the whole flow with no
+network and no secrets (proves the escalation/scoring/honesty logic didn't regress; it does NOT and
+cannot test non-deterministic model answers).: No such file or directory
+tests/selftest.py: line 5: import: command not found
+tests/selftest.py: line 6: syntax error near unexpected token `0,'
+tests/selftest.py: line 6: `sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "lib"))'
+exit_code=2
+
+--- post-move entrypoint path check (not part of the suite) ---
+$ python3 bin/validate --help
+usage: validate [-h] [--input INPUT] [--subject SUBJECT] [--topic TOPIC]
+                [--web] [--panel PANEL] [--out OUT] [--max-tokens MAX_TOKENS]
+                [--timeout TIMEOUT] [--config CONFIG] [--print]
+                [content]
+
+OpenRouter cross-model validation
+
+positional arguments:
+  content               content to validate (or use --input)
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT         file with the content, or '-' for stdin
+  --subject SUBJECT     one-line subject of what's being validated
+  --topic TOPIC         kebab-case topic for the filename
+  --web                 also run the Perplexity web fact-check (external)
+  --panel PANEL         comma keys to restrict the panel, e.g.
+                        gpt5,gemini,grok
+  --out OUT             output file or directory
+  --max-tokens MAX_TOKENS
+  --timeout TIMEOUT
+  --config CONFIG
+  --print               also print the doc
+exit_code=0
+$ OPENROUTER_API_KEY=x python3 bin/validate --panel nosuchkey hello
+ERROR: --panel matched no reasoners in the config.
+exit_code=1
+$ cd bin && python3 ./validate --help | head -2
+usage: validate [-h] [--input INPUT] [--subject SUBJECT] [--topic TOPIC]
+                [--web] [--panel PANEL] [--out OUT] [--max-tokens MAX_TOKENS]
+exit_code=0
