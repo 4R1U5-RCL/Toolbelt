@@ -99,3 +99,91 @@ Recorded in
 [`CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef`](CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef),
 whose `iteration` field is the first sentence above — the string this change-id
 is derived from.
+
+---
+
+## templates-md-quoted-memory-md-template_4602c9f9
+
+| Field | Value |
+|---|---|
+| **id** | `templates-md-quoted-memory-md-template_4602c9f9` |
+| **summary** | TEMPLATES.md quoted MEMORY.md.template inside a fence whose four section lines begin with ## at column 0, and the Track B entry scanner does not track fences, so those four lines were read as counterpart-less entries and Reciprocity failed |
+| **status** | `in-progress` |
+| **resolved_by** | [`CHANGE_LOG.md#re-set-the-memory-md-template-quotation_280a0bc0`](CHANGE_LOG.md#re-set-the-memory-md-template-quotation_280a0bc0) at fix-version-id `v1.0.0` |
+| **branch** | `fix/legacy-memory` |
+| **occurrences** | 1 — 2026-09-01, found by `bin/trackb-check.py Skills/Memory` |
+
+Appended rather than folded into
+[`skills-memory-failed-track-b-conformance_6cdef98b`](#skills-memory-failed-track-b-conformance_6cdef98b),
+which is the entry this corrects: PROCESS.md §10 decision 22 settles that a
+correction to an unmerged entry is recorded as a new issue↔change pair and never
+as an in-place note. Both entries describe the same unmerged `v1.0.0` migration.
+
+The status is `in-progress`, not `resolved`, for the same reason as that entry:
+the iteration is executed on the branch above but not merged, and
+`process.yaml: definitions.issue-status` forbids `resolved` while `merge_commit`
+is empty.
+
+### Outcome (X) — what it resulted in
+
+`bin/trackb-check.py Skills/Memory` failed **Reciprocity** with four findings:
+
+```
+[FAIL] Reciprocity  TEMPLATES.md#User cites no IMPLEMENTATIONS.md id;
+                    TEMPLATES.md#Feedback cites no IMPLEMENTATIONS.md id;
+                    TEMPLATES.md#Project cites no IMPLEMENTATIONS.md id;
+                    TEMPLATES.md#Reference cites no IMPLEMENTATIONS.md id
+```
+
+`User`, `Feedback`, `Project` and `Reference` are not entries and never were.
+They are four lines *of the file being quoted* — the four type sections of
+`Tooling/v1.0.0/templates/MEMORY.md.template`, reproduced inside a ```` ```markdown ````
+fence in the `memory-md-template` entry. No implementation can cite them,
+because there is nothing there to cite: they are content, not forms.
+
+Two readings were considered and rejected against what the file actually says.
+They are not four standalone templates — `TEMPLATES.md` states there are exactly
+two forms in this tool and both are real files under
+`Tooling/v1.0.0/templates/`, and no third and fourth file exists to be one. Nor
+are they prose sub-sections to be demoted to level 3 under §10 decision 18 —
+demoting them would silently rewrite the quotation of a shipped file, which is
+the one thing a verbatim quote may not do. §9 does not apply either: this tool
+had only a `README.md` before 2026-08-31, so it has no pre-conformance entries
+and nothing here is eligible for `status: legacy`.
+
+### Cause (Y) — the mechanism
+
+`bin/trackb-check.py`'s `entries()` scans line by line for a `## ` prefix and
+carries no fence state, so a fenced line is indistinguishable from a heading. The
+`TEMPLATES.md` preamble asserted the opposite — "the only other `##` lines in
+this file sit inside the fenced blocks … and are template content rather than
+headings" — which is true of the markdown and false of the parser that reads it.
+An assertion in a document does not change what the checker does.
+
+The convention every other tool in the repo already follows is the fix:
+`Skills/Handoff` ships a template whose body is seven `## ` sections and quotes
+none of them at column 0, naming them in inline code instead. This tool was the
+only one that reproduced `## ` lines flush left.
+
+The checker's fence-blindness is a real limitation and is **not** fixed here —
+`bin/` is outside this tool, and §10 has no decision on whether a fenced `## `
+line is an entry. It is left for that document to settle; the tool-side
+convention above holds regardless of how it is settled, which is why the fix
+belongs in `TEMPLATES.md` rather than in the checker.
+
+### Iteration (Z) — what is planned
+
+Re-set the MEMORY.md.template quotation in TEMPLATES.md as an indented code
+block so no quoted line sits at column 0 as a level-2 heading. Concretely, at
+`v1.0.0`, changing no tool code and no shipped template:
+
+1. Replace the ```` ```markdown ```` fence in the `memory-md-template` entry with a
+   four-space indented code block. The quoted bytes are unchanged; only the
+   indent is added, and the entry says so in the sentence that introduces it.
+2. Correct the preamble sentence that excused the flush-left `##` lines, so the
+   file states the rule it now keeps.
+
+Recorded in
+[`CHANGE_LOG.md#re-set-the-memory-md-template-quotation_280a0bc0`](CHANGE_LOG.md#re-set-the-memory-md-template-quotation_280a0bc0),
+whose `iteration` field is the first sentence above — the string that change-id
+is derived from.
