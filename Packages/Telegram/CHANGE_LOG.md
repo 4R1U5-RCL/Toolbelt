@@ -166,3 +166,113 @@ not the only non-legacy entry in `KNOWN_ISSUES.md` without a counterpart.
 created, no version was cut, and no test was run for it. Recorded per
 `process.yaml: definitions.escalate` — the work is left where it stands for the
 owner to judge.
+
+---
+
+## mark-packages-telegram-s-pre-conformance_4e15f56e
+
+| Field | Value |
+|---|---|
+| **id** | `mark-packages-telegram-s-pre-conformance_4e15f56e` — `sha256` over the canonical `iteration` field per `process.yaml: definitions.change-id`. Written as `**iteration.**` rather than `**iteration (Z).**` so the field is machine-readable and the id reproduces under `bin/trackb-check.py` — the two entries above use the parenthesised form and are reported as "no iteration field to hash" (PROCESS.md §10 decision 23) |
+| **resolves** | [`KNOWN_ISSUES.md#the-escalated-reciprocity-issue-is-stale_8a23643b`](KNOWN_ISSUES.md#the-escalated-reciprocity-issue-is-stale_8a23643b) |
+| **version** | `v1.0.0` — current version, **no bump**. Documents only; nothing under `Tooling/v1.0.0/` was touched, so no released version directory was edited and no new one was opened (§5 safeguard 2) |
+| **merge_commit** | **blank.** Nothing is merged: the work sits on branch `fix/legacy-telegram`. Because this field is empty the issue it resolves is `in-progress`, not `resolved` (`process.yaml: definitions.issue-status`) |
+
+**summary.** Apply the amended PROCESS.md §9 legacy exemption to this tool's
+pre-conformance IMPLEMENTATIONS.md and TEMPLATES.md entries.
+
+**cause (Y).** `IMPLEMENTATIONS.md` and `TEMPLATES.md` predate `PROCESS.md`. Their
+sections carry human-readable headings and cross-reference by template *name*, so
+under `process.yaml: definitions.entry` none is an addressable entry and the pair
+cannot cite one another by id. Both documents are append-only, so the headings
+cannot be rewritten. That was
+[`KNOWN_ISSUES.md#track-b-reciprocity-fails-for-the-implem_c160a132`](KNOWN_ISSUES.md#track-b-reciprocity-fails-for-the-implem_c160a132),
+escalated because the only real fix was a change to the spec. The spec has since
+been amended — §9 now grandfathers all four entry documents, and decision 16
+extends the exemption to heading form — so the marking is now available and
+nothing else about the documents needs to change.
+
+**outcome (X).** `bin/trackb-check.py Packages/Telegram` failed the Reciprocity
+check, as a hard FAIL, on 25 level-2 headings across the pair — 8 in
+`IMPLEMENTATIONS.md`, 17 in `TEMPLATES.md`. 24 of the 25 were reported as "not a
+bare id" — the exception is `## Environment`, where a single capitalised word
+happens to satisfy the free-slug regex `definitions.impl-id / template-id`
+allows, so it passed heading form by accident and failed only the citation half.
+24 were reported as citing no counterpart id. Under §7 that blocks the next
+genuine iteration on the package.
+
+**iteration.** Mark Packages/Telegram's pre-conformance IMPLEMENTATIONS.md and TEMPLATES.md
+entries `status: legacy` under the amended PROCESS.md §9, demote its prose
+sections to level 3, and record the true status of the escalated issue by
+appending rather than editing it.
+
+**expected_result (V).** Checkably:
+
+1. `python3 bin/trackb-check.py Packages/Telegram` reports no FAIL. Status and
+   Id-reproduction advisories may remain (decision 23).
+2. Every marking is the addition of a `status` field and nothing else — no
+   heading text, no prose, no ordering changed in either document.
+3. Every section demoted rather than marked records no use case and cites no
+   template, so demoting it states a fact about the section rather than
+   narrowing the check.
+4. `c160a132` is untouched, and its corrected status is stated in an appended
+   entry (decision 22).
+
+**change (W).** What changed, where, and how it was verified:
+
+- **`IMPLEMENTATIONS.md` — 6 sections marked `status: legacy`**: `Worked example:
+  the Poller`, `Worked example: a human gate in a script`, `Worked example:
+  replacing a hand-rolled format string`, `From Python`, `Environment`,
+  `Choosing a destination workflow`. Each describes a way the tool is wired into a
+  caller — a use case, which is what §3 says this document records — and each
+  predates v1.0.0. One `**status.**` line was inserted after each heading; nothing
+  else in the section was touched. The form is copied from
+  `Packages/Scrape/IMPLEMENTATIONS.md`, which made this edit first.
+- **`IMPLEMENTATIONS.md` — 2 sections demoted to level 3**: `The five commands`
+  (the CLI surface, a reference table) and `Adding a template` (guidance on
+  authoring a catalogue entry — the exact analogue of decision 18's own example,
+  "Adding an entry", and of the `# Adding a template` section
+  `Packages/Scrape/TEMPLATES.md` already keeps out of entry position). Neither
+  names a use case or cites a template. They are prose, so they belong at level 3
+  (decision 18); marking a reference table `legacy` would assert it is an entry.
+- **`TEMPLATES.md` — 16 entries marked `status: legacy`**: every message-type
+  section from `` `poller.settled` `` to `` `poll` ``. These *are* the templates
+  this document exists to record — they are entries, not prose — and they are the
+  16 §9 counts. They were marked rather than re-headed because their heading text
+  is the runtime template id (`./bin/telegram render poller.settled`): it contains
+  a dot, which `definitions.impl-id / template-id` forbids, so a bare-id heading
+  means renaming the templates and breaking every reference to them by name in
+  `README.md`, `IMPLEMENTATIONS.md` and `KNOWN_ISSUES.md`. §9 forbids exactly that
+  rewrite, and the amendment exists so it is not needed.
+- **`TEMPLATES.md` — 1 section demoted to level 3**: `How to read an entry`, which
+  explains the document's own field table. Document guidance, not a template.
+- **`KNOWN_ISSUES.md`** — appended
+  [`#the-escalated-reciprocity-issue-is-stale_8a23643b`](KNOWN_ISSUES.md#the-escalated-reciprocity-issue-is-stale_8a23643b),
+  which states the corrected status of `c160a132` (`in-progress`) without editing
+  it. **`c160a132` and `9f851380` were not modified**, and neither was any `TG-`
+  entry.
+- **Not touched**: `PROCESS.md`, `process.yaml`, `bin/`, `README.md`, anything
+  under `Tooling/` or `Tests/`, and every other tool. This is a documents-only
+  change; the suite was neither re-run nor altered, and `Tests/v1.0.0/` still
+  records the v1.0.0 run verbatim.
+
+**Verification of V, item by item.** 1 ✅ — `python3 bin/trackb-check.py
+Packages/Telegram` reports Canonical files, Code layout, Test layout,
+**Reciprocity**, Status and Version agreement all PASS, with Id reproduction the
+sole remaining advisory (three pre-existing entries, all of them above this one,
+none of them re-writable). 2 ✅ — `git diff` on both documents shows only inserted
+`**status.**` blocks and three `##` → `###` heading-level changes. 3 ✅ — stated
+section by section under **change (W)**. 4 ✅ — `git diff Packages/Telegram/KNOWN_ISSUES.md`
+shows pure addition at end of file.
+
+**One honest cost of the demotions.** `IMPLEMENTATIONS.md` is append-only, so its
+sections cannot be reordered. `### Adding a template` therefore now sits between
+two level-2 sections and renders as a subsection of the worked example above it.
+The heading level is what decision 18 constrains and level 3 is what it requires;
+fixing the apparent nesting would mean moving the section, which invariant 2
+forbids. Recorded rather than quietly left.
+
+**`Tests/v1.0.0/RESULTS.md` still records Reciprocity as ❌.** That file is the
+verbatim record of the v1.0.0 run and is not rewritten (§5 invariant 6). The
+current Track B result for this tool is the checker output cited under
+**Verification of V** above, not that tick-list.
