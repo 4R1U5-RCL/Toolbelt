@@ -1,4 +1,4 @@
-$ cd /studio/scratch/tb/Skills/Memory/Tooling/v1.0.0 && bash tests/verify.sh
+$ cd /studio/scratch/tb-wt/skills-memory/Skills/Memory/Tooling/v1.0.0 && bash tests/verify.sh
   PASS · install: MEMORY.md.template placed
   PASS · install: memory-entry.md.template placed
   PASS · entry template has name/description/metadata.type + type enum

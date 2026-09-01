@@ -2,22 +2,36 @@
 
 One entry per iteration made in response to an entry in
 [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md). Fields are those `process.yaml` defines
-under `change-entry`; ids follow the same `<description>_<hash8>` rule as issue
-ids.
+under `change-entry`.
+
+Entries are delimited by a level-2 heading whose text is the bare id
+(`process.yaml: definitions.entry`) — no backticks, nothing else on the line.
+
+Ids are `<description>_<hash8>` (`process.yaml: definitions.change-id`). A
+change-id's identity is the **`iteration` field alone**: the description is that
+field slugified, the hash is the first 8 hex characters of sha256 over it,
+canonicalised as trim → lowercase → collapse whitespace runs to a single space →
+strip trailing punctuation (`. , ; : ! ?`).
 
 ---
 
-<a name="migrated-skills-memory-to-the-tooling-v1_16012fef"></a>
-## `migrated-skills-memory-to-the-tooling-v1_16012fef` — v1.0.0
+## migrated-skills-memory-to-the-tooling-v1_16012fef
 
 | Field | Value |
 |---|---|
 | **id** | `migrated-skills-memory-to-the-tooling-v1_16012fef` |
-| **summary** | Migrated Skills/Memory to the Tooling/v1.0.0 and Tests/v1.0.0 layout and created the four missing canonical documents |
+| **iteration** | Migrated Skills/Memory to the Tooling/v1.0.0 and Tests/v1.0.0 layout and created the four missing canonical documents. |
 | **resolves** | [`KNOWN_ISSUES.md#skills-memory-failed-track-b-conformance_6cdef98b`](KNOWN_ISSUES.md#skills-memory-failed-track-b-conformance_6cdef98b) |
 | **version** | `v1.0.0` — **no bump.** The code did not change, it moved. PROCESS.md §9: a tool that has never been versioned starts at `v1.0.0`, and its current code becomes `Tooling/v1.0.0/` |
-| **merge_commit** | not yet merged — this change was prepared on a working tree; all git operations (branch, commit, PR, merge) are performed by the orchestrator, not by this run |
-| **date** | 2026-08-31 |
+| **branch** | `smoke/fix-skills-memory` |
+| **merge_commit** | *(empty — not merged)*. The change is committed on the branch above; the PR, human approval and merge are §6 steps 5–7 and have not happened |
+| **date** | 2026-08-31 (migration), corrected 2026-09-01 |
+
+The `iteration` row above is the identity string this id is derived from. It is
+recorded here with its trailing full stop; canonicalisation strips trailing
+punctuation, so `sha256` over
+`migrated skills/memory to the tooling/v1.0.0 and tests/v1.0.0 layout and created the four missing canonical documents`
+begins `16012fef` either way.
 
 ### Cause (Y)
 
@@ -36,9 +50,11 @@ version and its staleness was invisible.
 
 ### Iteration (Z)
 
-A conformance-only migration at `v1.0.0`: relocate the code and test code into
-`Tooling/v1.0.0/`, run and record the existing suite under `Tests/v1.0.0/`, and
-author the four missing canonical documents from what is actually in the tool.
+Migrated Skills/Memory to the Tooling/v1.0.0 and Tests/v1.0.0 layout and created
+the four missing canonical documents — a conformance-only migration at `v1.0.0`:
+relocate the code and test code into `Tooling/v1.0.0/`, run and record the
+existing suite under `Tests/v1.0.0/`, and author the four missing canonical
+documents from what is actually in the tool.
 
 ### Expected result (V)
 
@@ -50,8 +66,10 @@ Checkably, after this change:
 - `Tooling/v1.0.0/tests/verify.sh` runs from its new location and exits 0.
 - `Tests/v1.0.0/` holds the verbatim output of that run.
 - `README.md`, the newest `Tooling/` directory and this entry all name `v1.0.0`.
-- Every `IMPLEMENTATIONS.md` entry cites a `TEMPLATES.md` anchor and vice versa;
+- Every `IMPLEMENTATIONS.md` entry cites a `TEMPLATES.md` id and vice versa;
   this entry and its issue cite each other.
+- Every entry heading in this file and in `KNOWN_ISSUES.md` is the bare id, and
+  every id reproduces from its identity field under the canonicalisation above.
 
 ### Change (W) — what changed, where, how it was verified
 
@@ -59,17 +77,20 @@ Checkably, after this change:
 |---|---|---|
 | `templates/` and `tests/` relocated | → `Tooling/v1.0.0/templates/`, `Tooling/v1.0.0/tests/` | `find` over the tool directory; tool root now holds only the five `.md` files plus `Tooling/` and `Tests/` |
 | Path repair after the move | none was required | `verify.sh` resolves its own directory from `BASH_SOURCE` and reads templates as `$PKG/templates/` where `PKG="$HERE/.."`; moving `tests/` and `templates/` together preserved that. `mem_tool.py` does no `sys.path` manipulation and takes every path as an argument |
-| Test results recorded | `Tests/v1.0.0/run-tests.log`, `Tests/v1.0.0/RESULTS.md` | Captured verbatim: `== memory smoke: 18 passed, 0 failed ==`, `exit=0`. Identical before the move, after the move from `Tooling/v1.0.0/`, and from the tool root |
-| `TEMPLATES.md` created | tool root | Documents the two real files in `Tooling/v1.0.0/templates/`, quoted verbatim; each cites its `IMPLEMENTATIONS.md` anchor |
-| `IMPLEMENTATIONS.md` created | tool root | Three implementations derived from `README.md` and the files present; each cites a `TEMPLATES.md` anchor |
-| `KNOWN_ISSUES.md` created | tool root | Header plus the first entry, `…_6cdef98b`, citing this change |
+| Test results recorded | `Tests/v1.0.0/run-tests.log`, `Tests/v1.0.0/RESULTS.md` | Captured verbatim: `== memory smoke: 18 passed, 0 failed ==`, `exit=0`. Re-run 2026-09-01 on branch `smoke/fix-skills-memory` from `Tooling/v1.0.0/` and from the tool root; identical both times |
+| `TEMPLATES.md` created | tool root | Documents the two real files in `Tooling/v1.0.0/templates/`, quoted verbatim; each entry cites its `IMPLEMENTATIONS.md` id |
+| `IMPLEMENTATIONS.md` created | tool root | Three implementations derived from `README.md` and the files present; each entry cites a `TEMPLATES.md` id |
+| `KNOWN_ISSUES.md` created | tool root | Header plus the first entry, `skills-memory-failed-track-b-conformance_6cdef98b`, citing this change |
 | `CHANGE_LOG.md` created | tool root | This file; this entry cites that issue |
 | `README.md` updated | tool root | Adds a "Current version: `v1.0.0`" line; repoints the two `templates/…` rows and the `bash tests/verify.sh` self-check line at `Tooling/v1.0.0/`. No other prose changed |
+| Conformance corrections (2026-09-01) | `KNOWN_ISSUES.md`, `CHANGE_LOG.md`, `IMPLEMENTATIONS.md`, `TEMPLATES.md`, `Tests/v1.0.0/` | Entry headings reduced to the bare id; `status` moved onto the closed set (`in-progress`, not `resolved`, because `merge_commit` is empty); the change entry's identity field relabelled from the non-spec `summary` to `iteration`; branch claims corrected to `smoke/fix-skills-memory`; both ids re-derived with `sha256sum` and unchanged; the suite re-run and its real output re-recorded |
 
-### Deviations from §6 to note
+### Process notes (§6)
 
-This run executed the iteration directly on the working tree. It did **not**
-create a branch, seed a next version directory, open a PR or merge — steps 3, 5
-and 6 of §6 — because the code did not change and all git operations are the
-orchestrator's. Consequently the issue entry remains `open`; it closes when the
-merge is recorded (§6 step 7).
+The iteration was executed on branch `smoke/fix-skills-memory` (§6 step 3), off
+the migration commit rather than off a released version directory, because the
+code did not change — it moved, and `Tooling/v1.0.0/` is itself the rollback
+point this iteration creates (§4, §5 safeguard 1). Steps 5–7 — PR, human
+approval, merge, and recording the merge commit — have **not** happened, which
+is why `merge_commit` is empty and the issue entry reads `in-progress` rather
+than `resolved`.

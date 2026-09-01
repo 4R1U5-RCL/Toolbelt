@@ -4,22 +4,40 @@ Append-only (PROCESS.md §5.1). Every entry carries the fields `process.yaml`
 defines under `issue-entry`, and cites the iteration that addresses it in
 [`CHANGE_LOG.md`](CHANGE_LOG.md).
 
-Ids are `<description>_<hash8>` per `process.yaml` §5: the description is the
-summary slugified, the hash is the first 8 hex characters of sha256 over the
-canonicalised summary.
+Entries are delimited by a level-2 heading whose text is the bare id
+(`process.yaml: definitions.entry`) — no backticks, nothing else on the line, so
+that a `KNOWN_ISSUES.md#<id>` citation resolves against the heading.
+
+Ids are `<description>_<hash8>` (`process.yaml: definitions.issue-id`): the
+description is the summary slugified, the hash is the first 8 hex characters of
+sha256 over the canonicalised summary. Canonicalisation is trim → lowercase →
+collapse whitespace runs to a single space → strip trailing punctuation
+(`. , ; : ! ?`). Identity is the `summary` field alone (PROCESS.md §10.3).
+
+`status` is drawn from the closed set of seven in
+`process.yaml: definitions.issue-status` — `open, planned, in-progress,
+resolved, escalated, legacy, wont-fix`. No entry in this file is `legacy`: this
+tool had only a `README.md` before its first conformant version, so every entry
+here was written under PROCESS.md and is bound by the reciprocity check.
 
 ---
 
-<a name="skills-memory-failed-track-b-conformance_6cdef98b"></a>
-## `skills-memory-failed-track-b-conformance_6cdef98b`
+## skills-memory-failed-track-b-conformance_6cdef98b
 
 | Field | Value |
 |---|---|
 | **id** | `skills-memory-failed-track-b-conformance_6cdef98b` |
 | **summary** | Skills/Memory failed Track B conformance: four canonical documents missing, code not under Tooling/, no recorded results under Tests/, README named no version |
-| **status** | open — iteration executed, awaiting PR and human approval (PROCESS.md §6 steps 5–7) |
-| **resolved_by** | [`CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef`](CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef) at version `v1.0.0` — not yet merged, so this entry is not yet closed |
+| **status** | `in-progress` |
+| **resolved_by** | [`CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef`](CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef) at fix-version-id `v1.0.0` |
+| **branch** | `smoke/fix-skills-memory` |
 | **occurrences** | 1 — 2026-08-31, found by the Track B conformance check run against `Skills/Memory` during this migration |
+
+The status is `in-progress`, not `resolved`: the iteration has been executed on
+the branch above but the change is not merged, and
+`process.yaml: definitions.issue-status` states that `resolved` is never written
+while `merge_commit` is empty. It becomes `resolved` at §6 step 7, citing the
+merge commit.
 
 ### Outcome (X) — what it resulted in
 
@@ -63,8 +81,9 @@ claims, and the README is corrected to match.
 
 ### Iteration (Z) — what is planned
 
-Bring `Skills/Memory` into Track B conformance at `v1.0.0`, without changing any
-tool behaviour:
+Migrated Skills/Memory to the Tooling/v1.0.0 and Tests/v1.0.0 layout and created
+the four missing canonical documents. Concretely, at `v1.0.0`, without changing
+any tool behaviour:
 
 1. Move `templates/` and `tests/` into `Tooling/v1.0.0/`, leaving the canonical
    `.md` files at the tool root.
@@ -77,4 +96,6 @@ tool behaviour:
 5. State `v1.0.0` in `README.md` and repoint its `templates/` and `tests/` paths.
 
 Recorded in
-[`CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef`](CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef).
+[`CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef`](CHANGE_LOG.md#migrated-skills-memory-to-the-tooling-v1_16012fef),
+whose `iteration` field is the first sentence above — the string this change-id
+is derived from.
