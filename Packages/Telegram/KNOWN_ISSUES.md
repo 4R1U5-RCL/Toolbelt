@@ -855,3 +855,85 @@ green without either breaking invariant 2 or narrowing the wording of the check
 3. Appending fresh id-headed entries to both files and calling the pair
    reciprocal — the check reads *every* entry, so new entries do not repair old
    ones, and the result would be a green tick over a red check.
+
+---
+
+## the-escalated-reciprocity-issue-is-stale_8a23643b
+
+| Field | Value |
+|---|---|
+| **id** | `the-escalated-reciprocity-issue-is-stale_8a23643b` — `sha256` over the canonical `summary` per `process.yaml: definitions.issue-id`; it reproduces under `bin/trackb-check.py` |
+| **status** | in-progress |
+| **resolved_by** | the iteration is [`CHANGE_LOG.md#mark-packages-telegram-s-pre-conformance_4e15f56e`](CHANGE_LOG.md#mark-packages-telegram-s-pre-conformance_4e15f56e), fix-version `v1.0.0` (no bump — documents only; nothing under `Tooling/` changed). It is **executed**, on branch `fix/legacy-telegram`, but **`merge_commit` is blank**, so `resolved` may not be written (`process.yaml: definitions.issue-status`) |
+| **occurrences** | 1 — 2026-09-01, found re-running Track B against this tool after the PROCESS.md §9 amendment landed |
+
+**summary.** The escalated reciprocity issue is stale: the PROCESS.md §9 amendment it
+waited on has landed, so Telegram's pre-conformance IMPLEMENTATIONS.md and
+TEMPLATES.md entries can now be marked legacy.
+
+**outcome (X).** Two things were wrong at once, and only the second is a document
+defect:
+
+1. `Packages/Telegram` still failed the Track B **Reciprocity** check — 24 level-2
+   headings across `IMPLEMENTATIONS.md` and `TEMPLATES.md` that are neither bare
+   ids nor marked legacy, plus the counterpart-less citations that follow from
+   them. `bin/trackb-check.py Packages/Telegram` reported it as a hard FAIL.
+2. [`#track-b-reciprocity-fails-for-the-implem_c160a132`](#track-b-reciprocity-fails-for-the-implem_c160a132)
+   carries `status: escalated`, and its own stated ground for that status —
+   "the iteration is a change to `PROCESS.md`/`process.yaml`, which this branch
+   does not own" — no longer holds. `process.yaml: definitions.escalate` defines
+   escalated as *the absence of a verdict*: the check could not be answered. It
+   can now.
+
+**cause (Y).** The escalation was correct when it was written and was answered
+outside this tool. PROCESS.md §9 now reads "**The exemption covers all four entry
+documents**" and names Telegram's 8 and 16 pre-conformance entries explicitly;
+decision 17 records Telegram as the tool that escalated it, and decision 16
+extends the exemption to heading form as well as reciprocity. The amendment
+landed; the marking it authorises was never applied here, because applying it was
+not that branch's work. An issue status is a fact about the world, not about the
+entry, and the world moved.
+
+**iteration (Z).** Apply the exemption the amended §9 grants: mark every
+pre-conformance `IMPLEMENTATIONS.md` and `TEMPLATES.md` entry `status: legacy`,
+demote the prose sections that are not entries to level 3 per decision 18, and
+record the corrected status of `c160a132` by appending this pair. Planned and
+executed in
+[`CHANGE_LOG.md#mark-packages-telegram-s-pre-conformance_4e15f56e`](CHANGE_LOG.md#mark-packages-telegram-s-pre-conformance_4e15f56e).
+
+**The status of `c160a132`, stated rather than edited.** Its true status today is
+**`in-progress`**, not `escalated` and not `resolved`:
+
+- not `escalated` — the blocker it named is gone; the check is answerable and has
+  been answered.
+- not `resolved` — `resolved` "is never written while `merge_commit` is empty"
+  (`process.yaml: definitions.issue-status`), and nothing on this branch is
+  merged. Its `resolved_by` row still reads "no fix-version, no merge commit".
+- so `in-progress` — the fix loop is running on it, on branch
+  `fix/legacy-telegram`.
+
+That correction is recorded **here, by appending**, and the `c160a132` entry is
+left byte-for-byte as it stands. PROCESS.md §10 decision 22 (settled 2026-09-01,
+third pass) is explicit: a correction to an unmerged entry is appended as a new
+issue↔change pair and the entry is never edited in place, "even with a dated
+note". A reader of `c160a132` reaches this entry through the two links above and
+through this file's ordering; a reader who edits it in place destroys the record
+that it was ever escalated, which is the fact worth keeping.
+
+**What was deliberately not done.** The three non-fixes `c160a132` rejected are
+still rejected, and this iteration does not smuggle any of them back:
+
+1. No heading in `IMPLEMENTATIONS.md` or `TEMPLATES.md` was rewritten into an id.
+   The 16 template headings are the runtime ids passed to
+   `./bin/telegram render <id>`; they contain dots, which
+   `process.yaml: definitions.impl-id / template-id` forbids, so a bare-id heading
+   would mean *renaming the templates themselves* and breaking every cross-
+   reference that names them.
+2. "Entry" was not re-read to make the check vacuous. Six of the eight
+   `IMPLEMENTATIONS.md` sections and all sixteen `TEMPLATES.md` sections remain
+   entries, and are exempt because §9 exempts them — not because they stopped
+   counting. Only three sections were demoted, each one that records no use case
+   and cites no template.
+3. No fresh id-headed entries were appended to either file to manufacture a pair.
+   §9 permits that and does not require it; the reciprocity here rests on the
+   exemption, which is what the amendment was for.
