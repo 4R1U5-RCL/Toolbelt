@@ -10,8 +10,9 @@ under `Tooling/v1.0.0/`. Each entry cites the form it applies in
 
 ---
 
-<a name="new-memory-directory"></a>
-## 1. Stand up a memory directory for a project
+## new-memory-directory
+
+**Stand up a memory directory for a project**
 
 **Template:** [TEMPLATES.md#memory-md-template](TEMPLATES.md#memory-md-template)
 
@@ -39,8 +40,9 @@ when its index line looks relevant.
 
 ---
 
-<a name="record-a-memory"></a>
-## 2. Record one durable fact
+## record-a-memory
+
+**Record one durable fact**
 
 **Template:** [TEMPLATES.md#memory-entry-md-template](TEMPLATES.md#memory-entry-md-template)
 
@@ -75,8 +77,9 @@ found mid-session is promoted out of the handoff into a memory node.
 
 ---
 
-<a name="drift-check"></a>
-## 3. Check a memory directory for drift
+## drift-check
+
+**Check a memory directory for drift**
 
 **Templates:** [TEMPLATES.md#memory-md-template](TEMPLATES.md#memory-md-template)
 and [TEMPLATES.md#memory-entry-md-template](TEMPLATES.md#memory-entry-md-template)

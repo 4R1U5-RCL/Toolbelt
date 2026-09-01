@@ -6,12 +6,22 @@ installed to `~/.claude/data/templates/`. Nothing else in this tool is a
 template: there are no command files, no n8n workflows and no config forms.
 
 Each entry names the implementation in [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md)
-that applies it.
+that applies it. Entries are delimited by a level-2 heading whose text is the
+bare id (`process.yaml: definitions.entry`); the only other `##` lines in this
+file sit inside the fenced blocks that quote `MEMORY.md.template` verbatim, and
+are template content rather than headings.
+
+**Coverage.** Two templates, both present and both exercised by
+`Tooling/v1.0.0/tests/verify.sh` (18/18 — see [`Tests/v1.0.0/`](Tests/v1.0.0/)).
+No template exists for the *discipline* half of this tool (dedup-first,
+index-in-the-same-change, promotion out of a handoff): that is prose in
+`README.md`, not a form, and no file in this tool encodes it.
 
 ---
 
-<a name="memory-md-template"></a>
-## `MEMORY.md.template` — the index skeleton
+## memory-md-template
+
+**`MEMORY.md.template` — the index skeleton**
 
 **File:** `Tooling/v1.0.0/templates/MEMORY.md.template`
 **Installs to:** `~/.claude/data/templates/MEMORY.md.template`
@@ -53,8 +63,9 @@ What it fixes:
 
 ---
 
-<a name="memory-entry-md-template"></a>
-## `memory-entry.md.template` — one fact, one file
+## memory-entry-md-template
+
+**`memory-entry.md.template` — one fact, one file**
 
 **File:** `Tooling/v1.0.0/templates/memory-entry.md.template`
 **Installs to:** `~/.claude/data/templates/memory-entry.md.template`
@@ -87,13 +98,3 @@ What it fixes:
 - `name` must equal the file stem — the linter fails an entry where it does not.
 - The `{{…}}` placeholders are fill points; the `<!-- … -->` lines are guidance
   and are dropped when the template is cut (see `mem_tool.py build`).
-
----
-
-## Coverage note
-
-Two templates, both present and both exercised by
-`Tooling/v1.0.0/tests/verify.sh` (18/18 — see [`Tests/v1.0.0/`](Tests/v1.0.0/)).
-No template exists for the *discipline* half of this tool (dedup-first,
-index-in-the-same-change, promotion out of a handoff): that is prose in
-`README.md`, not a form, and no file in this tool encodes it.
