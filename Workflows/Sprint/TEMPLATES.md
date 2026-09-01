@@ -9,6 +9,16 @@ agent fills in). The rest are **installable artifacts**: files copied verbatim t
 a fixed path in `~/.claude/`, where the harness picks them up. Both kinds are
 application forms, so both are listed.
 
+**Not templates.** `fleet-kit/README.md` (install-path topology view) and
+`docs/topology.html` (self-contained system diagram) are documentation, not
+application forms. `fleet-mbox.sh`, `fleet-board.sh` and `fleet-doctor.sh` are
+executables invoked by the roles, not forms to fill in; they are described in
+[IMPLEMENTATIONS.md](IMPLEMENTATIONS.md), not here.
+
+Every level-2 heading below is a bare entry id
+(`process.yaml: definitions.entry`); this preamble carries the document's own
+prose so that no non-entry heading sits among the entries.
+
 | ID | Template | File | Kind | Used by |
 |---|---|---|---|---|
 | [T-01](#t-01) | Canonical sprint board | `fleet-kit/SPRINT.md.template` | Fill-in template | [IMP-02](IMPLEMENTATIONS.md#imp-02), [IMP-05](IMPLEMENTATIONS.md#imp-05) |
@@ -21,7 +31,9 @@ application forms, so both are listed.
 ---
 
 <a name="t-01"></a>
-## T-01 — Canonical sprint board (`SPRINT.md.template`)
+## T-01
+
+**Canonical sprint board (`SPRINT.md.template`)**
 
 **File:** `Tooling/v1.0.0/fleet-kit/SPRINT.md.template`
 **Installs to:** `~/.claude/data/templates/fleet-kit/SPRINT.md.template`
@@ -55,7 +67,9 @@ Implementations: [IMP-02](IMPLEMENTATIONS.md#imp-02) (creation),
 ---
 
 <a name="t-02"></a>
-## T-02 — The `/fleet` slash command
+## T-02
+
+**The `/fleet` slash command**
 
 **File:** `Tooling/v1.0.0/commands/fleet.md`
 **Installs to:** `~/.claude/commands/fleet.md`
@@ -85,7 +99,9 @@ Implementations: [IMP-01](IMPLEMENTATIONS.md#imp-01),
 ---
 
 <a name="t-03"></a>
-## T-03 — The emitted role blocks
+## T-03
+
+**The emitted role blocks**
 
 **Source:** the "Emit — in this exact order" section of
 `Tooling/v1.0.0/commands/fleet.md`.
@@ -106,7 +122,9 @@ Implementations: [IMP-02](IMPLEMENTATIONS.md#imp-02),
 ---
 
 <a name="t-04"></a>
-## T-04 — The `fleet-triage` subagent
+## T-04
+
+**The `fleet-triage` subagent**
 
 **File:** `Tooling/v1.0.0/agents/fleet-triage.md`
 **Installs to:** `~/.claude/agents/fleet-triage.md`
@@ -140,7 +158,9 @@ Implementation: [IMP-04](IMPLEMENTATIONS.md#imp-04).
 ---
 
 <a name="t-05"></a>
-## T-05 — The triage read-only guard hook
+## T-05
+
+**The triage read-only guard hook**
 
 **File:** `Tooling/v1.0.0/fleet-kit/fleet-triage-guard.sh`
 **Installs to:** `~/.claude/data/templates/fleet-kit/fleet-triage-guard.sh`
@@ -161,7 +181,9 @@ Implementation: [IMP-04](IMPLEMENTATIONS.md#imp-04).
 ---
 
 <a name="t-06"></a>
-## T-06 — The sprint SOP
+## T-06
+
+**The sprint SOP**
 
 **File:** `Tooling/v1.0.0/fleet-kit/SOP-Sprints.md` (221 lines)
 **Installs to:** `~/.claude/data/templates/fleet-kit/SOP-Sprints.md`
@@ -173,13 +195,3 @@ install — `commands/fleet.md` names it as governance, so a fleet stood up with
 it is running unsourced.
 
 Implementation: [IMP-01](IMPLEMENTATIONS.md#imp-01).
-
----
-
-## Not templates
-
-`fleet-kit/README.md` (install-path topology view) and `docs/topology.html`
-(self-contained system diagram) are documentation, not application forms.
-`fleet-mbox.sh`, `fleet-board.sh` and `fleet-doctor.sh` are executables invoked
-by the roles, not forms to fill in; they are described in
-[IMPLEMENTATIONS.md](IMPLEMENTATIONS.md), not here.

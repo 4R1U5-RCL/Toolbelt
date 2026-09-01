@@ -1,19 +1,68 @@
 $ date -u
-Mon Aug 31 15:24:15 UTC 2026
+Tue Sep  1 04:37:37 UTC 2026
 
-$ ls Workflows/Sprint (tool root)
-README.md
-Tests
-Tooling
+$ git rev-parse --abbrev-ref HEAD
+smoke/fix-workflows-sprint
 
-$ find . -name 'run-tests.sh' -o -type d -name tests
-(no output above = neither a run-tests.sh nor a tests/ directory exists)
+=== STEP 1: look for an executable test runner ===
+$ find . -path ./Tests -prune -o \( -name 'run-tests*' -o -name 'Makefile' -o -name 'package.json' -o -type d -name tests \) -print
+(no output above: there is NO run-tests.sh, no Makefile, no package.json and
+ no tests/ directory anywhere in this tool. This tool has never shipped test code.)
 
-=== FALLBACK: bash -n syntax check of the shipped scripts (NOT a test suite) ===
+=== STEP 2: no suite exists -> Track-B conformance checks run in its place (PROCESS.md §4, §5.5, §8) ===
+$ python3 Tests/v1.0.0/trackb-check.py
+[PASS] Canonical files    all five exist and are non-empty
+[PASS] Reciprocity        1 KI / 1 CL / 5 IMP / 6 T entries, all bare-id headings, all cross-cited
+[PASS] Code layout        Tooling/v1.0.0 holds all implementation files; nothing loose at the tool root
+[PASS] Test layout        Tests/v1.0.0 exists and holds RESULTS.md, run-tests.log, trackb-check.py
+[PASS] Version agreement  README=v1.0.0  newest Tooling/=v1.0.0  newest CHANGE_LOG entry=v1.0.0
+
+RESULT: ALL FIVE PASS (0 FAIL)
+exit=0
+
+=== STEP 3: id reproduction (process.yaml: definitions.change-id / .issue-id) ===
+$ printf '%s' 'conform the tool at `v1.0.0` per process.md §9 without touching behaviour' | sha256sum
+a832777d27391cdc1ed9cdb01a3958f09eaae1f209c907b57f1cfef34b1206f9  -
+  -> change-id conform-the-tool-at-v1-0-0-per-process-m_a832777d  (matches the entry)
+$ printf '%s' 'workflows/sprint failed track b conformance: four canonical documents missing, code not under tooling/, no recorded results under tests/, and readme named no version' | sha256sum
+e81c9e7677f2b987c87a62f659e04e25d4259077fdc25d4d18956cdac13d0701  -
+  -> issue-id  workflows-sprint-failed-track-b-conforma_e81c9e76  (matches the entry, unchanged)
+
+=== STEP 4: the retired orphan id has no live citation left ===
+$ grep -rn '695ac22d' --include='*.md' . | grep -E ':(## |<a name|- \*\*id)|\]\(.*695ac22d'
+(no output: no heading, anchor, id field or link cites it)
+$ grep -rn '695ac22d' --include='*.md' .   # every remaining mention
+Tests/v1.0.0/RESULTS.md:60:id `..._695ac22d` has no heading, anchor, `id` field or citation anywhere — its
+CHANGE_LOG.md:30:`migrate-workflows-sprint-to-the-process_695ac22d`. That id was an orphan: neither
+CHANGE_LOG.md:107:| change-id corrected | `..._695ac22d` → `conform-the-tool-at-v1-0-0-per-process-m_a832777d`, recomputed from the `iteration` field per `process.yaml: definitions.change-id`. See *id correction* above. Both citations in `KNOWN_ISSUES.md` moved with it |
+(both remaining mentions are prose inside the CHANGE_LOG entry, which quotes
+ the retired id on purpose to record that it was retired)
+
+=== STEP 5: status vocabulary inside the closed set of seven ===
+$ grep -n '\*\*status:\*\*' KNOWN_ISSUES.md
+23:- **status:** in-progress
+$ grep -n 'merge_commit' CHANGE_LOG.md | head -3
+22:- **merge_commit:** *(empty)* — not merged. The work is committed on
+108:| `status` corrected | the issue entry's status was free prose ("fixed in tree at `v1.0.0`, pending merge"), outside the closed set of seven. It now reads `in-progress` — the correct value while `merge_commit` is empty |
+109:| `merge_commit` / branch stated truthfully | the entry now names branch `smoke/fix-workflows-sprint` and records `merge_commit` as empty. The earlier claim "this session runs no git commands" is gone; this session does commit, to that branch only |
+
+=== STEP 6: relative links in the five canonical docs all resolve ===
+OK   CHANGE_LOG.md
+OK   IMPLEMENTATIONS.md
+OK   KNOWN_ISSUES.md
+OK   TEMPLATES.md
+OK   Tests/v1.0.0/RESULTS.md
+OK   Tests/v1.0.0/run-tests.log
+OK   Tests/v1.0.0/trackb-check.py
+
+=== STEP 7: FALLBACK sanity — bash -n on the shipped scripts (NOT a test suite) ===
 Tooling/v1.0.0/fleet-kit/fleet-board.sh: syntax OK
 Tooling/v1.0.0/fleet-kit/fleet-doctor.sh: syntax OK
 Tooling/v1.0.0/fleet-kit/fleet-mbox.sh: syntax OK
 Tooling/v1.0.0/fleet-kit/fleet-triage-guard.sh: syntax OK
+
+$ git diff --stat HEAD -- Tooling/     # released version dir must be untouched
+(empty above = no file under Tooling/v1.0.0/ was modified)
 
 === bash --version ===
 GNU bash, version 5.2.15(1)-release (x86_64-pc-linux-gnu)

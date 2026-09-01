@@ -8,7 +8,7 @@ carrying the version of the iteration that resolved it.
 
 | ID | Summary | Status |
 |---|---|---|
-| [workflows-sprint-failed-track-b-conforma_e81c9e76](#workflows-sprint-failed-track-b-conforma_e81c9e76) | Track B conformance failure found on first touch | Fixed in tree at v1.0.0, pending merge |
+| [workflows-sprint-failed-track-b-conforma_e81c9e76](#workflows-sprint-failed-track-b-conforma_e81c9e76) | Track B conformance failure found on first touch | in-progress |
 
 ---
 
@@ -20,8 +20,12 @@ carrying the version of the iteration that resolved it.
 - **source:** PROCESS.md §7 Track B, run on first touch of this tool (§9, "on next touch")
 - **occurred_at:** 2026-08-31
 - **tool:** `Workflows/Sprint`
-- **status:** fixed in tree at `v1.0.0`; not yet merged — this session runs no git commands, so the PR and merge are the orchestrator's (PROCESS.md §8)
-- **resolved_by:** [`CHANGE_LOG.md#migrate-workflows-sprint-to-the-process_695ac22d`](CHANGE_LOG.md#migrate-workflows-sprint-to-the-process_695ac22d), version `v1.0.0`
+- **status:** in-progress
+- **status_note:** the fix is written and committed on branch `smoke/fix-workflows-sprint`,
+  not merged to `main`. `merge_commit` on the change entry is therefore empty, and
+  `resolved` may not be written while it is (`process.yaml: definitions.issue-status`).
+  The PR and the merge are the owner's gate (PROCESS.md §8).
+- **resolved_by:** [`CHANGE_LOG.md#conform-the-tool-at-v1-0-0-per-process-m_a832777d`](CHANGE_LOG.md#conform-the-tool-at-v1-0-0-per-process-m_a832777d), version `v1.0.0`
 - **occurrences:** 1 — 2026-08-31, found by conformance sweep
 
 ### outcome — what the failure resulted in
@@ -59,16 +63,21 @@ Bring the tool into Track B conformance at `v1.0.0` per PROCESS.md §9, without
 changing behaviour: move the implementation under `Tooling/v1.0.0/`, create the
 four missing canonical documents, record an actual verification attempt under
 `Tests/v1.0.0/`, and state the version in `README.md`. Recorded as
-[`CHANGE_LOG.md#migrate-workflows-sprint-to-the-process_695ac22d`](CHANGE_LOG.md#migrate-workflows-sprint-to-the-process_695ac22d).
+[`CHANGE_LOG.md#conform-the-tool-at-v1-0-0-per-process-m_a832777d`](CHANGE_LOG.md#conform-the-tool-at-v1-0-0-per-process-m_a832777d).
 
 ### residual — not closed by this iteration
 
-**This tool has no test suite.** There is no `run-tests.sh` and no `tests/`
-directory, at the old root or the new version directory, so nothing could be run
-and nothing green could honestly be recorded. `Tests/v1.0.0/` therefore records
-the attempt and a `bash -n` syntax check of the four shell scripts — explicitly
-labelled as *not* a test suite — rather than a pass. Writing a real suite is
-future work; it is a separate issue and is not covered by this entry. Until it
-exists, PROCESS.md §5.5 ("a PR cannot merge without test files demonstrating the
-fix works end-to-end") cannot be satisfied for this tool by test code — only by
-the recorded conformance evidence.
+**This tool has no test suite.** There is no `run-tests.sh`, no `tests/`
+directory, no `Makefile` and no `package.json` — at the old root or the new
+version directory — so nothing could be run and nothing green could honestly be
+recorded. `Tests/v1.0.0/RESULTS.md` therefore records **NOT TESTED**, names the
+five Track-B checks run in its place (all five pass) and keeps a `bash -n` syntax
+parse of the four shell scripts explicitly labelled *not a test*. Writing a real
+suite is future work; it is a separate issue and is not covered by this entry.
+
+Amended PROCESS.md §5.5 and §8 (decisions 9 and 10) make this mergeable: the
+requirement is **recorded evidence**, not test files, and a recorded Track-B
+conformance result satisfies it for a code-less tool. What is still *not*
+established is that the tool works — `RESULTS.md` §5 states that limit directly,
+and the README's smoke-test counts remain an unverifiable claim because neither
+that test code nor its output is in this repository.
