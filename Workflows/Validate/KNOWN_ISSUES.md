@@ -6,20 +6,44 @@ Every issue found with this tool. Each entry cites the iteration that addresses 
 **Append-only** (PROCESS.md §5.1). Entries are never edited or removed; a fix appends, and a
 repeat occurrence is added as an occurrence row on the existing entry rather than a new entry.
 
-Ids are `<description>_<hash8>` per `process.yaml` §5 — the slugified summary, plus the first 8
-hex characters of the sha256 of the canonicalised summary.
+Ids are `<description>_<hash8>` per `process.yaml` `definitions.issue-id`. The identity string of
+an **issue** entry is its `summary` field alone (PROCESS.md §10.3). Canonicalisation, in order:
+trim → lowercase → collapse whitespace runs to a single space → strip trailing punctuation
+(`. , ; : ! ?`) — the last step is PROCESS.md §10.14. `<description>` is that canonical string
+slugified and truncated to 40 characters; `<hash8>` is the first 8 hex characters of its sha256.
+
+Entry headings are the **bare id** — no backticks, nothing else on the line
+(`process.yaml` `definitions.entry`), because the heading text is the anchor that
+`KNOWN_ISSUES.md#<id>` citations resolve against.
+
+> **One correction, recorded rather than hidden (2026-09-01).** The entry below was written during
+> the 2026-08-31 migration and has never been merged or released — it exists only on
+> `smoke/fix-workflows-validate`. Its conformance defects were corrected in place: the heading was
+> un-backticked, `status` was changed from a prose value to the closed-set value `in-progress`, and
+> a branch claim that was untrue when written was replaced with the branch that actually holds the
+> work. **No identity field was touched** — `summary` is byte-identical, so the id still recomputes
+> to `workflows-validate-failed-track-b-confor_ccdc053f`. Append-only binds released history; it is
+> not a licence to leave a false statement standing in an unmerged draft.
 
 ---
 
-## `workflows-validate-failed-track-b-confor_ccdc053f`
+## workflows-validate-failed-track-b-confor_ccdc053f
 
 | Field | Value |
 |---|---|
 | **id** | `workflows-validate-failed-track-b-confor_ccdc053f` |
 | **summary** | Workflows/Validate failed Track B conformance: four canonical documents missing, code not under Tooling/, no recorded test results under Tests/, README named no version |
-| **status** | open — the iteration is applied in the working tree on the migration branch; the entry closes as `resolved` on merge, per PROCESS.md §6 step 7 |
-| **resolved_by** | [`CHANGE_LOG.md#migrate-workflows-validate-to-the-proces_c65a856c`](CHANGE_LOG.md#migrate-workflows-validate-to-the-proces_c65a856c) at version `v1.0.0` |
+| **status** | in-progress |
+| **resolved_by** | planned by [`CHANGE_LOG.md#migrate-workflows-validate-to-the-proces_c65a856c`](CHANGE_LOG.md#migrate-workflows-validate-to-the-proces_c65a856c), target version `v1.0.0` — **not yet resolved**: nothing is merged, so no fix-version is released and no `merge_commit` exists |
 | **occurrences** | 1 — detected 2026-08-31 by the Track B conformance check run during this migration (PROCESS.md §7 Track B, §9 "on next touch") |
+
+**Current state — stated so the entry can be checked against the repository.** The iteration is
+written and executed, but not reviewed, not approved and not merged. Its files are committed on
+branch `smoke/fix-workflows-validate`, which is where this entry itself lives; `main` is unchanged.
+Status is therefore `in-progress` and not `resolved` — `resolved` is only written once a
+`merge_commit` exists (`process.yaml` `definitions.issue-status`). Earlier revisions of this entry
+recorded the status as `open` and attributed the work to a "migration branch" that did not exist
+when they were written; both claims are corrected here.
 
 **outcome (X) — what the failure resulted in.** The tool did not satisfy PROCESS.md §7 Track B and
 therefore could not release a version. Concretely, as found on 2026-08-31:

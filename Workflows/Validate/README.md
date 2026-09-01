@@ -117,6 +117,10 @@ else the current directory: `validate_<topic>_<UTC>.md`.
 This package was itself validated (LiteLLM GPT-5 + Gemini, a deliberately different backend) and the
 resulting action items were applied — see the hardening above.
 
-Run the self-test any time: `cd Tooling/v1.0.0 && python3 tests/selftest.py`.
-The recorded result for `v1.0.0` (28 passed, 0 failed, 2026-08-31) is in
-[`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md).
+Run the self-test any time: `cd Tooling/v1.0.0 && python3 tests/selftest.py`. It is a **Python**
+script and this tool ships no `run-tests.sh` — running it under `bash` produces shell syntax errors
+that look like a broken suite but are only the wrong interpreter.
+
+Recorded results for `v1.0.0` are in [`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md):
+28 passed, 0 failed on 2026-08-31 (migration agent), and 28 passed, 0 failed again on 2026-09-01
+when the suite was re-run from the post-move location.

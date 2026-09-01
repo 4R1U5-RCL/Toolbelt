@@ -3,6 +3,11 @@
 Production-ready application forms for this tool. Each entry is cited by its counterpart in
 [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md) (PROCESS.md §3 reciprocity).
 
+Entry headings are the **bare id** — no backticks, no title text on the heading line
+(`process.yaml` `definitions.entry`). The heading text is the anchor that `TEMPLATES.md#<id>` citations
+resolve against, so anything else on the line breaks the citation and makes reciprocity
+unverifiable by grep. Each entry's one-line title is the first line of its body instead.
+
 > **Scope note (honest gap).** This tool has **no `templates/` directory**. Nothing was invented
 > to fill this file: every form below is copied verbatim from an artifact that actually exists in
 > the repo — the invocation forms in [`README.md`](README.md) and the `bin/validate` docstring, and
@@ -14,7 +19,9 @@ environment; `bin/validate` exits with an error if it is unset.
 
 ---
 
-## `t-inline-content` — validate content passed as an argument
+## t-inline-content
+
+**Validate content passed as an argument.**
 
 Source: `README.md` "Install & use"; `bin/validate` docstring.
 
@@ -28,7 +35,9 @@ Implementation: [`IMPLEMENTATIONS.md#i-inline-content`](IMPLEMENTATIONS.md#i-inl
 
 ---
 
-## `t-file-input` — validate a document on disk
+## t-file-input
+
+**Validate a document on disk.**
 
 Source: `README.md` "Install & use".
 
@@ -43,7 +52,9 @@ Implementation: [`IMPLEMENTATIONS.md#i-file-input`](IMPLEMENTATIONS.md#i-file-in
 
 ---
 
-## `t-stdin-pipe` — validate piped content
+## t-stdin-pipe
+
+**Validate piped content.**
 
 Source: `README.md` "Install & use".
 
@@ -55,7 +66,9 @@ Implementation: [`IMPLEMENTATIONS.md#i-stdin-pipe`](IMPLEMENTATIONS.md#i-stdin-p
 
 ---
 
-## `t-web-factcheck` — add the opt-in Perplexity web fact-check
+## t-web-factcheck
+
+**Add the opt-in Perplexity web fact-check.**
 
 Source: `README.md` "Install & use" and "Honesty invariants".
 
@@ -70,7 +83,9 @@ Implementation: [`IMPLEMENTATIONS.md#i-web-factcheck`](IMPLEMENTATIONS.md#i-web-
 
 ---
 
-## `t-panel-subset` — run a subset of the panel
+## t-panel-subset
+
+**Run a subset of the panel.**
 
 Source: `README.md` "Install & use".
 
@@ -88,7 +103,9 @@ Implementation: [`IMPLEMENTATIONS.md#i-panel-subset`](IMPLEMENTATIONS.md#i-panel
 
 ---
 
-## `t-panel-config` — the panel definition
+## t-panel-config
+
+**The panel definition.**
 
 Source: `Tooling/v1.0.0/config/panel.json` (verbatim), also quoted in `README.md`
 "Configuration". This is the default `--config` value; swap models here rather than in code.
@@ -112,9 +129,11 @@ Implementation: [`IMPLEMENTATIONS.md#i-panel-config`](IMPLEMENTATIONS.md#i-panel
 
 ---
 
-## `t-offline-selftest` — run the offline self-test
+## t-offline-selftest
 
-Source: `README.md` "Verified" — *"Run the self-test any time: `python3 tests/selftest.py`"*.
+**Run the offline self-test.**
+
+Source: `README.md` "Verified" — *"Run the self-test any time: `cd Tooling/v1.0.0 && python3 tests/selftest.py`"*.
 
 ```sh
 cd Tooling/v1.0.0
@@ -123,5 +142,10 @@ python3 tests/selftest.py
 
 No network and no secrets — the suite injects a fake `call_model`. Recorded output for v1.0.0:
 [`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md).
+
+> **Runner trap.** `tests/selftest.py` is a **Python** script, not a shell script, and this tool
+> ships no `run-tests.sh`. Invoking it as `bash tests/selftest.py` fails with shell syntax errors
+> (`import: command not found`, `syntax error near unexpected token`) that look like a broken
+> suite but are only the wrong interpreter. Always run it with `python3`.
 
 Implementation: [`IMPLEMENTATIONS.md#i-offline-selftest`](IMPLEMENTATIONS.md#i-offline-selftest)

@@ -6,6 +6,11 @@ How this tool is actually used. Every entry cites its form in
 **Append-only** (PROCESS.md §5.2). A new use case is appended; an existing entry is never
 replaced.
 
+Entry headings are the **bare id** — no backticks, no title text on the heading line
+(`process.yaml` `definitions.entry`). The heading text is the anchor that `IMPLEMENTATIONS.md#<id>` citations
+resolve against, so anything else on the line breaks the citation and makes reciprocity
+unverifiable by grep. Each entry's one-line title is the first line of its body instead.
+
 Each entry below is derived from artifacts that exist in this directory —
 [`README.md`](README.md), the `bin/validate` docstring and argument parser, and
 `Tooling/v1.0.0/config/panel.json`. No use case is recorded here that the repo does not
@@ -17,7 +22,9 @@ as `validate_<topic>_<UTC>.md`; override with `--out <file|dir>`.
 
 ---
 
-## `i-inline-content` — stress-test a short plan passed inline
+## i-inline-content
+
+**Stress-test a short plan passed inline.**
 
 The quickest form: the content to validate is a command-line argument. Suited to a paragraph or
 a short decision statement rather than a long document.
@@ -31,7 +38,9 @@ Template: [`TEMPLATES.md#t-inline-content`](TEMPLATES.md#t-inline-content)
 
 ---
 
-## `i-file-input` — stress-test a document on disk
+## i-file-input
+
+**Stress-test a document on disk.**
 
 The primary use case per `README.md`: point the tool at a plan, analysis, proposal or decision
 document with `--input <file>` and give a one-line `--subject`. `--topic <slug>` overrides the
@@ -41,7 +50,9 @@ Template: [`TEMPLATES.md#t-file-input`](TEMPLATES.md#t-file-input)
 
 ---
 
-## `i-stdin-pipe` — stress-test piped content
+## i-stdin-pipe
+
+**Stress-test piped content.**
 
 `--input -` reads the content from stdin, so the tool composes with any generator of text
 (`cat`, a heredoc, another command's output) without a temporary file.
@@ -50,7 +61,9 @@ Template: [`TEMPLATES.md#t-stdin-pipe`](TEMPLATES.md#t-stdin-pipe)
 
 ---
 
-## `i-web-factcheck` — add an external fact-check pass
+## i-web-factcheck
+
+**Add an external fact-check pass.**
 
 `--web` adds Perplexity Sonar as a separate role that fact-checks the content against the public
 web. Per the honesty invariants in `README.md` it is opt-in, it does **not** vote, and it cannot
@@ -61,7 +74,9 @@ Template: [`TEMPLATES.md#t-web-factcheck`](TEMPLATES.md#t-web-factcheck)
 
 ---
 
-## `i-panel-subset` — run fewer models
+## i-panel-subset
+
+**Run fewer models.**
 
 `--panel <keys>` restricts the run to named reasoner keys — for a cheaper or faster pass, or to
 route around a model whose provider is unavailable. Note the honesty floor: with fewer than two
@@ -71,7 +86,9 @@ Template: [`TEMPLATES.md#t-panel-subset`](TEMPLATES.md#t-panel-subset)
 
 ---
 
-## `i-panel-config` — repoint the panel at different models
+## i-panel-config
+
+**Repoint the panel at different models.**
 
 The panel is configuration, not code. Editing `config/panel.json` (or passing `--config`) swaps
 models, labels, per-slot fallbacks and the `max_tokens`/`timeout` defaults without touching
@@ -83,7 +100,9 @@ Template: [`TEMPLATES.md#t-panel-config`](TEMPLATES.md#t-panel-config)
 
 ---
 
-## `i-offline-selftest` — verify the orchestration without network or secrets
+## i-offline-selftest
+
+**Verify the orchestration without network or secrets.**
 
 `tests/selftest.py` injects a fake `call_model` and exercises the scoring, fallback and honesty
 logic end to end — consensus→HIGH, dissent→LOW, failed model→`FAILED`, single responder→
