@@ -556,3 +556,90 @@ New failure? Append it here in the same shape — signature first, so a future
 session can grep for the symptom — and reference the ID from the code that
 guards it. An entry with no code reference is a warning; an entry with one is a
 guard.
+
+---
+
+# Process issues (PROCESS.md ids)
+
+Entries below use the `<description>_<hash8>` id scheme defined in
+`process.yaml` → `definitions.issue-id`, not the `KI-` scheme above. The `KI-`
+ids annotate code guards (`grep -rn KI-07 poller/`); a process issue has no code
+guard, so it gets no `KI-` number and the summary table above is left untouched.
+This file is append-only (PROCESS.md §5.1).
+
+---
+
+<a name="packages-poller-failed-track-b-conforman_8f776048"></a>
+## packages-poller-failed-track-b-conforman_8f776048
+
+| Field | Value |
+|---|---|
+| **id** | `packages-poller-failed-track-b-conforman_8f776048` |
+| **summary** | Packages/Poller failed Track B conformance: TEMPLATES.md and CHANGE_LOG.md missing, code not under Tooling/, no results under Tests/, README states no version |
+| **status** | open — iteration executed on this branch; closes on merge per PROCESS.md §6 step 7 |
+| **resolved_by** | [`CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062`](CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062), fix-version `v2.1.0` |
+| **occurrences** | 1 — detected 2026-08-31 during the Track B sweep recorded in PROCESS.md §9 |
+
+**Id derivation.** `hash8` = first 8 hex chars of
+`sha256("packages/poller failed track b conformance: templates.md and change_log.md missing, code not under tooling/, no results under tests/, readme states no version")`
+(the summary, trimmed, lowercased, whitespace collapsed) = `8f776048`.
+`description` = that same summary slugified and truncated to 40 characters.
+
+**Outcome (X).** The tool could not release a new version: PROCESS.md §7 Track B
+says a failing tool is blocked until the failure is logged and fixed. Concretely,
+as measured on 2026-08-31 at the tool root:
+
+- `TEMPLATES.md` — **missing**. The application forms existed as files
+  (`examples/*.json`, `n8n/`) but were catalogued nowhere, so `IMPLEMENTATIONS.md`
+  had no counterpart to cite and the §3 reciprocity check failed in both
+  directions.
+- `CHANGE_LOG.md` — **missing**. Twenty-two `KI-` entries described fixes with no
+  reciprocal iteration record, so no issue in this file could cite the change
+  that closed it.
+- `README.md`, `IMPLEMENTATIONS.md`, `KNOWN_ISSUES.md` — present and non-empty.
+- **Code layout — failed.** `poller/`, `bin/`, `tests/`, `examples/`, `n8n/` and
+  `run-tests.sh` sat at the tool root, not under `Tooling/v<version>/`. There was
+  therefore no immutable released-version directory, i.e. no in-repo rollback
+  point (PROCESS.md §5, safeguard 1).
+- **Test layout — failed.** No `Tests/` directory existed. The suite ran green
+  (187 tests) but nothing recorded that it had, so from the repository alone the
+  tool's test state was unknowable.
+- **Version agreement — failed.** `README.md` states no version anywhere. The
+  code declares `__version__ = "2.1.0"` (`poller/__init__.py`) and the merged PR
+  title `feat/poller-n8n-tier` puts the current version at `v2.1.0`, so three
+  places that must name one version named it in two and omitted it in the one a
+  reader looks at first.
+
+**Cause (Y).** The tool predates PROCESS.md. It was authored in the flat
+`<Tool>/{code,tests,docs}` shape that the whole repository used before the
+`Tooling/`/`Tests/` convention existed, and version identity was carried in
+Python source and in PR titles — the two places the convention does not read —
+rather than in the documents. Nothing in the old shape was wrong when written;
+it simply was never migrated. PROCESS.md §9 records this as a known backlog for
+all eleven tools, and Poller's row (`TEMPLATES ❌ CHANGE_LOG ❌ Tooling ❌
+Tests ❌`) matches what was found exactly.
+
+**Iteration (Z).** Bring the tool into conformance on its current version
+without touching its behaviour: move the implementation tree to
+`Tooling/v2.1.0/` (test *code* moving with it, per §4), repair anything the move
+broke, run the suite from the new location and record the real output under
+`Tests/v2.1.0/`, create the two missing canonical documents, and state `v2.1.0`
+in the README. No version bump — the code moved, it did not change. Planned and
+recorded in
+[`CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062`](CHANGE_LOG.md#migrated-packages-poller-code-to-tooling_39621062).
+
+**Still your job.** The status above reads `open` deliberately: this entry is
+appended in the same turn as the iteration (§5.7), before the PR exists. Whoever
+merges it appends the closing entry citing `v2.1.0` and the merge commit — this
+entry is never overwritten.
+
+---
+
+## Path note (appended 2026-08-31, v2.1.0 migration)
+
+Every code path referenced above — `poller/…`, `tests/…`, `n8n/…` — now lives
+under `Tooling/v2.1.0/`. So `grep -rn KI-07 poller/` reads
+`grep -rn KI-07 Tooling/v2.1.0/poller/`, and the KI-22 link to `n8n/README.md`
+resolves at `Tooling/v2.1.0/n8n/README.md`. The entries themselves are left
+exactly as written: this file is append-only, and rewriting twenty-two recorded
+incidents to fix link targets would edit history to fix a path.

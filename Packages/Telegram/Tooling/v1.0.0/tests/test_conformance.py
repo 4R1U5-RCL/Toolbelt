@@ -21,9 +21,36 @@ import helpers  # noqa: F401  (path setup)
 from telegram.seam import build_payload, build_request, serialise
 
 CLIENT_MJS = "/studio/packages/notify/src/client.mjs"
-POLLER_SINKS = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "Poller")
+
+
+def _poller_sinks_root() -> str:
+    """Import root of `Packages/Poller`'s `poller` package, or "" if absent.
+
+    This file lives at `Packages/Telegram/Tooling/v<version>/tests/`, so the
+    `Packages/` directory is five levels up. The Poller is either still flat
+    (`Packages/Poller/poller/`) or itself migrated to the versioned layout
+    (`Packages/Poller/Tooling/v<version>/poller/`); both are accepted, newest
+    version directory first. Returns "" when no `poller` package is found, so
+    the tests below skip loudly rather than erroring on import.
+    """
+    here = os.path.abspath(__file__)
+    packages_dir = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.dirname(here)))))
+    poller = os.path.join(packages_dir, "Poller")
+    candidates = []
+    tooling = os.path.join(poller, "Tooling")
+    if os.path.isdir(tooling):
+        candidates.extend(sorted(
+            (os.path.join(tooling, name) for name in os.listdir(tooling)),
+            reverse=True))
+    candidates.append(poller)
+    for candidate in candidates:
+        if os.path.isdir(os.path.join(candidate, "poller")):
+            return candidate
+    return ""
+
+
+POLLER_SINKS = _poller_sinks_root()
 
 STAMP = 1_756_500_000_123
 TOKEN = "conformance-token-000"

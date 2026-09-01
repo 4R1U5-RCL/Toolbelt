@@ -1,0 +1,16 @@
+$ cd /studio/scratch/tb/Packages/Scrape/Tooling/v1.0.0 && ./run-tests.sh
+.....usage: scrape url [-h] [-c CONFIG] [-v] [-o OUT]
+                  [--format {markdown,json,text}] [--formats FORMATS]
+                  [--no-clean] [--chunk] [--max-tokens MAX_TOKENS]
+                  [--overlap OVERLAP] [--max-chars MAX_CHARS]
+                  [--backend BACKEND] [--base-url BASE_URL]
+                  [--api-key-env API_KEY_ENV] [--timeout TIMEOUT]
+                  [--retries RETRIES] [--allow-insecure]
+                  url
+scrape url: error: argument --format: invalid choice: 'pdf' (choose from 'markdown', 'json', 'text')
+......................................................
+----------------------------------------------------------------------
+Ran 59 tests in 0.016s
+
+OK
+EXIT=0

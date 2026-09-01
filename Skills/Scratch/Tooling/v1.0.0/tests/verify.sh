@@ -2,7 +2,9 @@
 # Smoke test for the shipped Skills/Scratch package. Stands up a REAL throwaway git repo,
 # applies the shipped scratch.gitignore, and proves (via git check-ignore + git add) that every
 # scratch surface + secret is ignored while normal source stays trackable. Sandboxed under $SB.
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; PKG="$(cd "$HERE/.." && pwd)"; SB="$(mktemp -d)"; trap 'rm -rf "$SB"' EXIT
+# Layout: PKG is the version directory (Tooling/v<version>/) that holds templates/ and tests/;
+# TOOLROOT is the tool directory two levels up, where the five canonical .md files live (PROCESS.md §3/§4).
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; PKG="$(cd "$HERE/.." && pwd)"; TOOLROOT="$(cd "$PKG/../.." && pwd)"; SB="$(mktemp -d)"; trap 'rm -rf "$SB"' EXIT
 P=0; F=0
 ok(){ if eval "$2"; then echo "  PASS · $1"; P=$((P+1)); else echo "  FAIL · $1"; F=$((F+1)); fi; }
 GI="$PKG/templates/scratch.gitignore"
@@ -12,7 +14,7 @@ ok "template present + non-empty" '[ -s "$GI" ]'
 for pat in 'scratch/' '.runstate/' '.claude/worktrees/' 'clients/' 'labs/' '.env' '\*.key' '\*.pem' '_token'; do
   ok "gitignore covers: $pat" "grep -q \"$pat\" \"$GI\""
 done
-ok "README points at the shipped template" 'grep -q "scratch.gitignore" "$PKG/README.md"'
+ok "README points at the shipped template" 'grep -q "scratch.gitignore" "$TOOLROOT/README.md"'
 
 # --- 2. Real git repo: apply the ignore block and check reality ---
 R="$SB/repo"; mkdir -p "$R"; git -C "$R" init -q

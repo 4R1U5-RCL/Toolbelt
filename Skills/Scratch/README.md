@@ -11,9 +11,14 @@ Not a `/command` — a discipline, like **[Memory](../Memory/)**.
 
 ## What's here
 
+**Current version: `v1.0.0`.** The code sits under `Tooling/v1.0.0/`; the recorded
+test results for that version sit under `Tests/v1.0.0/` (PROCESS.md §4).
+
 | Path | Role |
 |------|------|
-| `templates/scratch.gitignore` | Drop-in `.gitignore` block that ignores every scratch surface **plus** the never-commit secrets/clients rows. Append it to a repo's `.gitignore`. |
+| `Tooling/v1.0.0/templates/scratch.gitignore` | Drop-in `.gitignore` block that ignores every scratch surface **plus** the never-commit secrets/clients rows. Append it to a repo's `.gitignore`. |
+| `Tooling/v1.0.0/tests/verify.sh` | The committed self-check (see the foot of this file). |
+| `Tests/v1.0.0/` | Recorded output of running that suite at `v1.0.0`. |
 
 ## The surfaces
 
@@ -133,4 +138,4 @@ shipped here is lifted from that tree (plus the `anthro-bugbounty` secrets wall)
 executed — it is a discipline + a droppable ignore file.
 
 
-**Committed self-check:** `bash tests/verify.sh` — **29/29**. It stands up a real throwaway git repo, applies the shipped `scratch.gitignore`, and proves every surface + secret is ignored (`git check-ignore`) while normal source stays trackable and `git add -A` never stages a secret.
+**Committed self-check:** `cd Tooling/v1.0.0 && bash tests/verify.sh` — **29/29**. It stands up a real throwaway git repo, applies the shipped `scratch.gitignore`, and proves every surface + secret is ignored (`git check-ignore`) while normal source stays trackable and `git add -A` never stages a secret.

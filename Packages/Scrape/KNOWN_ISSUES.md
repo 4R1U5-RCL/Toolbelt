@@ -135,3 +135,84 @@ same shape (Signature / Cause / Prevented by / Still your job / **Code.** /
 **Test.**), give it an `<a name="ki-nn"></a>` anchor, and carry the `KI-NN` id in a
 comment on the line that guards it — so `grep -rn KI-NN scrape/` finds the guard.
 An entry with no code reference is a warning; an entry with one is a guard.
+
+---
+
+# Process issues
+
+Entries below follow the `process.yaml` `issue-entry` schema (id, summary,
+outcome, cause, iteration, resolved_by, status, occurrences) rather than the
+`KI-NN` guard format above. The `KI-` sections are failure modes of *web
+scraping* that the code guards against; the entries here are failures of *this
+tool's conformance to PROCESS.md*. Both live in this file because PROCESS.md §7
+Track B says a conformance failure is logged in `KNOWN_ISSUES.md` like any other
+issue. Append only — never rewrite (PROCESS.md §5.1).
+
+<a name="track-b-conformance-failure-scrape-code_76631893"></a>
+## track-b-conformance-failure-scrape-code_76631893
+
+- **id.** `track-b-conformance-failure-scrape-code_76631893`
+- **summary.** Track B conformance failure: Scrape code is not under Tooling/, no recorded test results exist under Tests/, TEMPLATES.md and CHANGE_LOG.md are missing, and README.md states no version
+- **source.** Track B conformance check (PROCESS.md §7) run against `Packages/Scrape` during the §9 migration.
+- **occurred_at.** 2026-08-31
+
+### Outcome (X)
+
+`Packages/Scrape` failed three of the five Track B checks as it stood on `main`:
+
+| Track B check | Result | Detail |
+|---|---|---|
+| Canonical files | **FAIL** | `README.md`, `IMPLEMENTATIONS.md` and `KNOWN_ISSUES.md` were present; `TEMPLATES.md` and `CHANGE_LOG.md` did not exist. |
+| Reciprocity | **FAIL** | With `TEMPLATES.md` absent, no `IMPLEMENTATIONS.md` entry could cite a template; with `CHANGE_LOG.md` absent, no `KNOWN_ISSUES.md` entry cited a change id (the `KI-01`…`KI-08` entries cite code and tests, never a change entry). |
+| Code layout | **FAIL** | The code (`bin/`, `scrape/`, `tests/`, `examples/`, `run-tests.sh`, `.gitignore`) sat directly at the tool root. No `Tooling/` directory existed. |
+| Test layout | **FAIL** | No `Tests/` directory existed. The suite was runnable but its results had never been recorded in-repo, so a reader had no evidence any version ever passed. |
+| Version agreement | **FAIL (partial)** | `README.md` names no version anywhere. There was no `Tooling/` directory and no `CHANGE_LOG.md`, so two of the three sources this check compares did not exist. The only version statement in the tool was `scrape/__init__.py`'s `__version__ = "1.0.0"`, which no document referenced. |
+
+Consequences: the tool had no in-repo rollback point (PROCESS.md §5 safeguard 1
+requires a released `Tooling/v<current>/` directory to be the rollback point), no
+human-readable evidence of a passing suite, and no way to record an iteration —
+so it could not release a new version at all (PROCESS.md §7: "A tool failing
+Track B cannot release a new version").
+
+### Cause (Y)
+
+`Packages/Scrape` was authored and merged (PR #14) before the PROCESS.md §3/§4
+conventions were settled on 2026-08-31, and no migration pass had run against it
+since. It is one of the eleven tools listed in the PROCESS.md §9 migration
+backlog, whose row records exactly this state:
+`README ✅ · IMPLEMENTATIONS ✅ · TEMPLATES ❌ · KNOWN_ISSUES ✅ · CHANGE_LOG ❌ · Tooling/ ❌ · Tests/ ❌`.
+The mechanism is therefore ordering, not defect: the documents and directories
+were never created because the convention requiring them postdates the tool.
+
+### Iteration (Z)
+
+Bring `Packages/Scrape` into §3/§4 conformance without changing its behaviour:
+move all implementation files into `Tooling/v1.0.0/`, repair any path broken by
+the move, run `run-tests.sh` from its new location and record the actual output
+under `Tests/v1.0.0/`, create the two missing canonical documents, append the
+reciprocal citations `IMPLEMENTATIONS.md` owed `TEMPLATES.md`, and state the
+version in `README.md`. Version `v1.0.0` per PROCESS.md §10.6 (a never-versioned
+tool starts at `v1.0.0`) — which also matches the `__version__` the code already
+carried. Planned and recorded in
+[`CHANGE_LOG.md#migrate-scrape-to-the-tooling-tests-layo_70b30a3b`](CHANGE_LOG.md#migrate-scrape-to-the-tooling-tests-layo_70b30a3b).
+
+### resolved_by
+
+[`CHANGE_LOG.md#migrate-scrape-to-the-tooling-tests-layo_70b30a3b`](CHANGE_LOG.md#migrate-scrape-to-the-tooling-tests-layo_70b30a3b),
+fix-version-id `v1.0.0`.
+
+### status
+
+`resolved` — pending the PR merge that PROCESS.md §6 step 6/7 requires. All five
+canonical files now exist and are non-empty, the code sits under
+`Tooling/v1.0.0/`, recorded results exist at `Tests/v1.0.0/`, and `README.md`,
+the newest `Tooling/` directory and the sole `CHANGE_LOG.md` entry all name
+`v1.0.0`. The merge commit is not recorded here because this migration ran under
+an orchestrator that performs all git operations; no commit id was available to
+this entry at write time.
+
+### occurrences
+
+| # | occurred_at | Where |
+|---|---|---|
+| 1 | 2026-08-31 | Track B check on `Packages/Scrape` at the §9 migration; the state matching the PROCESS.md §9 backlog row for this tool. |

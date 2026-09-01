@@ -6,7 +6,13 @@ model's full critique and the points where they disagree. One OpenRouter key rea
 the package is pure-stdlib Python, so it installs anywhere with no dependencies.
 
 This is the portable, OpenRouter-backed, parallel-panel evolution of the studio's `consult`/`validate`
-methodology. See **`docs/topology.html`** for the flow.
+methodology. See **`Tooling/v1.0.0/docs/topology.html`** for the flow.
+
+**Current version: `v1.0.0`.** The code lives in [`Tooling/v1.0.0/`](Tooling/v1.0.0/); recorded test
+results for it are in [`Tests/v1.0.0/`](Tests/v1.0.0/). Use cases are in
+[`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md), their application forms in
+[`TEMPLATES.md`](TEMPLATES.md), and issues/iterations in [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) and
+[`CHANGE_LOG.md`](CHANGE_LOG.md).
 
 ## Panel & flow
 
@@ -25,7 +31,10 @@ a Claude reviewer would share the author's blind spots (the whole point of *cros
 
 ## Install & use
 
+All commands below are relative to `Tooling/v1.0.0/`.
+
 ```sh
+cd Tooling/v1.0.0
 # needs OPENROUTER_API_KEY in the environment
 set -a; . /studio/.env; set +a          # or: export OPENROUTER_API_KEY=...
 
@@ -56,7 +65,7 @@ else the current directory: `validate_<topic>_<UTC>.md`.
 
 ## Configuration
 
-`config/panel.json` defines the panel — swap models without touching code. A reasoner may declare a
+`Tooling/v1.0.0/config/panel.json` defines the panel — swap models without touching code. A reasoner may declare a
 `fallback` used automatically when its primary errors:
 
 ```json
@@ -84,7 +93,7 @@ else the current directory: `validate_<topic>_<UTC>.md`.
    errors (provider outage, allowlist), the slot silently falls back to `deepseek/deepseek-r1` and
    the doc labels it `(fallback)`. Note **DeepSeek R1 is a slow reasoner** (a run that falls back can
    take a couple of minutes; per-call timeout defaults to 220s). To use **Claude** as the 4th
-   instead, set `anthropic/claude-opus-4.6` in `config/panel.json` — it works, but shares the
+   instead, set `anthropic/claude-opus-4.6` in `Tooling/v1.0.0/config/panel.json` — it works, but shares the
    author's lab (the weakest cross-check). Lower `--timeout`/`--max-tokens` for quicker, cheaper runs.
 3. **GPT-5 spends tokens on hidden reasoning.** With a small `max_tokens` it can return empty content
    with `finish_reason: length`; the client uses a generous default and retries once with a larger
@@ -96,7 +105,7 @@ else the current directory: `validate_<topic>_<UTC>.md`.
 
 ## Verified
 
-- **Offline self-test** (`tests/selftest.py`, injected fake `call_model`, no network/secrets):
+- **Offline self-test** (`Tooling/v1.0.0/tests/selftest.py`, injected fake `call_model`, no network/secrets):
   **28/28** — consensus→HIGH, dissent→LOW, mixed→disagreements, failed-model→`FAILED`, single
   responder→`unknown`, web-tier gating, the honesty caveat, the primary→fallback path, and the
   hardening from a cross-model self-review: unparseable stance→non-responding (the honesty
@@ -108,4 +117,6 @@ else the current directory: `validate_<topic>_<UTC>.md`.
 This package was itself validated (LiteLLM GPT-5 + Gemini, a deliberately different backend) and the
 resulting action items were applied — see the hardening above.
 
-Run the self-test any time: `python3 tests/selftest.py`.
+Run the self-test any time: `cd Tooling/v1.0.0 && python3 tests/selftest.py`.
+The recorded result for `v1.0.0` (28 passed, 0 failed, 2026-08-31) is in
+[`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md).

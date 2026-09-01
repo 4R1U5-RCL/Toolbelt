@@ -1,0 +1,19 @@
+$ cd /studio/scratch/tb/Skills/Handoff/Tooling/v1.0.0 && bash tests/verify.sh
+  PASS · install: command file placed
+  PASS · install: template placed
+  PASS · guard passes when template present+non-empty
+  PASS · guard ABORTS when template missing (fail-closed)
+  PASS · guard ABORTS when template empty (fail-closed)
+  PASS · scope: empty dir -> full
+  PASS · scope: <4h old -> incremental since prior
+  PASS · scope: >4h old -> full
+  PASS · filename matches handoff_<topic>_<UTC>.md
+  PASS · e2e: doc written under handoffs/
+  PASS · e2e: frontmatter has topic/session_scope/created
+  PASS · e2e: all template sections present in doc (7 headers)
+  PASS · e2e: doc filename regex-valid
+  PASS · memory-link: absent index degrades to None
+  PASS · write-scope: only handoffs/ got the new doc
+
+== handoff smoke: 15 passed, 0 failed ==
+EXIT=0

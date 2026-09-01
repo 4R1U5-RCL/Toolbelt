@@ -656,3 +656,89 @@ different facts, and only the second is evidence of anything.
 it serialises its reply. Measure before concluding — that is the mistake this
 entry records. Do not re-soften it back to advisory without checking whether the
 signature actually matches.
+
+---
+
+# Process conformance issues
+
+The entries above are numbered `TG-nn` and predate `PROCESS.md`. Entries from
+here on carry a process id — `<description>_<hash8>` per
+`process.yaml: definitions.issue-id` — and are appended, never rewritten
+(PROCESS.md §5 invariant 1). The index table at the top of this file is left as
+it was for the same reason; it indexes the `TG-` series only.
+
+---
+
+<a name="packages-telegram-failed-track-b-conform_9f851380"></a>
+## `packages-telegram-failed-track-b-conform_9f851380`
+
+| Field | Value |
+|---|---|
+| **id** | `packages-telegram-failed-track-b-conform_9f851380` |
+| **status** | resolved |
+| **resolved_by** | [`CHANGE_LOG.md#migrate-packages-telegram-to-the-tooling_78deb9ee`](CHANGE_LOG.md#migrate-packages-telegram-to-the-tooling_78deb9ee), fix-version `v1.0.0` (no bump — the code moved, it did not change) |
+| **occurrences** | 1 — 2026-08-31, found by the Track B conformance sweep run against this tool (PROCESS.md §7 Track B / §9 "on next touch") |
+
+**summary.** Packages/Telegram failed Track B conformance: CHANGE_LOG.md
+missing, code not under Tooling/, no recorded test results under Tests/.
+
+**outcome (X).** Measured against the five Track B checks of PROCESS.md §7, as
+found on 2026-08-31:
+
+| Check | Result as found |
+|---|---|
+| Canonical files | **FAIL** — four of five present (`README.md`, `IMPLEMENTATIONS.md`, `TEMPLATES.md`, `KNOWN_ISSUES.md`, all non-empty). `CHANGE_LOG.md` did not exist. This is the one document missing; it matches the §9 backlog table, which already records Telegram as the only tool carrying `TEMPLATES.md` and as having no `CHANGE_LOG.md` |
+| Code layout | **FAIL** — no `Tooling/` directory existed. `telegram/`, `bin/`, `templates/`, `n8n/`, `examples/`, `tests/` and `run-tests.sh` all sat at the tool root, and test *code* sat in a lowercase `tests/` at the root rather than inside the version it tests (§4) |
+| Test layout | **FAIL** — no `Tests/` directory existed. The suite passed (189 tests, verified before the move) but **no recorded result existed anywhere in the repo**: the evidence lived only in whoever last ran it |
+| Version agreement | **PARTIAL** — `README.md` did state a version, `v1.0.0`, under "Status". The claim is *not* that the README named no version; it named one that nothing else corroborated, because neither a `Tooling/` directory nor a `CHANGE_LOG.md` entry existed to agree with it |
+| Reciprocity | **PASS for the pair that exists, VACUOUS for the other.** `KNOWN_ISSUES.md` ↔ `CHANGE_LOG.md` could not be checked at all — there was no `CHANGE_LOG.md`, and no `TG-` entry cites a change id. `IMPLEMENTATIONS.md` → `TEMPLATES.md` is linked once, at IMPLEMENTATIONS.md line 149, and the two documents otherwise refer to each other by template name (`poller.settled`) rather than by entry id |
+
+Consequence: under §7, "a tool failing Track B cannot release a new version" —
+so the next genuine fix to this package was blocked before it could start, and
+until then the tool's test status was unauditable from the repo alone.
+
+**cause (Y).** The tool was authored before `PROCESS.md` existed (the process
+document and `process.yaml` are both dated 2026-08-31; this package's live proof
+runs date from executions 15034–15111 before it). Its layout is the flat
+package shape that `PROCESS.md` §9 describes as the migration backlog — not
+drift away from the convention, but code that predates it. Nothing in the tool
+enforced the convention, so nothing failed loudly when it was not met; the gap
+was only visible by reading the tool directory against §3 and §4 by hand.
+
+**iteration (Z).** Bring the tool into conformance as its first pass through
+§6: move the implementation to `Tooling/v1.0.0/` (§9 — a never-versioned tool
+starts at `v1.0.0`), repair the paths the move breaks, run the suite from the
+new location and record the verbatim output under `Tests/v1.0.0/`, create
+`CHANGE_LOG.md` empty-but-valid with this migration as its first entry, and
+correct `README.md` to state the layout and current version. Planned and
+recorded in
+[`CHANGE_LOG.md#migrate-packages-telegram-to-the-tooling_78deb9ee`](CHANGE_LOG.md#migrate-packages-telegram-to-the-tooling_78deb9ee).
+
+**What the move actually broke.** Recorded here because it is the interesting
+part and it is exactly what §5 invariant 6 exists to catch.
+`tests/test_conformance.py` located `Packages/Poller` by walking three
+directories up from itself. One directory deeper, that expression resolved to
+`Packages/Telegram/Tooling/`, which contains no `Poller` — so the guard
+`@unittest.skipUnless(os.path.isdir(POLLER_SINKS))` would have **skipped both
+cross-package conformance tests while the suite still printed `OK`**. A green
+189-test run would have silently stopped proving that this package and the
+Poller emit the same envelope bytes. The path was fixed (five levels up, and
+tolerant of the Poller's own migration into `Tooling/`), and the recorded run in
+[`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md) shows **zero skips**, which
+is the evidence that it is fixed rather than merely quiet.
+
+**Still open after this iteration.** Stated rather than silently carried:
+
+- `IMPLEMENTATIONS.md` and `TEMPLATES.md` contain tool-root-relative paths
+  (`./bin/telegram`, `tests/test_conformance.py`, `templates/`,
+  `n8n/README.md`) that now live under `Tooling/v1.0.0/`. They were not
+  rewritten: `IMPLEMENTATIONS.md` is append-only under §5 invariant 2, and
+  correcting them is a documentation change, not part of this migration.
+- The `IMPLEMENTATIONS.md` ↔ `TEMPLATES.md` reciprocity required by §7 is
+  cross-referenced by template name rather than by entry id, so a strict id-level
+  reciprocity check still fails for that pair.
+- `IMPLEMENTATIONS.md` line 53 hard-codes
+  `/studio/scratch/toolbelt/Toolbelt/Packages/Telegram/bin/telegram` as a Poller
+  sink command. That absolute path is now wrong twice over (the checkout is at
+  `/studio/scratch/tb`, and `bin/` moved), but it documents a live wiring
+  outside this repo and is not this iteration's to change.

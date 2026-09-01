@@ -489,3 +489,35 @@ poller status --config cfg.json || echo "poller is not alive" | mail -s alert me
 - [ ] The first `run --once` seeded and reported nothing (KI-15)
 - [ ] Something checks `poller status` on a schedule (KI-09)
 - [ ] The config contains no secret values — only `@env:` references (KI-11)
+
+---
+
+## Template index (appended 2026-08-31, v2.1.0 migration)
+
+Appended, not rewritten — this file is append-only (PROCESS.md §5.2). Two things
+changed underneath the guide above and are recorded here rather than edited in
+place:
+
+**1. Paths.** As of `v2.1.0` the tool's code lives under
+`Packages/Poller/Tooling/v2.1.0/`. Every relative path above — `bin/poller`,
+`examples/*.json`, `run-tests.sh`, `n8n/` — is now relative to that directory,
+not to the tool root. So `cd Packages/Poller` in the snippets above reads
+`cd Packages/Poller/Tooling/v2.1.0`. The commands are otherwise unchanged.
+
+**2. Reciprocity.** Each implementation section now cites its template entry in
+[`TEMPLATES.md`](TEMPLATES.md), as PROCESS.md §3 requires:
+
+| Implementation section (above) | Template |
+|---|---|
+| Worked example: Kaggle competition submissions | [TPL-01](TEMPLATES.md#tpl-kaggle-submissions) — `examples/kaggle-submissions.json` |
+| Surviving the session that launched it / The headless-session rail | [TPL-02](TEMPLATES.md#tpl-kaggle-fallback) — `examples/kaggle-with-fallback.json` |
+| Worked example → 5. Arm it (a single named watch) | [TPL-03](TEMPLATES.md#tpl-kaggle-v15scar) — `examples/kaggle-v15scar-final.json` |
+| Recipe: GitHub Actions runs | [TPL-04](TEMPLATES.md#tpl-github-actions) — `examples/github-actions.json` |
+| Recipe: a generic REST job queue / Auth schemes | [TPL-05](TEMPLATES.md#tpl-generic-http) — `examples/generic-http.json` |
+| Where n8n fits | [TPL-06](TEMPLATES.md#tpl-n8n-always-on) — `n8n/kaggle-submission-poller.json` + its builder |
+
+Sections with no template entry — "Anatomy of a config", "When declarative is
+not enough: a Python source", "Choosing rails", "Running it", "Before you arm a
+watch" — are explanatory, not application forms. There is no `templates/`
+directory in this tool; see the header of `TEMPLATES.md` for what does and does
+not count as a template here.

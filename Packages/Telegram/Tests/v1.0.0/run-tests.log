@@ -1,0 +1,206 @@
+$ cd Packages/Telegram/Tooling/v1.0.0 && ./run-tests.sh -v
+
+test_an_update_failing_the_gate_exits_non_zero (test_cli.TestDecode.test_an_update_failing_the_gate_exits_non_zero) ... ok
+test_decodes_a_whole_update (test_cli.TestDecode.test_decodes_a_whole_update) ... ok
+test_decodes_callback_data (test_cli.TestDecode.test_decodes_callback_data) ... ok
+test_a_long_message_previews_as_several (test_cli.TestRender.test_a_long_message_previews_as_several) ... ok
+test_a_missing_required_field_fails (test_cli.TestRender.test_a_missing_required_field_fails) ... ok
+test_data_file_supplies_the_payload (test_cli.TestRender.test_data_file_supplies_the_payload) ... ok
+test_json_output_carries_the_parts_and_the_meta (test_cli.TestRender.test_json_output_carries_the_parts_and_the_meta) ... ok
+test_lenient_renders_anyway_and_names_the_gap (test_cli.TestRender.test_lenient_renders_anyway_and_names_the_gap) ... ok
+test_malformed_set_is_rejected (test_cli.TestRender.test_malformed_set_is_rejected) ... ok
+test_renders_a_report (test_cli.TestRender.test_renders_a_report) ... ok
+test_reports_the_length_in_the_unit_telegram_uses (test_cli.TestRender.test_reports_the_length_in_the_unit_telegram_uses) ... ok
+test_set_overrides_the_data_file (test_cli.TestRender.test_set_overrides_the_data_file) ... ok
+test_shows_what_each_button_encodes_to (test_cli.TestRender.test_shows_what_each_button_encodes_to) ... ok
+test_unknown_template_is_an_error_that_lists_the_known_ones (test_cli.TestRender.test_unknown_template_is_an_error_that_lists_the_known_ones) ... ok
+test_group_filter (test_cli.TestTemplates.test_group_filter) ... ok
+test_json_output_is_machine_readable (test_cli.TestTemplates.test_json_output_is_machine_readable) ... ok
+test_lists_all_three_groups (test_cli.TestTemplates.test_lists_all_three_groups) ... ok
+test_prints_a_version (test_cli.TestVersion.test_prints_a_version) ... ok
+test_body_and_signature_match (test_conformance.TestAgainstClientMjs.test_body_and_signature_match) ... ok
+test_json_stringify_and_serialise_agree_on_awkward_values (test_conformance.TestAgainstClientMjs.test_json_stringify_and_serialise_agree_on_awkward_values)
+The cases where two JSON serialisers actually differ. ... ok
+test_envelope_bytes_match_the_poller_sink (test_conformance.TestAgainstPollerSink.test_envelope_bytes_match_the_poller_sink) ... ok
+test_this_package_sends_headers_the_poller_does_not (test_conformance.TestAgainstPollerSink.test_this_package_sends_headers_the_poller_does_not)
+A superset, not a difference — and worth stating explicitly. ... ok
+test_carries_the_ids_needed_to_answer_the_callback (test_inbound.TestCallback.test_carries_the_ids_needed_to_answer_the_callback) ... ok
+test_decodes_the_three_parts (test_inbound.TestCallback.test_decodes_the_three_parts) ... ok
+test_empty_action_is_untrusted (test_inbound.TestCallback.test_empty_action_is_untrusted) ... ok
+test_trusted_when_no_allow_list_is_given (test_inbound.TestCallback.test_trusted_when_no_allow_list_is_given) ... ok
+test_a_chat_off_the_allow_list_is_refused (test_inbound.TestGates.test_a_chat_off_the_allow_list_is_refused) ... ok
+test_a_declared_action_passes (test_inbound.TestGates.test_a_declared_action_passes) ... ok
+test_an_allow_listed_chat_passes (test_inbound.TestGates.test_an_allow_listed_chat_passes) ... ok
+test_an_undeclared_action_is_refused (test_inbound.TestGates.test_an_undeclared_action_is_refused) ... ok
+test_both_gates_must_pass (test_inbound.TestGates.test_both_gates_must_pass) ... ok
+test_a_hostile_callback_data_decodes_without_executing_anything (test_inbound.TestMalformed.test_a_hostile_callback_data_decodes_without_executing_anything) ... ok
+test_callback_with_no_data (test_inbound.TestMalformed.test_callback_with_no_data) ... ok
+test_empty_update (test_inbound.TestMalformed.test_empty_update) ... ok
+test_non_dict_update (test_inbound.TestMalformed.test_non_dict_update) ... ok
+test_plain_message_is_decoded_but_routes_nowhere (test_inbound.TestMalformed.test_plain_message_is_decoded_but_routes_nowhere) ... ok
+test_a_chat_allow_list_cannot_admit_a_poll_answer (test_inbound.TestPollAnswer.test_a_chat_allow_list_cannot_admit_a_poll_answer) ... ok
+test_decodes_the_vote (test_inbound.TestPollAnswer.test_decodes_the_vote) ... ok
+test_says_it_carries_no_chat_id (test_inbound.TestPollAnswer.test_says_it_carries_no_chat_id) ... ok
+test_exactly_at_the_cap_is_allowed (test_keyboard.TestByteCap.test_exactly_at_the_cap_is_allowed) ... ok
+test_multibyte_characters_count_as_their_bytes (test_keyboard.TestByteCap.test_multibyte_characters_count_as_their_bytes) ... ok
+test_one_byte_over_is_refused (test_keyboard.TestByteCap.test_one_byte_over_is_refused) ... ok
+test_the_error_names_the_action_and_says_it_is_never_truncated (test_keyboard.TestByteCap.test_the_error_names_the_action_and_says_it_is_never_truncated) ... ok
+test_garbage_decodes_to_empty_parts_rather_than_raising (test_keyboard.TestDecode.test_garbage_decodes_to_empty_parts_rather_than_raising) ... ok
+test_none_is_survivable (test_keyboard.TestDecode.test_none_is_survivable) ... ok
+test_round_trip (test_keyboard.TestDecode.test_round_trip) ... ok
+test_a_colon_in_the_action_is_refused (test_keyboard.TestEncode.test_a_colon_in_the_action_is_refused) ... ok
+test_a_colon_in_the_entity_is_refused (test_keyboard.TestEncode.test_a_colon_in_the_entity_is_refused) ... ok
+test_action_may_not_be_empty (test_keyboard.TestEncode.test_action_may_not_be_empty) ... ok
+test_an_id_may_contain_colons (test_keyboard.TestEncode.test_an_id_may_contain_colons) ... ok
+test_single_column_key_keeps_an_empty_middle_segment (test_keyboard.TestEncode.test_single_column_key_keeps_an_empty_middle_segment) ... ok
+test_three_part_form (test_keyboard.TestEncode.test_three_part_form) ... ok
+test_an_interpolated_id_that_is_too_long_fails_at_compose_time (test_keyboard.TestKeyboardRendering.test_an_interpolated_id_that_is_too_long_fails_at_compose_time) ... ok
+test_empty_rows_are_dropped (test_keyboard.TestKeyboardRendering.test_empty_rows_are_dropped) ... ok
+test_from_spec_interpolates_context (test_keyboard.TestKeyboardRendering.test_from_spec_interpolates_context) ... ok
+test_from_spec_returns_none_without_buttons (test_keyboard.TestKeyboardRendering.test_from_spec_returns_none_without_buttons) ... ok
+test_rows_are_preserved (test_keyboard.TestKeyboardRendering.test_rows_are_preserved) ... ok
+test_a_button_envelope_routes_to_the_message_branch_with_a_keyboard (test_n8n_parity.TestInteractiveShaping.test_a_button_envelope_routes_to_the_message_branch_with_a_keyboard) ... ok
+test_a_plain_report_needs_neither (test_n8n_parity.TestInteractiveShaping.test_a_plain_report_needs_neither) ... ok
+test_a_poll_degrades_to_readable_text_without_a_bot_token (test_n8n_parity.TestInteractiveShaping.test_a_poll_degrades_to_readable_text_without_a_bot_token)
+n8n has no sendPoll, so a poll is a Bot API call needing a token. ... ok
+test_a_poll_envelope_routes_to_the_poll_branch (test_n8n_parity.TestInteractiveShaping.test_a_poll_envelope_routes_to_the_poll_branch) ... ok
+test_a_poll_with_one_option_is_not_treated_as_a_poll (test_n8n_parity.TestInteractiveShaping.test_a_poll_with_one_option_is_not_treated_as_a_poll) ... ok
+test_buttons_beyond_the_third_are_dropped_and_counted (test_n8n_parity.TestInteractiveShaping.test_buttons_beyond_the_third_are_dropped_and_counted)
+The interactive workflow carries one row of three (TG-20). ... ok
+test_an_id_containing_colons_survives_both (test_n8n_parity.TestReceiverParity.test_an_id_containing_colons_survives_both) ... ok
+test_callback_decodes_identically (test_n8n_parity.TestReceiverParity.test_callback_decodes_identically) ... ok
+test_chat_allow_list_agrees (test_n8n_parity.TestReceiverParity.test_chat_allow_list_agrees) ... ok
+test_empty_action_is_untrusted_in_both (test_n8n_parity.TestReceiverParity.test_empty_action_is_untrusted_in_both) ... ok
+test_garbage_update_is_untrusted_in_both (test_n8n_parity.TestReceiverParity.test_garbage_update_is_untrusted_in_both) ... ok
+test_poll_answer_agrees (test_n8n_parity.TestReceiverParity.test_poll_answer_agrees) ... ok
+test_poll_answer_cannot_pass_a_chat_allow_list_in_either (test_n8n_parity.TestReceiverParity.test_poll_answer_cannot_pass_a_chat_allow_list_in_either) ... ok
+test_single_column_key_decodes_identically (test_n8n_parity.TestReceiverParity.test_single_column_key_decodes_identically) ... ok
+test_the_deployed_receiver_fails_closed_when_unconfigured (test_n8n_parity.TestReceiverParity.test_the_deployed_receiver_fails_closed_when_unconfigured)
+The one place the two sides deliberately differ (TG-21). ... ok
+test_the_trigger_path_carries_no_headers_and_is_not_gated_on_them (test_n8n_parity.TestReceiverParity.test_the_trigger_path_carries_no_headers_and_is_not_gated_on_them)
+On the Telegram Trigger n8n owns the endpoint; there are no headers. ... ok
+test_the_webhook_secret_gates_a_generic_webhook_deployment (test_n8n_parity.TestReceiverParity.test_the_webhook_secret_gates_a_generic_webhook_deployment)
+Telegram signs nothing; `setWebhook`'s secret_token is the only gate. ... ok
+test_content_type_has_no_charset_suffix (test_seam.TestBuildRequest.test_content_type_has_no_charset_suffix) ... ok
+test_is_pure (test_seam.TestBuildRequest.test_is_pure) ... ok
+test_secret_falls_back_to_the_token (test_seam.TestBuildRequest.test_secret_falls_back_to_the_token) ... ok
+test_sends_both_signature_header_families (test_seam.TestBuildRequest.test_sends_both_signature_header_families) ... ok
+test_sends_both_timestamp_header_families (test_seam.TestBuildRequest.test_sends_both_timestamp_header_families) ... ok
+test_token_header_is_present (test_seam.TestBuildRequest.test_token_header_is_present) ... ok
+test_defaults_match_the_javascript_nullish_fallbacks (test_seam.TestPayload.test_defaults_match_the_javascript_nullish_fallbacks) ... ok
+test_field_order_matches_client_mjs (test_seam.TestPayload.test_field_order_matches_client_mjs) ... ok
+test_optional_fields_append_at_the_end (test_seam.TestPayload.test_optional_fields_append_at_the_end) ... ok
+test_optional_fields_are_absent_unless_given (test_seam.TestPayload.test_optional_fields_are_absent_unless_given) ... ok
+test_schema_is_the_shared_one (test_seam.TestPayload.test_schema_is_the_shared_one) ... ok
+test_a_correctly_signed_response_is_accepted (test_seam.TestResponseSignature.test_a_correctly_signed_response_is_accepted) ... ok
+test_a_mismatch_fails_the_send (test_seam.TestResponseSignature.test_a_mismatch_fails_the_send) ... ok
+test_an_unsigned_response_is_still_accepted (test_seam.TestResponseSignature.test_an_unsigned_response_is_still_accepted) ... ok
+test_unsigned_response_is_none_not_false (test_seam.TestResponseSignature.test_unsigned_response_is_none_not_false) ... ok
+test_valid_signature_verifies (test_seam.TestResponseSignature.test_valid_signature_verifies) ... ok
+test_wrong_signature_is_reported_false (test_seam.TestResponseSignature.test_wrong_signature_is_reported_false) ... ok
+test_a_rejection_does_not_raise (test_seam.TestSend.test_a_rejection_does_not_raise) ... ok
+test_a_transport_error_does_not_raise (test_seam.TestSend.test_a_transport_error_does_not_raise) ... ok
+test_accepted_send (test_seam.TestSend.test_accepted_send) ... ok
+test_body_is_the_signed_bytes (test_seam.TestSend.test_body_is_the_signed_bytes) ... ok
+test_correlation_can_be_switched_off_for_byte_parity (test_seam.TestSend.test_correlation_can_be_switched_off_for_byte_parity) ... ok
+test_correlation_id_is_present_by_default (test_seam.TestSend.test_correlation_id_is_present_by_default) ... ok
+test_dry_run_sends_nothing (test_seam.TestSend.test_dry_run_sends_nothing) ... ok
+test_missing_configuration_is_reported_not_raised (test_seam.TestSend.test_missing_configuration_is_reported_not_raised) ... ok
+test_preflight_names_what_is_missing (test_seam.TestSend.test_preflight_names_what_is_missing) ... ok
+test_preflight_reports_names_never_values (test_seam.TestSend.test_preflight_reports_names_never_values) ... ok
+test_no_whitespace_padding (test_seam.TestSerialise.test_no_whitespace_padding) ... ok
+test_non_ascii_is_not_escaped (test_seam.TestSerialise.test_non_ascii_is_not_escaped) ... ok
+test_covers_the_timestamp_as_well_as_the_body (test_seam.TestSignature.test_covers_the_timestamp_as_well_as_the_body) ... ok
+test_is_deterministic (test_seam.TestSignature.test_is_deterministic) ... ok
+test_known_vector (test_seam.TestSignature.test_known_vector) ... ok
+test_always_three_fractional_digits (test_seam.TestTimestamp.test_always_three_fractional_digits) ... ok
+test_differs_from_python_default_isoformat (test_seam.TestTimestamp.test_differs_from_python_default_isoformat) ... ok
+test_matches_javascript_toisostring (test_seam.TestTimestamp.test_matches_javascript_toisostring) ... ok
+test_a_long_id_is_refused_rather_than_silently_truncated (test_template.TestBundledCatalogueBehaviour.test_a_long_id_is_refused_rather_than_silently_truncated) ... ok
+test_every_interactive_template_encodes_its_buttons (test_template.TestBundledCatalogueBehaviour.test_every_interactive_template_encodes_its_buttons) ... ok
+test_poller_settled_requires_a_score (test_template.TestBundledCatalogueBehaviour.test_poller_settled_requires_a_score) ... ok
+test_a_file_path_works_anywhere_an_id_does (test_template.TestCatalogue.test_a_file_path_works_anywhere_an_id_does) ... ok
+test_a_local_directory_overrides_the_bundled_catalogue (test_template.TestCatalogue.test_a_local_directory_overrides_the_bundled_catalogue) ... ok
+test_every_bundled_template_is_valid (test_template.TestCatalogue.test_every_bundled_template_is_valid) ... ok
+test_groups_are_all_populated (test_template.TestCatalogue.test_groups_are_all_populated) ... ok
+test_one_unusable_file_does_not_take_down_the_catalogue (test_template.TestCatalogue.test_one_unusable_file_does_not_take_down_the_catalogue) ... ok
+test_the_bundled_catalogue_loads_and_is_not_empty (test_template.TestCatalogue.test_the_bundled_catalogue_loads_and_is_not_empty) ... ok
+test_unknown_id_names_what_is_available (test_template.TestCatalogue.test_unknown_id_names_what_is_available) ... ok
+test_carries_the_template_identity (test_template.TestMeta.test_carries_the_template_identity) ... ok
+test_extra_meta_is_merged (test_template.TestMeta.test_extra_meta_is_merged) ... ok
+test_keyboard_lands_where_the_fan_out_looks_for_it (test_template.TestMeta.test_keyboard_lands_where_the_fan_out_looks_for_it) ... ok
+test_no_keyboard_key_when_there_are_no_buttons (test_template.TestMeta.test_no_keyboard_key_when_there_are_no_buttons) ... ok
+test_a_pipe_separated_string_is_accepted (test_template.TestPoll.test_a_pipe_separated_string_is_accepted) ... ok
+test_fewer_than_two_options_is_an_error (test_template.TestPoll.test_fewer_than_two_options_is_an_error) ... ok
+test_options_are_capped_at_ten (test_template.TestPoll.test_options_are_capped_at_ten) ... ok
+test_options_come_from_a_context_field (test_template.TestPoll.test_options_come_from_a_context_field) ... ok
+test_an_undeclared_missing_field_renders_blank_rather_than_raising (test_template.TestRendering.test_an_undeclared_missing_field_renders_blank_rather_than_raising) ... ok
+test_defaults_fill_gaps (test_template.TestRendering.test_defaults_fill_gaps) ... ok
+test_empty_sections_do_not_leave_gaps (test_template.TestRendering.test_empty_sections_do_not_leave_gaps) ... ok
+test_interpolates_context (test_template.TestRendering.test_interpolates_context) ... ok
+test_payload_beats_defaults (test_template.TestRendering.test_payload_beats_defaults) ... ok
+test_payload_content_is_never_altered_by_rendering (test_template.TestRendering.test_payload_content_is_never_altered_by_rendering) ... ok
+test_severity_emoji_is_available_to_every_template (test_template.TestRendering.test_severity_emoji_is_available_to_every_template) ... ok
+test_template_structure_is_flattened_but_content_is_not (test_template.TestRendering.test_template_structure_is_flattened_but_content_is_not) ... ok
+test_title_body_and_footer_are_joined_with_blank_lines (test_template.TestRendering.test_title_body_and_footer_are_joined_with_blank_lines) ... ok
+test_a_default_satisfies_a_requirement (test_template.TestRequires.test_a_default_satisfies_a_requirement) ... ok
+test_a_missing_required_field_raises_by_default (test_template.TestRequires.test_a_missing_required_field_raises_by_default) ... ok
+test_an_empty_string_counts_as_missing (test_template.TestRequires.test_an_empty_string_counts_as_missing) ... ok
+test_lenient_mode_renders_anyway_and_records_the_gap (test_template.TestRequires.test_lenient_mode_renders_anyway_and_records_the_gap) ... ok
+test_zero_does_not_count_as_missing (test_template.TestRequires.test_zero_does_not_count_as_missing) ... ok
+test_a_template_needs_a_title (test_template.TestValidation.test_a_template_needs_a_title) ... ok
+test_a_template_needs_an_id (test_template.TestValidation.test_a_template_needs_an_id) ... ok
+test_an_interactive_template_must_have_a_return_path (test_template.TestValidation.test_an_interactive_template_must_have_a_return_path) ... ok
+test_group_must_be_known (test_template.TestValidation.test_group_must_be_known) ... ok
+test_kind_must_be_known_or_null (test_template.TestValidation.test_kind_must_be_known_or_null) ... ok
+test_severity_must_be_known (test_template.TestValidation.test_severity_must_be_known) ... ok
+test_unknown_keys_are_warned_not_ignored (test_template.TestValidation.test_unknown_keys_are_warned_not_ignored) ... ok
+test_a_boundary_near_the_start_does_not_waste_the_window (test_text.TestChunk.test_a_boundary_near_the_start_does_not_waste_the_window)
+A title paragraph must not become a message of its own. ... ok
+test_a_single_unbroken_token_is_still_split (test_text.TestChunk.test_a_single_unbroken_token_is_still_split) ... ok
+test_empty_text (test_text.TestChunk.test_empty_text) ... ok
+test_every_part_is_within_the_cap (test_text.TestChunk.test_every_part_is_within_the_cap) ... ok
+test_no_content_is_lost (test_text.TestChunk.test_no_content_is_lost) ... ok
+test_parts_are_numbered (test_text.TestChunk.test_parts_are_numbered) ... ok
+test_short_text_is_one_part_with_no_marker (test_text.TestChunk.test_short_text_is_one_part_with_no_marker) ... ok
+test_splits_on_a_paragraph_boundary_when_one_fits (test_text.TestChunk.test_splits_on_a_paragraph_boundary_when_one_fits) ... ok
+test_ascii_matches_len (test_text.TestLength.test_ascii_matches_len) ... ok
+test_astral_emoji_counts_as_two (test_text.TestLength.test_astral_emoji_counts_as_two) ... ok
+test_bmp_character_counts_as_one (test_text.TestLength.test_bmp_character_counts_as_one) ... ok
+test_emoji_heavy_message_is_over_the_limit_while_len_is_under (test_text.TestLength.test_emoji_heavy_message_is_over_the_limit_while_len_is_under) ... ok
+test_a_delimited_secret_is_not_mangled (test_text.TestPlain.test_a_delimited_secret_is_not_mangled) ... ok
+test_an_asterisk_that_is_not_emphasis_survives (test_text.TestPlain.test_an_asterisk_that_is_not_emphasis_survives) ... ok
+test_an_identifier_with_underscores_survives (test_text.TestPlain.test_an_identifier_with_underscores_survives) ... ok
+test_blockquote_marker_is_dropped (test_text.TestPlain.test_blockquote_marker_is_dropped) ... ok
+test_bullets_become_a_readable_character (test_text.TestPlain.test_bullets_become_a_readable_character) ... ok
+test_empty_input (test_text.TestPlain.test_empty_input) ... ok
+test_heading_marker_is_dropped (test_text.TestPlain.test_heading_marker_is_dropped) ... ok
+test_image_reduces_to_its_alt_text (test_text.TestPlain.test_image_reduces_to_its_alt_text) ... ok
+test_inline_delimiters_are_left_alone (test_text.TestPlain.test_inline_delimiters_are_left_alone) ... ok
+test_link_keeps_label_and_url (test_text.TestPlain.test_link_keeps_label_and_url) ... ok
+test_quoted_code_keeps_its_backticks (test_text.TestPlain.test_quoted_code_keeps_its_backticks) ... ok
+test_runs_of_blank_lines_collapse (test_text.TestPlain.test_runs_of_blank_lines_collapse) ... ok
+test_marker_is_visible (test_text.TestTruncate.test_marker_is_visible) ... ok
+test_never_splits_a_surrogate_pair (test_text.TestTruncate.test_never_splits_a_surrogate_pair) ... ok
+test_short_text_is_untouched (test_text.TestTruncate.test_short_text_is_untouched) ... ok
+test_an_api_outage_is_unavailable_not_failed (test_verify.TestAvailability.test_an_api_outage_is_unavailable_not_failed) ... ok
+test_nothing_to_match_on_is_unavailable (test_verify.TestAvailability.test_nothing_to_match_on_is_unavailable) ... ok
+test_unconfigured_is_unavailable_not_delivered (test_verify.TestAvailability.test_unconfigured_is_unavailable_not_delivered) ... ok
+test_a_custom_delivery_node_name (test_verify.TestVerdicts.test_a_custom_delivery_node_name) ... ok
+test_an_error_on_the_delivery_node_still_fails (test_verify.TestVerdicts.test_an_error_on_the_delivery_node_still_fails) ... ok
+test_any_known_delivery_node_counts (test_verify.TestVerdicts.test_any_known_delivery_node_counts)
+The interactive workflow routes to a different node per button count. ... ok
+test_delivery_node_errored (test_verify.TestVerdicts.test_delivery_node_errored) ... ok
+test_delivery_node_ran_clean (test_verify.TestVerdicts.test_delivery_node_ran_clean) ... ok
+test_matches_on_a_needle_when_there_is_no_request_id (test_verify.TestVerdicts.test_matches_on_a_needle_when_there_is_no_request_id) ... ok
+test_no_matching_execution (test_verify.TestVerdicts.test_no_matching_execution) ... ok
+test_workflow_ran_but_never_reached_delivery (test_verify.TestVerdicts.test_workflow_ran_but_never_reached_delivery) ... ok
+test_does_not_wait_when_told_not_to (test_verify.TestWaiting.test_does_not_wait_when_told_not_to) ... ok
+test_gives_up_and_says_not_found (test_verify.TestWaiting.test_gives_up_and_says_not_found) ... ok
+test_polls_until_the_record_appears (test_verify.TestWaiting.test_polls_until_the_record_appears) ... ok
+
+----------------------------------------------------------------------
+Ran 189 tests in 1.067s
+
+OK
+EXIT=0

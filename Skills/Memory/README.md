@@ -1,5 +1,7 @@
 # Memory — durable, file-based long-term memory
 
+**Current version: `v1.0.0`** — code and templates live in `Tooling/v1.0.0/`; recorded test results in `Tests/v1.0.0/`.
+
 A persistent, file-based memory that survives **across** Claude Code sessions. Unlike the other
 entries in this repo, Memory is **not a `/command`** — nothing runs it. It is a **discipline plus a
 small file format**: one fact per file with YAML frontmatter, all indexed by a single `MEMORY.md`
@@ -12,8 +14,8 @@ This package documents the working method and ships the two templates that fix t
 
 | Path | Installs to | Role |
 |------|-------------|------|
-| `templates/MEMORY.md.template` | `~/.claude/data/templates/` | Blank index skeleton for a new memory directory. |
-| `templates/memory-entry.md.template` | `~/.claude/data/templates/` | A single memory file with the correct frontmatter. |
+| `Tooling/v1.0.0/templates/MEMORY.md.template` | `~/.claude/data/templates/` | Blank index skeleton for a new memory directory. |
+| `Tooling/v1.0.0/templates/memory-entry.md.template` | `~/.claude/data/templates/` | A single memory file with the correct frontmatter. |
 
 Both are shipped **verbatim** from the live system. The README *is* the skill.
 
@@ -124,4 +126,4 @@ every session — its `MEMORY.md` index appears in-context as the auto-memory bl
 shipped here are the exact skeletons that new memory directories and entries are cut from.
 
 
-**Committed self-check:** `bash tests/verify.sh` — **18/18** (frontmatter validity, the index-is-recall invariant, wikilink resolution, and a live drift demo where an un-indexed entry is caught then fixed).
+**Committed self-check:** `bash Tooling/v1.0.0/tests/verify.sh` — **18/18** (frontmatter validity, the index-is-recall invariant, wikilink resolution, and a live drift demo where an un-indexed entry is caught then fixed).

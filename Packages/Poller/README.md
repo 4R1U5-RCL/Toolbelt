@@ -1,5 +1,8 @@
 # Poller
 
+**Current version: `v2.1.0`** — code at `Tooling/v2.1.0/`, recorded test
+results at `Tests/v2.1.0/`.
+
 A source-agnostic watch-and-report engine. Point it at any endpoint that returns
 a list of things with states, and it reports each item that reaches a terminal
 state — exactly once, on every rail you configure, and it tells you when it
@@ -12,6 +15,10 @@ a laptop.
 - **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** — the ways pollers have
   actually broken here, what each one looked like, and what guards it now.
   Read this before writing a config.
+- **[TEMPLATES.md](TEMPLATES.md)** — the production application forms: the
+  shipped example configs and the always-on n8n workflow template.
+- **[CHANGE_LOG.md](CHANGE_LOG.md)** — every iteration made in response to an
+  entry in `KNOWN_ISSUES.md`.
 - **[IMPLEMENTATIONS.md](IMPLEMENTATIONS.md)** — how to plug in a new source,
   with Kaggle worked end to end and recipes for GitHub Actions, generic REST,
   and custom Python sources; plus how to configure the headless-session
@@ -33,7 +40,7 @@ incident bought.
 ## Quickstart
 
 ```bash
-cd Packages/Poller
+cd Packages/Poller/Tooling/v2.1.0
 ./run-tests.sh                                          # full suite, offline, ~1s
 
 ./bin/poller check  --config examples/kaggle-submissions.json   # prove credentials + endpoint
@@ -121,27 +128,31 @@ Packages/Poller/
 ├── README.md              this file
 ├── KNOWN_ISSUES.md        the failure catalogue and its guards
 ├── IMPLEMENTATIONS.md     how to plug in a new source
-├── bin/poller             executable entry point (no install needed)
-├── run-tests.sh           the whole suite, offline
-├── examples/              kaggle · kaggle-with-fallback · github-actions · generic-http
-├── n8n/                   always-on tier: workflow that runs the loop on n8n
-├── poller/
-│   ├── engine.py          the loop, delivery, heartbeat, lifecycle
-│   ├── state.py           durable dedup + per-sink delivery ledger
-│   ├── sinks.py           file · stdout · slack · notify_webhook · webhook ·
-│   │                      command · claude_code
-│   ├── sources/           base · http_json (declarative) · kaggle (preset)
-│   ├── http.py            retrying HTTPS client (transient vs fatal)
-│   ├── config.py          config schema, defaults, validation
-│   ├── lock.py            single-instance lock without `ps`
-│   ├── supervisor.py      liveness of the session that launched the watch
-│   ├── clock.py           injectable time; interruptible sleep
-│   ├── envfile.py         read .env without sourcing it
-│   ├── render.py          total templating
-│   ├── log.py             redacting logger
-│   ├── model.py           Item · Event · ItemState
-│   └── errors.py          the transient/fatal taxonomy
-└── tests/                 the suite; no network, no fixtures to install
+├── TEMPLATES.md           the application forms, each linked from the above
+├── CHANGE_LOG.md          the iterations that closed those issues
+├── Tests/v2.1.0/          recorded results of running v2.1.0's suite
+└── Tooling/v2.1.0/        the code at this version (everything below)
+    ├── bin/poller             executable entry point (no install needed)
+    ├── run-tests.sh           the whole suite, offline
+    ├── examples/              kaggle · kaggle-with-fallback · github-actions · generic-http
+    ├── n8n/                   always-on tier: workflow that runs the loop on n8n
+    ├── poller/
+    │   ├── engine.py          the loop, delivery, heartbeat, lifecycle
+    │   ├── state.py           durable dedup + per-sink delivery ledger
+    │   ├── sinks.py           file · stdout · slack · notify_webhook · webhook ·
+    │   │                      command · claude_code
+    │   ├── sources/           base · http_json (declarative) · kaggle (preset)
+    │   ├── http.py            retrying HTTPS client (transient vs fatal)
+    │   ├── config.py          config schema, defaults, validation
+    │   ├── lock.py            single-instance lock without `ps`
+    │   ├── supervisor.py      liveness of the session that launched the watch
+    │   ├── clock.py           injectable time; interruptible sleep
+    │   ├── envfile.py         read .env without sourcing it
+    │   ├── render.py          total templating
+    │   ├── log.py             redacting logger
+    │   ├── model.py           Item · Event · ItemState
+    │   └── errors.py          the transient/fatal taxonomy
+    └── tests/                 the suite; no network, no fixtures to install
 ```
 
 ## Testing
@@ -185,7 +196,8 @@ is gone the moment that laptop is — and nothing is left to restart it.
 So the poll loop can also run **on n8n**, on an always-on VPS, with dedup state
 in `$getWorkflowStaticData`. It is the less capable tier — no per-sink ledger,
 no staleness SLA, no fallback rail — and that is the right trade for the layer
-whose only job is to not be absent. See [`n8n/`](n8n/).
+whose only job is to not be absent. See
+[`Tooling/v2.1.0/n8n/`](Tooling/v2.1.0/n8n/).
 
 ```
 n8n schedule (VPS, always on)  ──▶ the watch itself, immune to your laptop

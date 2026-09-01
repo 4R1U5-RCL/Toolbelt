@@ -1,0 +1,43 @@
+$ cd /studio/scratch/tb/Workflows/Validate/Tooling/v1.0.0
+$ python3 tests/selftest.py
+  PASS · A: all concur → HIGH
+  PASS · A: no disagreements
+  PASS · A: web skipped when web=False
+  PASS · A: all 3 reviewers responded
+  PASS · B: any dissent → LOW
+  PASS · B: disagreements listed (mixed stances)
+  PASS · C: failed model recorded ok=False
+  PASS · C: 2 concurring responders → HIGH
+  PASS · D: <2 responders → unknown
+  PASS · G: fallback answered the slot
+  PASS · G: fallback labelled
+  PASS · G: mixed concur+concerns → MEDIUM
+  PASS · H: slot FAILED when both down
+  PASS · H: error names primary + fallback
+  PASS · E: web fact-check included
+  PASS · F: doc has agreement-not-correctness caveat
+  PASS · F: doc has Panel + Disagreements + Findings
+  PASS · F: doc marks the failed model
+  PASS · F: parse_stance reads STANCE line
+  PASS · I: unparseable stance → ok False
+  PASS · I: error flags unparseable
+  PASS · I: two parseable concur → HIGH
+  PASS · J: unparseable no longer inflates the panel → unknown
+  PASS · K: fenced stance ignored
+  PASS · L: doc has stance counts
+  PASS · L: doc has resolved-model column
+  PASS · M: CRITIC_SYSTEM warns of untrusted content
+  PASS · M: MEDIUM wording dropped 'sound'
+
+== selftest: 28 passed, 0 failed ==
+exit_code=0
+
+--- post-move entrypoint path check (not part of the suite) ---
+$ cd /studio/scratch/tb/Workflows/Validate/Tooling/v1.0.0
+$ python3 bin/validate --help | head -3
+usage: validate [-h] [--input INPUT] [--subject SUBJECT] [--topic TOPIC]
+                [--web] [--panel PANEL] [--out OUT] [--max-tokens MAX_TOKENS]
+                [--timeout TIMEOUT] [--config CONFIG] [--print]
+$ OPENROUTER_API_KEY=x python3 bin/validate --panel nosuchkey hello
+ERROR: --panel matched no reasoners in the config.
+exit_code=1

@@ -1,5 +1,8 @@
 # scrape — web pages into LLM-ready text
 
+**Current version: `v1.0.0`** — code in [`Tooling/v1.0.0/`](Tooling/v1.0.0/),
+recorded test results in [`Tests/v1.0.0/`](Tests/v1.0.0/).
+
 Point it at a URL and get back clean, bounded, LLM-ready markdown — the page
 fetched through Firecrawl, its markdown normalized, hard-capped to a
 context-window-safe size, and (on request) split into token-bounded chunks with
@@ -13,6 +16,8 @@ offline against fake Firecrawl responses.
 
 - **[KNOWN_ISSUES.md](KNOWN_ISSUES.md)** — the ways web scrapes actually break, each with the guard that now prevents it.
 - **[IMPLEMENTATIONS.md](IMPLEMENTATIONS.md)** — how to configure a scrape, chunk for a model, and plug in a new backend.
+- **[TEMPLATES.md](TEMPLATES.md)** — the application forms themselves (the `examples/` configs and the backend-class shape).
+- **[CHANGE_LOG.md](CHANGE_LOG.md)** — every iteration made in response to a `KNOWN_ISSUES.md` entry.
 
 ## Why this exists
 
@@ -26,7 +31,7 @@ written once, with a test behind every guard.
 ## Quickstart
 
 ```bash
-cd Packages/Scrape
+cd Packages/Scrape/Tooling/v1.0.0               # the code lives under the version
 ./run-tests.sh                                  # 59 tests, offline, no key needed
 
 export FIRECRAWL_API_KEY=fc-...                 # the one credential
@@ -84,29 +89,37 @@ pipeline run per URL, independently, so one failure is recorded rather than fata
 
 ```
 Packages/Scrape/
-├── bin/scrape              # no-install shim -> scrape.cli:main
-├── scrape/
-│   ├── cli.py              # argparse; url / batch / version
-│   ├── config.py           # Config dataclass, load_config, resolve_api_key (honest missing-key)
-│   ├── client.py           # FirecrawlClient (the backend) + build_client registry
-│   ├── http.py             # injectable stdlib HTTP client (retry/backoff, transient vs fatal)
-│   ├── transform.py        # raw payload -> Document: clean · truncate · map fields
-│   ├── chunk.py            # token-bounded markdown chunker
-│   ├── render.py           # Document -> markdown(+frontmatter) / json / text
-│   ├── engine.py           # scrape_url · scrape_many (independent batch)
-│   ├── model.py            # Document · Chunk value objects
-│   └── errors.py           # ScrapeError taxonomy (transient vs fatal)
-├── examples/               # one JSON config per scenario
-├── tests/                  # stdlib unittest, offline, injected fakes
-├── run-tests.sh
-├── README.md · KNOWN_ISSUES.md · IMPLEMENTATIONS.md
+├── README.md · IMPLEMENTATIONS.md · TEMPLATES.md · KNOWN_ISSUES.md · CHANGE_LOG.md
+├── Tests/v1.0.0/           # recorded results of running v1.0.0's suite
+└── Tooling/v1.0.0/         # the code at v1.0.0
+    ├── bin/scrape          # no-install shim -> scrape.cli:main
+    ├── scrape/
+    │   ├── cli.py          # argparse; url / batch / version
+    │   ├── config.py       # Config dataclass, load_config, resolve_api_key (honest missing-key)
+    │   ├── client.py       # FirecrawlClient (the backend) + build_client registry
+    │   ├── http.py         # injectable stdlib HTTP client (retry/backoff, transient vs fatal)
+    │   ├── transform.py    # raw payload -> Document: clean · truncate · map fields
+    │   ├── chunk.py        # token-bounded markdown chunker
+    │   ├── render.py       # Document -> markdown(+frontmatter) / json / text
+    │   ├── engine.py       # scrape_url · scrape_many (independent batch)
+    │   ├── model.py        # Document · Chunk value objects
+    │   └── errors.py       # ScrapeError taxonomy (transient vs fatal)
+    ├── examples/           # one JSON config per scenario
+    ├── tests/              # stdlib unittest, offline, injected fakes (ships with the version it tests)
+    └── run-tests.sh
 ```
+
+Every relative path in this README and in `IMPLEMENTATIONS.md` (`./bin/scrape`,
+`examples/`, `./run-tests.sh`) is relative to `Tooling/v1.0.0/`.
 
 ## Testing
 
 ```bash
-./run-tests.sh          # or: python3 -m unittest discover -s tests -t tests
+cd Tooling/v1.0.0 && ./run-tests.sh    # or: python3 -m unittest discover -s tests -t tests
 ```
+
+The recorded output of the last run is in [`Tests/v1.0.0/`](Tests/v1.0.0/)
+(`run-tests.log` verbatim, `RESULTS.md` for the conditions).
 
 Every test is offline and deterministic: the HTTP transport is faked at the
 `urlopen` seam (with injected clock and RNG so backoff windows are exact), and the

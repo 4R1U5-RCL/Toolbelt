@@ -105,3 +105,25 @@ retry and batch policies apply unchanged.
 - [ ] For a batch, you've decided `--on-error continue` (default) vs `stop`.
 - [ ] For chrome-heavy sites, you've considered requesting `onlyMainContent` upstream (KI-08).
 - [ ] `./run-tests.sh` is green.
+
+---
+
+## Template index (appended 2026-08-31, v1.0.0)
+
+Reciprocal citations for [`TEMPLATES.md`](TEMPLATES.md), added when this tool was
+brought into PROCESS.md §3/§4 conformance. The implementations above predate
+`TEMPLATES.md`; this section supplies the link each of them owes its template
+rather than rewriting them (IMPLEMENTATIONS.md is append-only, PROCESS.md §5.2).
+
+| Implementation above | Template |
+|---|---|
+| "Worked example: one docs page, ready for a model" | [TEMPLATES.md#tpl-01](TEMPLATES.md#tpl-01) — single URL → markdown (`examples/single-url.json`) |
+| "Recipe: batch a list of URLs" | [TEMPLATES.md#tpl-02](TEMPLATES.md#tpl-02) — batch → JSON (`examples/batch-json.json`) and [TEMPLATES.md#tpl-04](TEMPLATES.md#tpl-04) — URL-list file (`examples/urls.txt`) |
+| "Recipe: chunking for a context window" | [TEMPLATES.md#tpl-03](TEMPLATES.md#tpl-03) — chunked config (`examples/llm-chunks.json`) |
+| "Adding a backend" | [TEMPLATES.md#tpl-05](TEMPLATES.md#tpl-05) — new backend class form |
+| "Anatomy of a config" | no dedicated template file — it is the annotated superset of TPL-01/02/03, not a shipped form |
+
+Note on paths: every relative path in the sections above (`./bin/scrape`,
+`examples/`, `scrape/`, `tests/`, `./run-tests.sh`) is now relative to
+`Tooling/v1.0.0/`, not to the tool root. See
+[`CHANGE_LOG.md`](CHANGE_LOG.md) → `migrate-scrape-to-the-tooling-tests-layo_70b30a3b`.

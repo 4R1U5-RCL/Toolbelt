@@ -1,0 +1,19 @@
+$ date -u
+Mon Aug 31 15:24:15 UTC 2026
+
+$ ls Workflows/Sprint (tool root)
+README.md
+Tests
+Tooling
+
+$ find . -name 'run-tests.sh' -o -type d -name tests
+(no output above = neither a run-tests.sh nor a tests/ directory exists)
+
+=== FALLBACK: bash -n syntax check of the shipped scripts (NOT a test suite) ===
+Tooling/v1.0.0/fleet-kit/fleet-board.sh: syntax OK
+Tooling/v1.0.0/fleet-kit/fleet-doctor.sh: syntax OK
+Tooling/v1.0.0/fleet-kit/fleet-mbox.sh: syntax OK
+Tooling/v1.0.0/fleet-kit/fleet-triage-guard.sh: syntax OK
+
+=== bash --version ===
+GNU bash, version 5.2.15(1)-release (x86_64-pc-linux-gnu)
