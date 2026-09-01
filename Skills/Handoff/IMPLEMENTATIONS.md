@@ -18,8 +18,9 @@ from.
 
 ---
 
-<a name="impl-01"></a>
-## `IMPL-01` — Install into a live `~/.claude/`
+## IMPL-01
+
+**Install into a live `~/.claude/`.**
 
 **Applies** [`TMPL-01`](TEMPLATES.md#tmpl-01) and [`TMPL-02`](TEMPLATES.md#tmpl-02).
 
@@ -37,8 +38,9 @@ there and creates nothing else.
 
 ---
 
-<a name="impl-02"></a>
-## `IMPL-02` — End-of-session handoff, full-session scope
+## IMPL-02
+
+**End-of-session handoff, full-session scope.**
 
 **Applies** [`TMPL-02`](TEMPLATES.md#tmpl-02) filling [`TMPL-01`](TEMPLATES.md#tmpl-01).
 
@@ -58,8 +60,9 @@ It writes nowhere else — not to memory, plans or templates.
 
 ---
 
-<a name="impl-03"></a>
-## `IMPL-03` — Follow-on handoff within 4 hours, incremental scope
+## IMPL-03
+
+**Follow-on handoff within 4 hours, incremental scope.**
 
 **Applies** [`TMPL-02`](TEMPLATES.md#tmpl-02) filling [`TMPL-01`](TEMPLATES.md#tmpl-01).
 
@@ -74,8 +77,9 @@ check is mtime-based and topic-blind (see `KNOWN_ISSUES.md`).
 
 ---
 
-<a name="impl-04"></a>
-## `IMPL-04` — Offline self-check of the shipped package
+## IMPL-04
+
+**Offline self-check of the shipped package.**
 
 **Applies** [`TMPL-01`](TEMPLATES.md#tmpl-01) — it is the artefact under test.
 

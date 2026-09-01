@@ -2,11 +2,13 @@
 
 Append-only (PROCESS.md §5.1). Every entry carries an id computed per
 `process.yaml` `definitions.issue-id` and cites the `CHANGE_LOG.md` entry that
-resolves it.
+resolves it. Entry headings are the bare id (`process.yaml`
+`definitions.entry.heading_form`); statuses come from the closed set of seven in
+`definitions.issue-status`.
 
 | id | Summary | Status |
 |---|---|---|
-| [`skills-handoff-fails-track-b-conformance_761fac80`](#skills-handoff-fails-track-b-conformance_761fac80) | Track B conformance failure found at migration | resolved |
+| [skills-handoff-fails-track-b-conformance_761fac80](#skills-handoff-fails-track-b-conformance_761fac80) | Track B conformance failure found at migration | in-progress |
 
 The four caveats the README has always carried — hard-coded studio paths, the
 topic-blind 4h scope test, curation being model judgment, and a handoff being a
@@ -17,8 +19,7 @@ iteration has been planned against them; doing so would require inventing an
 
 ---
 
-<a name="skills-handoff-fails-track-b-conformance_761fac80"></a>
-## `skills-handoff-fails-track-b-conformance_761fac80`
+## skills-handoff-fails-track-b-conformance_761fac80
 
 | Field | Value |
 |---|---|
@@ -27,9 +28,21 @@ iteration has been planned against them; doing so would require inventing an
 | **source** | PROCESS.md §7 Track B check run against `Skills/Handoff` during the migration of this tool |
 | **occurred_at** | 2026-08-31 |
 | **tool** | `Skills/Handoff` |
-| **status** | resolved |
-| **resolved_by** | [`CHANGE_LOG.md#migrate-skills-handoff-to-the-track-b-la_bf26568c`](CHANGE_LOG.md#migrate-skills-handoff-to-the-track-b-la_bf26568c) at fix-version **v1.0.0** |
+| **status** | `in-progress` |
+| **resolved_by** | [CHANGE_LOG.md#bring-the-tool-into-3-4-conformance-at-v_54324955](CHANGE_LOG.md#bring-the-tool-into-3-4-conformance-at-v_54324955), planned fix-version **v1.0.0**. Not merged — see *Status* below |
 | **occurrences** | 1 — 2026-08-31, the migration run |
+
+**Identity.** The id reproduces from the `summary` field alone
+(`process.yaml` `definitions.issue-id`, PROCESS.md §10.3). Canonical string
+(trim → lowercase → collapse whitespace → strip trailing `. , ; : ! ?`):
+
+```
+skills/handoff fails track b conformance: four canonical documents missing, code not under tooling/, no recorded test results under tests/, readme names no version
+```
+
+`sha256` = `761fac804bdc81b0…`, so `hash8` = `761fac80`; the slug rule truncates
+the summary to `skills-handoff-fails-track-b-conformance`. Recomputed with
+`sha256sum` on 2026-09-01 under the amended canonicalisation — unchanged.
 
 **outcome (X).** Four of the five canonical files of §3 did not exist:
 `IMPLEMENTATIONS.md`, `TEMPLATES.md`, `KNOWN_ISSUES.md` and `CHANGE_LOG.md`.
@@ -52,15 +65,29 @@ missing migration, not a defect in the skill — the skill itself runs and its
 suite passes.
 
 **iteration (Z).** Migrate the tool to the §3/§4 layout at **v1.0.0** per §9
-("a tool that has never been versioned starts at v1.0"): move `commands/`,
+("a tool that has never been versioned starts at v1.0.0"): move `commands/`,
 `templates/` and `tests/` into `Tooling/v1.0.0/`, leave the canonical `.md`
 files at the tool root, run the suite from its new location and record the
 verbatim output under `Tests/v1.0.0/`, create the four missing documents, and
 state `v1.0.0` in `README.md`. Planned and recorded in
-[`CHANGE_LOG.md#migrate-skills-handoff-to-the-track-b-la_bf26568c`](CHANGE_LOG.md#migrate-skills-handoff-to-the-track-b-la_bf26568c).
+[CHANGE_LOG.md#bring-the-tool-into-3-4-conformance-at-v_54324955](CHANGE_LOG.md#bring-the-tool-into-3-4-conformance-at-v_54324955).
 
-**Note on `resolved`.** The layout, the documents and the recorded results are
-in place and the suite passes 15/15 from the new location
-(`Tests/v1.0.0/run-tests.log`). The merge commit is not yet recorded — this
-migration ran before merge and all git operations are performed outside it. §6
-step 7 (`write_version` → `close_issue`) completes when that commit exists.
+**Status: `in-progress`, not `resolved`.** The layout, the documents and the
+recorded results are in place and the suite passes 15/15 from the new location
+(`Tests/v1.0.0/run-tests.log`, re-run 2026-09-01). Nothing has merged: the work
+sits on branch `smoke/fix-skills-handoff`, which is not pushed and has no PR, so
+`merge_commit` in the change entry is empty. `process.yaml`
+`definitions.issue-status` states plainly that `resolved` is never written while
+`merge_commit` is empty — an approved-but-unmerged fix is `in-progress`. §6 step 7
+(`write_version` → `close_issue`) flips this to `resolved` when the merge commit
+exists, and not before.
+
+**Correction — 2026-09-01.** This entry was written by the 2026-08-31 migration
+with `status: resolved` and no merge commit, and with a backticked heading. Both
+are Track-B conformance failures under the amended spec (PROCESS.md §10.11/§10.13,
+`process.yaml` `definitions.issue-status`, `definitions.entry`). Corrected in
+place on branch `smoke/fix-skills-handoff`: status → `in-progress`, heading → the
+bare id, and the `CHANGE_LOG.md` citation → the change-id recomputed under the
+amended `change-id` identity rule (§10.8 — the `iteration` field alone). The
+entry is unmerged and unreleased, so correcting it does not overwrite released
+history; the identity fields (`id`, `summary`) are untouched.
