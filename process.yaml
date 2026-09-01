@@ -321,7 +321,10 @@ definitions:
                of identity: the id must be computable at check_existing, which
                runs before determine_cause. occurred_at is excluded (it would
                never dedupe); tool is redundant (the file is already per-tool)
-        canonical: trim, lowercase, collapse whitespace runs to a single space
+        canonical: trim, lowercase, collapse whitespace runs to a single space,
+                   then strip trailing punctuation (. , ; : ! ?). Without the
+                   final step the same summary written with and without a full
+                   stop hashes to two different ids
     unique_in:   one tool's KNOWN_ISSUES.md — at most one entry per id. A repeated
                  identity yields a repeated id; existing_check routes that to
                  attach_occurrence rather than a duplicate entry
@@ -333,17 +336,31 @@ definitions:
     format:      <description>_<hash8>
     example:     retry-backoff-on-empty-body_9c1a44be
     assigned_by: agent
+    segments:
+      description:
+        source:    derived from the entry's `iteration` field by the same
+                   slug_rule and regex as issue-id.description
+      hash8:
+        charset:   "[0-9a-f], exactly 8"
+        source:    first 8 hex chars of sha256 over the canonical identity string
+        identity:  the `iteration` field alone — the planned change Z. Mirrors
+                   PROCESS.md §10.3: a change is the same change when the planned
+                   iteration is described the same way. `resolves` is excluded so
+                   the id is computable at write_change, before the issue entry is
+                   re-read; `version` and `merge_commit` are excluded because they
+                   do not exist yet at that point
+        canonical: identical to issue-id.hash8.canonical
     unique_in:   one tool's CHANGE_LOG.md
-    stable:      yes
+    stable:      yes — derived from write-once identity fields
     cited_as:    CHANGE_LOG.md#retry-backoff-on-empty-body_9c1a44be
 
   fix-version-id:
-    format:      v<major>.<minor>
+    format:      v<major>.<minor>.<patch>
     example:     v2.1
     assigned_by: agent
     source:      increments the tool's current version; minor for a fix, major
                  for a breaking change. A tool with no prior version starts at
-                 v1.0 (PROCESS.md §10.6 — settled)
+                 v1.0.0 (PROCESS.md §10.6 — settled)
     unique_in:   one tool — never reused
     stable:      yes — a released version is immutable
     used_by:     <TOOL>/Tooling/v<version>/, <TOOL>/Tests/v<version>/
@@ -356,6 +373,35 @@ definitions:
                   test_decision.on_unknown]
     not:         "a rejection, and not a failure verdict — it is the absence of a
                   verdict. The work is left where it stands for the user to judge"
+
+  issue-status:
+    values:      [open, planned, in-progress, resolved, escalated, legacy,
+                  wont-fix]
+    closed_set:  yes — no other string is valid, and a status outside this list
+                 is a Track-B conformance failure
+    meanings:
+      open:        recorded, no iteration planned yet
+      planned:     an iteration is written in CHANGE_LOG.md, not yet executed
+      in-progress: the fix loop is running on it
+      resolved:    merged; cites both a fix-version-id and a merge_commit
+      escalated:   the loop bound was exhausted or a check could not be answered
+      legacy:      pre-conformance entry, exempt from reciprocity (PROCESS.md §9)
+      wont-fix:    accepted and closed without an iteration; needs a reason field
+    note:        "`resolved` is never written while merge_commit is empty — an
+                  approved-but-unmerged fix is still `in-progress`"
+
+  entry:
+    means:       one record in a prose document (KNOWN_ISSUES.md, CHANGE_LOG.md,
+                 IMPLEMENTATIONS.md, TEMPLATES.md)
+    delimited_by: a level-2 markdown heading whose text is the bare id — no
+                 backticks, no surrounding prose, nothing else on the line. The
+                 entry runs to the next level-2 heading or end of file
+    heading_form: "## <id>"
+    rationale:   the heading text IS the anchor target that `FILE.md#<id>`
+                 citations resolve against; backticks or extra words break the
+                 anchor and make reciprocity unverifiable by grep
+    fields_in:   a markdown table or a definition list inside the block; either
+                 is valid, but one tool uses one form throughout
 
   issue-entry:
     fields:      [id, summary, outcome, cause, iteration, resolved_by, status,

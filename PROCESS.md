@@ -69,8 +69,8 @@ Two versioned directories per tool. Both are binding.
 
 | Directory | Holds |
 |---|---|
-| `Tooling/v<major>.<minor>/` | The tool's code at that version |
-| `Tests/v<major>.<minor>/` | The recorded **results** of running that version's tests |
+| `Tooling/v<major>.<minor>.<patch>/` | The tool's code at that version |
+| `Tests/v<major>.<minor>.<patch>/` | The recorded **results** of running that version's tests |
 
 **Test code ships inside the version it tests** — `Tooling/v2.0/tests/` — because a
 test belongs to the version it was written against. `Tests/v2.0/` holds *output*:
@@ -81,7 +81,15 @@ An iteration never edits one; it seeds the next version from it and works there.
 The previous directory therefore remains a permanent, in-repo rollback point —
 this is safeguard 1 of §5 in concrete form, not a separate copy kept elsewhere.
 
-**Bumping:** minor for a fix, major for a breaking change. The version created by
+**Tools with no executable code.** Some tools *are* their documentation —
+`Workflows/Audit` and `Workflows/Review` describe a process rather than ship a
+program. They are not exempt from this section. The documents that constitute
+the tool live under `Tooling/v<version>/` exactly as code would, and their
+`Tests/v<version>/RESULTS.md` records that no executable suite exists and names
+the Track-B checks run in its place. No marker file is invented.
+
+**Bumping:** patch for a fix, minor for a backwards-compatible addition, major
+for a breaking change. The version created by
 an iteration is the `fix-version-id` in `process.yaml`, and it is what
 `KNOWN_ISSUES.md` and `CHANGE_LOG.md` cite when the issue is closed.
 
@@ -99,8 +107,11 @@ reports instead.
 3. **Never apply a fix blindly.** The issue is logged and the iteration planned
    before any tooling file is touched.
 4. **Never merge directly to `main`.** All work reaches `main` through a PR.
-5. **A PR cannot merge without test files** demonstrating the fix works
-   end-to-end, ideally producing output a human reviews.
+5. **A PR cannot merge without recorded evidence** that the change works
+   end-to-end. For a tool with an executable suite that is a passing run which
+   exercises the logged failure. For a code-less tool (§4) it is a recorded
+   Track-B conformance result. In both cases the evidence is a file under
+   `Tests/v<version>/` — never an assertion in the PR body.
 6. **Never falsify a test result.** A test document must record what actually
    happened. A failing or unrun test is recorded as such.
 7. **Same-turn logging.** If a session must iterate on a tool mid-work because of
@@ -127,8 +138,12 @@ Each is independently verifiable, and all three must hold:
 1. The last released version directory (`Tooling/v<current>/`) is intact and
    untouched before any work begins — it **is** the rollback point (§4). No
    separate copy is taken.
-2. All iteration happens on a **branch**, in a **new version directory**;
-   existing files are never edited in place before merge.
+2. All iteration happens on a **branch**, in a **new version directory**. Files
+   under a **released** `Tooling/v<version>/` are never edited in place. The
+   five canonical root documents are a deliberate exception: they are
+   *append-only* (invariants 1–2), not immutable, and appending to them on the
+   branch is the process working — not a violation. This is what §9 means by
+   creating missing canonical files on next touch.
 3. Nothing reaches `main` except through a PR carrying passing test files and
    human approval.
 
@@ -202,7 +217,7 @@ two places:
 | Check | Passes when |
 |---|---|
 | Canonical files | all five of §3 exist and are non-empty |
-| Reciprocity | every `KNOWN_ISSUES.md` entry cites a `CHANGE_LOG.md` id and vice versa; every `IMPLEMENTATIONS.md` entry cites a `TEMPLATES.md` id and vice versa |
+| Reciprocity | every **non-legacy** `KNOWN_ISSUES.md` entry cites a `CHANGE_LOG.md` id and vice versa; every `IMPLEMENTATIONS.md` entry cites a `TEMPLATES.md` id and vice versa. Legacy entries are defined and exempted in §9 |
 | Code layout | the tool's code sits under `Tooling/v<version>/` |
 | Test layout | recorded results exist under `Tests/v<version>/` for the current version |
 | Version agreement | `README.md`, the newest `Tooling/` directory and the newest `CHANGE_LOG.md` entry name the same current version |
@@ -215,9 +230,11 @@ A tool failing Track B cannot release a new version. Failures are logged in
 ## 8. Pull requests
 
 - Branch off `main`; never commit to `main`.
-- The PR must contain versioned test results under `Tests/`.
-- Tests must include an **end-to-end** test corroborating the fix, ideally with
-  output a human reviews to confirm.
+- The PR must contain versioned results under `Tests/`.
+- For a tool with an executable suite, those results must include an
+  **end-to-end** test corroborating the fix, with output a human can review.
+- For a code-less tool (§4), a recorded Track-B conformance result satisfies
+  this. A code-less tool is never unmergeable for want of a suite it cannot have.
 - Approval is a human gate. Rejection returns the work to planning inside the
   fix loop; it does not end the process.
 - **Approval and merge are separate.** The user approves; the agent performs the
@@ -253,6 +270,22 @@ Summary: **no tool has `CHANGE_LOG.md`**; only `Telegram` has `TEMPLATES.md`; no
 tool uses `Tooling/` or `Tests/`. Existing tools keep test *code* in a lowercase
 `tests/` directory at the tool root, which moves into `Tooling/v<version>/tests/`.
 
+### Legacy entries
+
+`Packages/Poller`, `Packages/Scrape` and `Packages/Telegram` carry issue entries
+written **before** this document existed. They have no `CHANGE_LOG.md`
+counterpart, and one cannot be manufactured for them without inventing a change
+history that never happened — which invariant 6 forbids outright.
+
+They are therefore **grandfathered**. An entry predating a tool's first
+conformant version is marked `status: legacy` and is exempt from the reciprocity
+check in §7 Track B. Reciprocity binds every entry from that first conformant
+version onward.
+
+Marking an entry `legacy` is the one permitted edit to a pre-existing entry, and
+it adds a field rather than changing one — invariant 1 still holds, and nothing
+else about the entry may be touched.
+
 ### When a tool must conform
 
 - **On next touch.** Any tool the fix procedure runs against is brought into
@@ -263,8 +296,8 @@ tool uses `Tooling/` or `Tests/`. Existing tools keep test *code* in a lowercase
   use, `KNOWN_ISSUES.md` for tools that lack one.
 - **No tool is exempt.** A tool that has never had an issue still needs the five
   canonical files, because their absence is what makes staleness invisible.
-- **A tool that has never been versioned starts at `v1.0`.** Its current code
-  becomes `Tooling/v1.0/` regardless of any version its README claims; the README
+- **A tool that has never been versioned starts at `v1.0.0`.** Its current code
+  becomes `Tooling/v1.0.0/` regardless of any version its README claims; the README
   is corrected to match.
 
 ---
@@ -280,7 +313,27 @@ All settled 2026-08-31.
 | 3 | Hash identity | **`summary` alone.** Two errors are the same error when described the same way |
 | 4 | Unanswered human gate | **Never auto-advance.** The PR is left open for the user; the process waits |
 | 5 | Who merges | **The agent**, after a recorded human approval |
-| 6 | Initial version for an unversioned tool | **`v1.0`** |
+| 6 | Initial version for an unversioned tool | **`v1.0.0`** |
+
+### Settled 2026-09-01
+
+Opened by the Track-B smoke test (all eleven tools migrated in parallel, then
+audited by an agent that did not do the migration). Each row is a gap the run
+exposed in *this document*, not in the tools.
+
+| # | Gap | Resolution |
+|---|---|---|
+| 7 | 52 pre-existing issue entries can never satisfy reciprocity | **Grandfather them** — `status: legacy`, exempt (§9) |
+| 8 | `change-id` had a format but no identity | **The `iteration` field alone**, mirroring §10.3 |
+| 9 | No rule for a tool that has no executable code | **Not exempt** — its documents live in `Tooling/`; no marker file (§4) |
+| 10 | Invariant 5 made code-less tools permanently unmergeable | **Recorded evidence**, not "test files"; Track-B result qualifies (§5.5, §8) |
+| 11 | Eleven tools produced seven different status strings | **Closed set of seven** (`process.yaml: definitions.issue-status`) |
+| 12 | §5 safeguard 2 read as forbidding what §9 requires | **Released version dirs are immutable; root docs are append-only** (§5) |
+| 13 | "entry" was undefined for a prose document | **A level-2 heading whose text is the bare id** (`process.yaml: definitions.entry`) |
+| 14 | Two summaries differing only by a full stop hashed differently | **Canonicalisation strips trailing punctuation** |
+
+Decisions 9 and 10 are a pair: 9 says a code-less tool must conform, 10 removes
+the invariant that made conforming impossible for it.
 
 Identity deliberately excludes the cause: an id must be computable at
 `check_existing`, which runs before the cause is determined. It also excludes
