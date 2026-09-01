@@ -20,6 +20,10 @@ heartbeat, locking, staleness, clean shutdown — you get unchanged.
 
 ## Anatomy of a config
 
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 ```jsonc
 {
   "name": "kaggle-agentsec",        // filename-safe; names the state/lock/heartbeat files
@@ -49,6 +53,10 @@ would otherwise leave you polling at the default for hours.
 ---
 
 ## Worked example: Kaggle competition submissions
+
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
 
 The one this package was built for. Config:
 [`examples/kaggle-submissions.json`](examples/kaggle-submissions.json).
@@ -164,6 +172,10 @@ notebook it came from.
 
 ## Recipe: GitHub Actions runs
 
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 A different vocabulary, and a list nested inside an object. Config:
 [`examples/github-actions.json`](examples/github-actions.json).
 
@@ -206,6 +218,10 @@ Two things worth copying:
 
 ## Recipe: a generic REST job queue
 
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 Config: [`examples/generic-http.json`](examples/generic-http.json). It shows the
 three things most in-house APIs need:
 
@@ -232,6 +248,10 @@ three things most in-house APIs need:
 ---
 
 ## When declarative is not enough: a Python source
+
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
 
 Pagination, GraphQL, a second call per row, or a signature scheme — write a
 class. You implement one method and inherit everything else.
@@ -285,6 +305,10 @@ the test suite exercises the plugin path end to end.
 
 ## Choosing rails
 
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 | Sink | Use it for | Notes |
 |---|---|---|
 | `file` | The audit trail. Always include one. | Works with no network. Template `{key}` into the path for one file per event |
@@ -329,6 +353,10 @@ single-secret mode, not a misconfiguration.
 ---
 
 ## Surviving the session that launched it
+
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
 
 ### What actually needs surviving
 
@@ -447,6 +475,10 @@ obligation, and generating the workflow from a poller config is a known gap.
 
 ## Running it
 
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 | How | Command | When |
 |---|---|---|
 | **Cron tick** | `poller run -c cfg.json --once` every N minutes | **Preferred.** No long-lived process to die; cron is the survivability layer |
@@ -478,6 +510,10 @@ poller status --config cfg.json || echo "poller is not alive" | mail -s alert me
 
 ## Before you arm a watch
 
+**status.** `legacy` — predates v2.1.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 - [ ] `poller check` passes — credentials resolve, endpoint answers, rows parse
 - [ ] The state counts in `check` look right (settled/failed/pending)
 - [ ] `poller test --live` produced a message on every rail you care about
@@ -492,7 +528,7 @@ poller status --config cfg.json || echo "poller is not alive" | mail -s alert me
 
 ---
 
-## Template index (appended 2026-08-31, v2.1.0 migration)
+### Template index (appended 2026-08-31, v2.1.0 migration)
 
 Appended, not rewritten — this file is append-only (PROCESS.md §5.2). Two things
 changed underneath the guide above and are recorded here rather than edited in
@@ -524,7 +560,7 @@ not count as a template here.
 
 ---
 
-## Implementation entries (appended 2026-09-01)
+### Implementation entries (appended 2026-09-01)
 
 The guide above predates PROCESS.md: its level-2 headings are section titles, not
 entry ids, and this file is append-only (§5.2) so they cannot be rewritten. The

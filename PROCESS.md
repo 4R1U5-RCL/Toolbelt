@@ -378,10 +378,28 @@ evidence, but left `process.yaml: branches.test_decision` naming one runner with
 `on_unknown: escalate`. Since the preamble makes `process.yaml` authoritative on
 conflict, `Workflows/Audit` and `Workflows/Review` remained unmergeable until now.
 
-One finding is recorded here without a resolution, because it is not a spec
-question: **`Workflows/Audit` and `Workflows/Review` are one sentence each.**
-Both conform. Neither is useful. What they are meant to be is not written down
-anywhere in this repository.
+### Settled 2026-09-01, third pass
+
+| # | Decision | Resolution |
+|---|---|---|
+| 22 | Recording a correction to an unmerged entry | **Append** a new issue↔change pair. Never edit the entry in place, even with a dated note. The eleven-tool run split four/three on this; appending is the only form that keeps `KNOWN_ISSUES.md` genuinely append-only |
+| 23 | How a field is written in markdown was never specified | **Unresolved — and it is the reason Track B was never mechanically checkable.** `process.yaml` lists the *fields* of `issue-entry` and `change-entry` but not their syntax, so eleven agents produced eleven layouts. Only 3 of 11 `CHANGE_LOG.md` files express `iteration` in a form any parser can find, and `iteration` is what a change-id hashes. Until this is settled, `bin/trackb-check.py` reports Status and Id reproduction as **advisories**, not failures |
+
+Decision 23 is the deepest finding of the exercise. Reciprocity and id
+reproduction were presented as checkable from the start; in practice neither
+could be verified without a human reading prose, which is exactly the gap that
+let the 2026-08-31 run record a false pass unchallenged. A checker that cannot
+parse an entry must say so — silence reads as a pass.
+
+**Decision 19 has a known cost.** It was settled after the eleven tools were
+fixed, so ids computed under the earlier rule no longer reproduce. The checker
+reports those separately as *predating decision 19* rather than as wrong ids.
+`Packages/Poller` carries one.
+
+`Workflows/Audit` and `Workflows/Review` **are not yet built** — each is a
+one-sentence stub, and the owner confirmed on 2026-09-01 that this is their
+intended state for now, not a defect. They conform; there is simply nothing in
+them yet.
 
 Identity deliberately excludes the cause: an id must be computable at
 `check_existing`, which runs before the cause is determined. It also excludes

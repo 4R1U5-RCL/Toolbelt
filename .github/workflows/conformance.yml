@@ -1,0 +1,37 @@
+name: conformance
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  track-b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Track-B conformance (PROCESS.md §7)
+        run: python3 bin/trackb-check.py
+
+  suites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Each tool declares its own runner (process.yaml: definitions.declared-runner).
+      # Workflows/Validate is python3, not bash — running it under bash yields a
+      # syntax error that reads as a failing suite.
+      - name: Packages
+        run: |
+          for t in Poller Scrape Telegram; do
+            d=$(ls -d Packages/$t/Tooling/v*/ | tail -1)
+            echo "== $t ($d)"; (cd "$d" && ./run-tests.sh)
+          done
+      - name: Skills
+        run: |
+          for t in Errors Handoff Memory Scratch; do
+            d=$(ls -d Skills/$t/Tooling/v*/ | tail -1)
+            echo "== $t ($d)"; (cd "$d" && bash tests/verify.sh)
+          done
+      - name: Workflows/Validate
+        run: |
+          d=$(ls -d Workflows/Validate/Tooling/v*/ | tail -1)
+          (cd "$d" && python3 tests/selftest.py)

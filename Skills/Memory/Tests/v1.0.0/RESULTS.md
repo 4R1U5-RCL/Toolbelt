@@ -68,3 +68,49 @@ whitespace → strip trailing `. , ; : ! ?`). Both reproduce unchanged:
 `6cdef98b` from the issue `summary`, `16012fef` from the change `iteration`
 field. The change id reproduces only because the trailing full stop on the
 `iteration` field is stripped.
+
+---
+
+## Track B conformance result (2026-09-01, branch `fix/legacy-memory`)
+
+Appended, not substituted for the table above. That table was a **hand-read**
+Track-B verdict recorded before `bin/trackb-check.py` existed as the repo-level
+checker (PROCESS.md §10 decision 21); its Reciprocity PASS row is what a human
+reading the two documents concluded, and the mechanical checker contradicted it
+— see
+[`KNOWN_ISSUES.md#templates-md-quoted-memory-md-template_4602c9f9`](../../KNOWN_ISSUES.md#templates-md-quoted-memory-md-template_4602c9f9).
+It is left in place as the record of what was actually claimed on that date
+(invariant 6); this section is the current, machine-produced result.
+
+Command, run from the repository root:
+
+```
+python3 bin/trackb-check.py Skills/Memory
+```
+
+Output — verbatim, with the shell's exit status appended:
+
+```
+Skills/Memory
+  [PASS] Canonical files    all five present and non-empty
+  [PASS] Code layout        Tooling/v1.0.0
+  [PASS] Test layout        Tests/v1.0.0
+  [PASS] Reciprocity        2 KNOWN / 2 CHANGE / 3 IMPLEMENTATIONS / 2 TEMPLATES entries (0 legacy, exempt), all cross-cited
+  [PASS] Status             every status in the closed set; no resolved-without-merge
+  [PASS] Id reproduction    every id reproduces from its identity field
+  [PASS] Version agreement  README, Tooling/ and CHANGE_LOG all name v1.0.0
+
+1 tool(s) checked, 0 failing, 0 with advisories
+exit=0
+```
+
+Five checks pass and no advisory is raised. `TEMPLATES.md` now reports **2**
+entries, not 6: the four phantoms (`User`, `Feedback`, `Project`, `Reference`)
+were lines of the quoted `MEMORY.md.template`, and the quotation is now an
+indented block.
+
+`Tooling/v1.0.0/tests/verify.sh` was **not** re-run for this change and its
+recorded 18/18 result above still stands: nothing under `Tooling/v1.0.0/`
+was touched. The de-indented quotation in `TEMPLATES.md` was diffed against
+`Tooling/v1.0.0/templates/MEMORY.md.template` and is byte-identical, so the
+shipped template is provably unchanged.

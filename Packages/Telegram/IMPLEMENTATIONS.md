@@ -17,7 +17,7 @@ unchanged.
 
 ---
 
-## The five commands
+### The five commands
 
 ```bash
 ./bin/telegram templates                       # what exists
@@ -35,6 +35,10 @@ which is where every trap in `KNOWN_ISSUES.md` lives.
 ---
 
 ## Worked example: the Poller
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the section.
 
 The Poller produces exactly the events this package's `input` group renders, and
 the two are deliberately **not coupled**. The Poller's rule is no paths into
@@ -86,6 +90,10 @@ Both are legitimate. The conformance test is what makes having both safe.
 
 ## Worked example: a human gate in a script
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the section.
+
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
@@ -116,6 +124,10 @@ plainly to whoever is relying on it.
 
 ## Worked example: replacing a hand-rolled format string
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the section.
+
 The seventeen SEO-suite n8n builders each carry their own:
 
 ```js
@@ -144,7 +156,7 @@ languages, unverifiable until each one next fires.
 
 ---
 
-## Adding a template
+### Adding a template
 
 1. Write the JSON (see [TEMPLATES.md](TEMPLATES.md#writing-your-own)).
 2. `./bin/telegram render ./my.json --set …` until it reads right.
@@ -156,6 +168,10 @@ languages, unverifiable until each one next fires.
 ---
 
 ## From Python
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the section.
 
 ```python
 from telegram import Catalogue, Seam
@@ -192,6 +208,10 @@ deliberately distinct from `FAILED`. An unverifiable send is never assumed good.
 
 ## Environment
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the section.
+
 Read from `/studio/.env` by default (`--env-file` to change it). Names only; the
 package never prints a value, and `telegram check` reports presence.
 
@@ -213,6 +233,10 @@ is why everything rides the webhook and not the Bot API (TG-08).
 ---
 
 ## Choosing a destination workflow
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the section.
 
 | You need | Point at | `--url-env` | State |
 |---|---|---|---|

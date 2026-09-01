@@ -10,7 +10,7 @@ will show you the same thing.
 ./bin/telegram render <id> --set k=v     # exactly what would arrive
 ```
 
-## How to read an entry
+### How to read an entry
 
 Every template declares:
 
@@ -35,6 +35,11 @@ producer; `generic.event` is the escape hatch so an unmapped payload still gets
 through rather than being dropped.
 
 ## `poller.settled`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 A watched item reached a successful terminal state.
 **requires** `key`, `score` · severity `info` · kind `complete`
 
@@ -51,6 +56,11 @@ has no result should use `generic.event`, not a settle report with a blank
 where the number goes.
 
 ## `poller.failed`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 A watched item reached an error terminal state.
 **requires** `key` · severity `error` · kind `alert`
 
@@ -69,6 +79,11 @@ a rail that reports only successes teaches you to read silence as "nothing
 happened" when it means "something failed".
 
 ## `poller.stale`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 An item has been pending past its SLA.
 **requires** `key` · severity `warn` · kind `attention`
 
@@ -76,10 +91,20 @@ The distinction this carries: **the watched thing is slow, the watch is fine.**
 Without it, a long silence is ambiguous between the two.
 
 ## `poller.degraded`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 Consecutive fetch failures — still watching, no longer trusted.
 severity `warn` · kind `attention`
 
 ## `poller.stopped`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 The watch ended. severity `error` · kind `alert`
 
 ```
@@ -94,12 +119,22 @@ The single most important message the rail carries. After this, silence means
 nobody is watching — not that nothing happened.
 
 ## `poller.supervisor_lost`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 The session that launched the watch is gone. severity `warn` · kind `attention`
 
 The watch survived; the attention did not. Reports keep arriving with nobody
 reading them, and everything looks healthy while it happens.
 
 ## `generic.event`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 Any source at all. **requires** `title` · severity `info`
 
 ```
@@ -113,6 +148,11 @@ Any source at all. **requires** `title` · severity `info`
 # output — something the studio is saying
 
 ## `report`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 A finished result. **requires** `title` · severity `info` · kind `complete`
 
 ```
@@ -124,6 +164,11 @@ harness run 412
 ```
 
 ## `update`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 Progress on work still running. **requires** `title` · kind null
 
 ```
@@ -138,6 +183,11 @@ Deliberately quiet — no emoji, no `kind`. An update is not an event, and
 dressing it as one is how a channel becomes unreadable.
 
 ## `alert`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 Something is wrong and wants eyes now. **requires** `title` · severity `error`
 
 ```
@@ -151,6 +201,11 @@ Check the run log
 Use `{action}` for the footer: say what to do, not just what happened.
 
 ## `digest`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 Many items in one message. **requires** `title`, `body` · kind `complete`
 
 ```
@@ -165,6 +220,11 @@ Reach for this instead of N sends. A rail that fires per item trains its reader
 to ignore it.
 
 ## `handoff`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 A session or agent transition. **requires** `title` · kind `attention`
 
 ```
@@ -189,6 +249,11 @@ keyboard (TG-19) and cannot send a poll at all (TG-18). Send them with
 yours encodes to with `render` before shipping.
 
 ## `approval`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 The human gate. **requires** `title`, `id` · severity `warn`
 
 ```
@@ -207,6 +272,11 @@ make becomes a message they ignore, which is indistinguishable from a rejection
 nobody sent.
 
 ## `choice`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 Pick one of two named options.
 **requires** `title`, `id`, `option_a`, `option_b`
 
@@ -219,6 +289,11 @@ Beyond two or three, use `poll`. A keyboard of eight buttons is unreadable on a
 phone.
 
 ## `ack`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 The triage vocabulary already in use across the studio.
 **requires** `title`, `id`
 
@@ -232,6 +307,11 @@ The action codes match the existing `triage-receiver` and `dirnotif-feedback`
 receivers deliberately — this is the vocabulary those already route on.
 
 ## `poll`
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the heading form and the §7 Track B reciprocity check (PROCESS.md
+§9). This field is the only edit made to the entry.
+
 A native Telegram poll. **requires** `question`
 
 ```
