@@ -338,13 +338,12 @@ definitions:
     cited_as:    CHANGE_LOG.md#retry-backoff-on-empty-body_9c1a44be
 
   fix-version-id:
-    format:      v<major>.<minor>.<patch>
-    example:     v2.1.0
+    format:      v<major>.<minor>
+    example:     v2.1
     assigned_by: agent
-    source:      increments the tool's current version — patch for a fix, minor
-                 for a backwards-compatible addition, major for a breaking
-                 change. A tool with no prior version starts at v1.0.0
-                 (PROCESS.md §10.6 — settled)
+    source:      increments the tool's current version; minor for a fix, major
+                 for a breaking change. A tool with no prior version starts at
+                 v1.0 (PROCESS.md §10.6 — settled)
     unique_in:   one tool — never reused
     stable:      yes — a released version is immutable
     used_by:     <TOOL>/Tooling/v<version>/, <TOOL>/Tests/v<version>/

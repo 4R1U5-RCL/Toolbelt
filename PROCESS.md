@@ -69,11 +69,11 @@ Two versioned directories per tool. Both are binding.
 
 | Directory | Holds |
 |---|---|
-| `Tooling/v<major>.<minor>.<patch>/` | The tool's code at that version |
-| `Tests/v<major>.<minor>.<patch>/` | The recorded **results** of running that version's tests |
+| `Tooling/v<major>.<minor>/` | The tool's code at that version |
+| `Tests/v<major>.<minor>/` | The recorded **results** of running that version's tests |
 
-**Test code ships inside the version it tests** — `Tooling/v2.0.0/tests/` — because a
-test belongs to the version it was written against. `Tests/v2.0.0/` holds *output*:
+**Test code ships inside the version it tests** — `Tooling/v2.0/tests/` — because a
+test belongs to the version it was written against. `Tests/v2.0/` holds *output*:
 what the run actually produced, in a form a human can read and confirm.
 
 **Versioning is how rollback works.** A released version directory is immutable.
@@ -81,8 +81,7 @@ An iteration never edits one; it seeds the next version from it and works there.
 The previous directory therefore remains a permanent, in-repo rollback point —
 this is safeguard 1 of §5 in concrete form, not a separate copy kept elsewhere.
 
-**Bumping:** patch for a fix, minor for a backwards-compatible addition, major
-for a breaking change. The version created by
+**Bumping:** minor for a fix, major for a breaking change. The version created by
 an iteration is the `fix-version-id` in `process.yaml`, and it is what
 `KNOWN_ISSUES.md` and `CHANGE_LOG.md` cite when the issue is closed.
 
@@ -264,8 +263,8 @@ tool uses `Tooling/` or `Tests/`. Existing tools keep test *code* in a lowercase
   use, `KNOWN_ISSUES.md` for tools that lack one.
 - **No tool is exempt.** A tool that has never had an issue still needs the five
   canonical files, because their absence is what makes staleness invisible.
-- **A tool that has never been versioned starts at `v1.0.0`.** Its current code
-  becomes `Tooling/v1.0.0/` regardless of any version its README claims; the README
+- **A tool that has never been versioned starts at `v1.0`.** Its current code
+  becomes `Tooling/v1.0/` regardless of any version its README claims; the README
   is corrected to match.
 
 ---
@@ -281,7 +280,7 @@ All settled 2026-08-31.
 | 3 | Hash identity | **`summary` alone.** Two errors are the same error when described the same way |
 | 4 | Unanswered human gate | **Never auto-advance.** The PR is left open for the user; the process waits |
 | 5 | Who merges | **The agent**, after a recorded human approval |
-| 6 | Initial version for an unversioned tool | **`v1.0.0`** |
+| 6 | Initial version for an unversioned tool | **`v1.0`** |
 
 Identity deliberately excludes the cause: an id must be computable at
 `check_existing`, which runs before the cause is determined. It also excludes
