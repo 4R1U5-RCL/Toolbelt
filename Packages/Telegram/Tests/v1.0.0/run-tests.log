@@ -200,7 +200,7 @@ test_gives_up_and_says_not_found (test_verify.TestWaiting.test_gives_up_and_says
 test_polls_until_the_record_appears (test_verify.TestWaiting.test_polls_until_the_record_appears) ... ok
 
 ----------------------------------------------------------------------
-Ran 189 tests in 1.067s
+Ran 189 tests in 1.148s
 
 OK
 EXIT=0

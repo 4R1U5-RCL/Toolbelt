@@ -5,21 +5,26 @@ cites its id, per PROCESS.md §3 (reciprocal pair) and §6. Newest last; entries
 are appended, never rewritten.
 
 Entry ids follow `process.yaml: definitions.change-id` —
-`<description>_<hash8>`, the hash being the first 8 hex characters of
-`sha256` over the canonical (trimmed, lowercased, whitespace-collapsed)
-summary.
+`<description>_<hash8>`. Both segments derive from the **`iteration` field
+alone** (PROCESS.md §10, decision 8): the description is that field run through
+`slug_rule`, and the hash is the first 8 hex characters of `sha256` over it
+canonicalised — trimmed, lowercased, whitespace runs collapsed to one space,
+then trailing `. , ; : ! ?` stripped (decision 14).
+
+Every id in this file was recomputed with `sha256sum` on 2026-09-01. The first
+entry's id **moved**: it was minted from the `summary` field before decision 8
+settled identity on `iteration`.
 
 ---
 
-<a name="migrate-packages-telegram-to-the-tooling_78deb9ee"></a>
-## `migrate-packages-telegram-to-the-tooling_78deb9ee`
+## move-the-implementation-into-tooling-v1_6206c8de
 
 | Field | Value |
 |---|---|
-| **id** | `migrate-packages-telegram-to-the-tooling_78deb9ee` |
+| **id** | `move-the-implementation-into-tooling-v1_6206c8de` — **recomputed 2026-09-01**, replacing `migrate-packages-telegram-to-the-tooling_78deb9ee`. That id was derived from this entry's `summary`; `process.yaml: definitions.change-id` settles identity on the `iteration` field alone. Both segments now come from `iteration (Z)` below |
 | **resolves** | [`KNOWN_ISSUES.md#packages-telegram-failed-track-b-conform_9f851380`](KNOWN_ISSUES.md#packages-telegram-failed-track-b-conform_9f851380) |
 | **version** | `v1.0.0` — current version, **no bump**. The code did not change, it moved (PROCESS.md §9: an unversioned tool's current code becomes `Tooling/v1.0.0/`) |
-| **merge_commit** | not recorded — this working copy performs no git operations; the commit and PR are the orchestrator's (PROCESS.md §8) |
+| **merge_commit** | **blank.** Nothing is merged: the work sits on branch `smoke/fix-packages-telegram`. Because this field is empty the issue it resolves is `in-progress`, not `resolved` (`process.yaml: definitions.issue-status`) |
 
 **summary.** Migrate Packages/Telegram to the Tooling/Tests versioned layout at
 v1.0.0 and create CHANGE_LOG.md.
@@ -95,5 +100,69 @@ version in `README.md`.
   further down; this is recorded as an open sub-point on the issue rather than
   fixed by rewriting an append-only document.
 
-**Verification of V, item by item:** 1 ✅ (`ls` of the tool root); 2 ✅ (exit 0);
+**Verification of V, item by item** — re-run and re-checked 2026-09-01, not
+carried over from the migration run: 1 ✅ (`ls` of the tool root); 2 ✅ (exit 0);
 3 ✅ (zero skips in the log, all three named tests `ok`); 4 ✅; 5 ✅; 6 ✅.
+
+**These six ticks are not a Track B pass, and must not be read as one.** V was
+the expected result of *this iteration*; it never contained a reciprocity item.
+The honest Track B tick-list — five checks, of which **Reciprocity is ❌** —
+is in [`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md), and the failure is
+logged as
+[`KNOWN_ISSUES.md#track-b-reciprocity-fails-for-the-implem_c160a132`](KNOWN_ISSUES.md#track-b-reciprocity-fails-for-the-implem_c160a132).
+The migration entry originally carried these six ticks with no such statement
+next to them, which read as a clean conformance pass over a check that fails.
+
+---
+
+## extend-the-process-md-9-legacy-rule-to-c_ad654f71
+
+| Field | Value |
+|---|---|
+| **id** | `extend-the-process-md-9-legacy-rule-to-c_ad654f71` — `sha256sum` over the canonical `iteration` field per `process.yaml: definitions.change-id` |
+| **resolves** | [`KNOWN_ISSUES.md#track-b-reciprocity-fails-for-the-implem_c160a132`](KNOWN_ISSUES.md#track-b-reciprocity-fails-for-the-implem_c160a132) |
+| **version** | none. No version was created; nothing under `Tooling/` changed |
+| **merge_commit** | **blank** — planned only, and the plan is not this branch's to execute. Branch `smoke/fix-packages-telegram` |
+
+**summary.** Plan for the IMPLEMENTATIONS.md ↔ TEMPLATES.md half of Track B
+reciprocity, which this tool cannot satisfy without breaking append-only.
+
+**cause (Y).** `IMPLEMENTATIONS.md` and `TEMPLATES.md` predate `PROCESS.md`.
+Their entries are prose sections with human-readable headings, not
+`<description>_<hash8>` ids, so they cannot cite one another by id. Both
+documents are append-only, so the headings cannot be rewritten. PROCESS.md §9
+grandfathers pre-conformance *issue* entries only, and the §7 reciprocity check
+attaches "non-legacy" only to the `KNOWN_ISSUES.md` clause — leaving the
+`IMPLEMENTATIONS.md` ↔ `TEMPLATES.md` clause with a requirement and no exemption.
+
+**outcome (X).** `Packages/Telegram` fails Track B on Reciprocity. Under §7 that
+blocks the next genuine iteration on the package, and it makes the six ✅ in the
+entry above misleading unless they are explicitly scoped, which they now are.
+
+**iteration (Z).** Extend the PROCESS.md §9 legacy rule to cover
+pre-conformance IMPLEMENTATIONS.md and TEMPLATES.md entries, so the
+IMPLEMENTATIONS ↔ TEMPLATES half of Track B reciprocity can be satisfied
+without rewriting append-only entries.
+
+**expected_result (V).** Checkably, after the spec change lands:
+
+1. §9 defines a legacy marking for `IMPLEMENTATIONS.md` and `TEMPLATES.md`
+   entries that predate a tool's first conformant version, mirroring decision 7.
+2. §7's Reciprocity row exempts those entries the way it exempts legacy issue
+   entries, with the exemption written into the check rather than assumed.
+3. Every `IMPLEMENTATIONS.md` and `TEMPLATES.md` entry in this tool that
+   predates 2026-08-31 carries that marking, added as a field and changing
+   nothing else — the same single permitted edit §9 already allows.
+4. Track B run against `Packages/Telegram` then returns five ✅ **for real**,
+   with the reciprocity tick backed by the exemption rather than by wording.
+
+**change (W).** Nothing in this tool. The change is to `PROCESS.md` §7/§9 and
+`process.yaml: definitions` — files this branch is forbidden to touch (they are
+PR #16's). This entry exists so the failure has a recorded, reciprocal plan
+instead of sitting as an untracked sub-point, and so the issue it resolves is
+not the only non-legacy entry in `KNOWN_ISSUES.md` without a counterpart.
+
+**Status of the plan: escalated, not executed.** No `Tooling/` directory was
+created, no version was cut, and no test was run for it. Recorded per
+`process.yaml: definitions.escalate` — the work is left where it stands for the
+owner to judge.
