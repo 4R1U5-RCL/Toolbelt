@@ -147,4 +147,4 @@ verify-time known-fix matching. The templates here are the generic, drift-correc
 that system.
 
 
-**Committed self-check:** `bash Tooling/v1.0.0/tests/verify.sh` — **32/32**. It checks the template structure and the drift-fixes, then on a fixture registry verifies signature greppability, the compact-grep-vs-`ID-[0-9]+` fragmentation caveat (live), index↔catalog consistency, and a duplicate-ID guard that reproduces the live `IN-38` bug.
+**Committed self-check:** from `Tooling/v1.0.0/`, run `bash tests/verify.sh` — **32/32**, exit 0, last run 2026-09-01 and recorded verbatim at [`Tests/v1.0.0/verify.log`](Tests/v1.0.0/verify.log). There is no `run-tests.sh` in this tool; `tests/verify.sh` is the whole suite. It checks the template structure and the drift-fixes, then on a fixture registry verifies signature greppability, the compact-grep-vs-`ID-[0-9]+` fragmentation caveat (live), index↔catalog consistency, and a duplicate-ID guard that reproduces the live `IN-38` bug.
