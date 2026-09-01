@@ -90,7 +90,7 @@ pipeline run per URL, independently, so one failure is recorded rather than fata
 ```
 Packages/Scrape/
 ├── README.md · IMPLEMENTATIONS.md · TEMPLATES.md · KNOWN_ISSUES.md · CHANGE_LOG.md
-├── Tests/v1.0.0/           # recorded results of running v1.0.0's suite
+├── Tests/v1.0.0/           # recorded results for v1.0.0: run-tests.log, track-b.log, RESULTS.md
 └── Tooling/v1.0.0/         # the code at v1.0.0
     ├── bin/scrape          # no-install shim -> scrape.cli:main
     ├── scrape/
@@ -118,8 +118,10 @@ Every relative path in this README and in `IMPLEMENTATIONS.md` (`./bin/scrape`,
 cd Tooling/v1.0.0 && ./run-tests.sh    # or: python3 -m unittest discover -s tests -t tests
 ```
 
-The recorded output of the last run is in [`Tests/v1.0.0/`](Tests/v1.0.0/)
-(`run-tests.log` verbatim, `RESULTS.md` for the conditions).
+The recorded output of the last run is in [`Tests/v1.0.0/`](Tests/v1.0.0/):
+`run-tests.log` is the verbatim suite capture, `track-b.log` the verbatim
+PROCESS.md §7 Track B conformance capture, and `RESULTS.md` the conditions and
+what each does and does not show.
 
 Every test is offline and deterministic: the HTTP transport is faked at the
 `urlopen` seam (with injected clock and RNG so backoff windows are exact), and the
