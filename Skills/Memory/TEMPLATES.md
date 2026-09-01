@@ -7,9 +7,10 @@ template: there are no command files, no n8n workflows and no config forms.
 
 Each entry names the implementation in [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md)
 that applies it. Entries are delimited by a level-2 heading whose text is the
-bare id (`process.yaml: definitions.entry`); the only other `##` lines in this
-file sit inside the fenced blocks that quote `MEMORY.md.template` verbatim, and
-are template content rather than headings.
+bare id (`process.yaml: definitions.entry`), and no other line in this file
+begins with `## ` at column 0. Quoted template content that carries its own
+`## ` lines is shown as an indented code block rather than a fenced one, for
+exactly that reason — a fence does not stop a line-based entry scanner.
 
 **Coverage.** Two templates, both present and both exercised by
 `Tooling/v1.0.0/tests/verify.sh` (18/18 — see [`Tests/v1.0.0/`](Tests/v1.0.0/)).
@@ -28,26 +29,27 @@ index-in-the-same-change, promotion out of a handoff): that is prose in
 **Applied by:** [IMPLEMENTATIONS.md#new-memory-directory](IMPLEMENTATIONS.md#new-memory-directory),
 [IMPLEMENTATIONS.md#drift-check](IMPLEMENTATIONS.md#drift-check)
 
-A blank `MEMORY.md` for a new memory directory. Verbatim contents:
+A blank `MEMORY.md` for a new memory directory. Its contents, indented four
+spaces for display — the file on disk has no indent, but four of its lines begin
+with `## `, and a line beginning `## ` at column 0 in *this* document is an entry
+heading (PROCESS.md §10 decision 13) whatever it is nested inside:
 
-```markdown
-# Memory Index
+    # Memory Index
 
-<!-- One line per memory file. Format: - [Title](file.md) — one-line hook (under ~150 chars) -->
-<!-- Types: user | feedback | project | reference -->
+    <!-- One line per memory file. Format: - [Title](file.md) — one-line hook (under ~150 chars) -->
+    <!-- Types: user | feedback | project | reference -->
 
-## User
-<!-- Who the user is, their role, expertise, preferences -->
+    ## User
+    <!-- Who the user is, their role, expertise, preferences -->
 
-## Feedback
-<!-- How Claude should behave in this project — corrections and confirmed approaches -->
+    ## Feedback
+    <!-- How Claude should behave in this project — corrections and confirmed approaches -->
 
-## Project
-<!-- Ongoing work, decisions, deadlines, goals -->
+    ## Project
+    <!-- Ongoing work, decisions, deadlines, goals -->
 
-## Reference
-<!-- Pointers to external systems, dashboards, docs, channels -->
-```
+    ## Reference
+    <!-- Pointers to external systems, dashboards, docs, channels -->
 
 What it fixes:
 
