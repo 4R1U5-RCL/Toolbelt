@@ -5,18 +5,24 @@ The production application forms shipped by this tool. All three live in
 tool ships besides its self-check; the tool has no runtime code and no `bin/`.
 
 Each entry names the file, where an installed copy lands, what it contains, and which
-[`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md) entries use it.
+[`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md) entries use it — and each of those implementations
+cites the template back, which is the §7 Track B reciprocity pair.
+
+An entry is delimited by a level-2 heading whose text is the bare entry id — no backticks,
+no title, nothing else on the line (`process.yaml: definitions.entry`). The heading text is
+the anchor a `TEMPLATES.md#<id>` citation resolves against.
 
 | id | File | Installs to |
 |---|---|---|
-| [`TPL-hub`](#tpl-hub) | `templates/ERRORS_AND_FINDINGS.md.template` | repo root, as `ERRORS_AND_FINDINGS.md` |
-| [`TPL-area`](#tpl-area) | `templates/errors-area.md.template` | `errors/<area>.md` |
-| [`TPL-entry`](#tpl-entry) | `templates/incident-entry.md.template` | snippet — pasted into an `errors/<area>.md` section |
+| [`tpl-hub`](#tpl-hub) | `templates/ERRORS_AND_FINDINGS.md.template` | repo root, as `ERRORS_AND_FINDINGS.md` |
+| [`tpl-area`](#tpl-area) | `templates/errors-area.md.template` | `errors/<area>.md` |
+| [`tpl-entry`](#tpl-entry) | `templates/incident-entry.md.template` | snippet — pasted into an `errors/<area>.md` section |
 
 ---
 
-<a name="tpl-hub"></a>
-## `TPL-hub` — the registry hub
+## tpl-hub
+
+**The registry hub**
 
 **File:** `Tooling/v1.0.0/templates/ERRORS_AND_FINDINGS.md.template` (83 lines).
 
@@ -38,14 +44,15 @@ Contains, verbatim in the shipped file:
 
 Placeholders to fill: `<Project>`, `<YYYY-MM-DD>`, the Index rows and their ID prefixes.
 
-**Used by:** [`IMP-scaffold`](IMPLEMENTATIONS.md#imp-scaffold),
-[`IMP-promote`](IMPLEMENTATIONS.md#imp-promote),
-[`IMP-selfcheck`](IMPLEMENTATIONS.md#imp-selfcheck).
+**Used by:** [`imp-scaffold`](IMPLEMENTATIONS.md#imp-scaffold),
+[`imp-promote`](IMPLEMENTATIONS.md#imp-promote),
+[`imp-selfcheck`](IMPLEMENTATIONS.md#imp-selfcheck).
 
 ---
 
-<a name="tpl-area"></a>
-## `TPL-area` — a per-area incident catalog
+## tpl-area
+
+**A per-area incident catalog**
 
 **File:** `Tooling/v1.0.0/templates/errors-area.md.template` (37 lines).
 
@@ -63,13 +70,14 @@ Contains:
 
 Placeholders to fill: `<Area>`, the topic headings, and the ID prefix (`AA-*`).
 
-**Used by:** [`IMP-scaffold`](IMPLEMENTATIONS.md#imp-scaffold),
-[`IMP-selfcheck`](IMPLEMENTATIONS.md#imp-selfcheck).
+**Used by:** [`imp-scaffold`](IMPLEMENTATIONS.md#imp-scaffold),
+[`imp-selfcheck`](IMPLEMENTATIONS.md#imp-selfcheck).
 
 ---
 
-<a name="tpl-entry"></a>
-## `TPL-entry` — one incident
+## tpl-entry
+
+**One incident**
 
 **File:** `Tooling/v1.0.0/templates/incident-entry.md.template` (18 lines).
 
@@ -80,5 +88,5 @@ machine-matchable. Leading and trailing HTML comments state the canonical format
 finished entry is appended, and that a failure which has now bitten across more than one
 area should also be minted as a `PAT-*` in the hub.
 
-**Used by:** [`IMP-incident`](IMPLEMENTATIONS.md#imp-incident),
-[`IMP-selfcheck`](IMPLEMENTATIONS.md#imp-selfcheck).
+**Used by:** [`imp-incident`](IMPLEMENTATIONS.md#imp-incident),
+[`imp-selfcheck`](IMPLEMENTATIONS.md#imp-selfcheck).
