@@ -8,6 +8,14 @@ demonstrable in this repo, it is called out as such.
 
 Append-only (PROCESS.md §5.2). A new use case adds an entry; it never rewrites one.
 
+**Honest gap.** No implementation below has an automated test in this repository.
+See [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) and
+[`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md).
+
+Every level-2 heading below is a bare entry id
+(`process.yaml: definitions.entry`); this preamble carries the document's own
+prose so that no non-entry heading sits among the entries.
+
 | ID | Implementation | Template |
 |---|---|---|
 | [IMP-01](#imp-01) | Install the kit into `~/.claude/` | [T-02](TEMPLATES.md#t-02), [T-06](TEMPLATES.md#t-06) |
@@ -19,7 +27,9 @@ Append-only (PROCESS.md §5.2). A new use case adds an entry; it never rewrites 
 ---
 
 <a name="imp-01"></a>
-## IMP-01 — Install the kit into `~/.claude/`
+## IMP-01
+
+**Install the kit into `~/.claude/`**
 
 **When.** Once per host, before the first `/fleet` run. Everything else assumes
 these paths exist, because the command body and the agent frontmatter address
@@ -47,7 +57,9 @@ Templates: [T-02](TEMPLATES.md#t-02), [T-06](TEMPLATES.md#t-06).
 ---
 
 <a name="imp-02"></a>
-## IMP-02 — Sprint mode: worktree + canonical board + mailbox
+## IMP-02
+
+**Sprint mode: worktree + canonical board + mailbox**
 
 **When.** A piece of work is large enough to want several sessions on it at once
 and a durable board that survives any one of them dying.
@@ -92,7 +104,9 @@ Templates: [T-01](TEMPLATES.md#t-01), [T-02](TEMPLATES.md#t-02),
 ---
 
 <a name="imp-03"></a>
-## IMP-03 — Block-only mode: role blocks with no durable state
+## IMP-03
+
+**Block-only mode: role blocks with no durable state**
 
 **When.** A short parallel push that does not warrant a branch, a board or a
 mailbox — you want the coordination *prompts* and nothing else.
@@ -117,7 +131,9 @@ Templates: [T-02](TEMPLATES.md#t-02), [T-03](TEMPLATES.md#t-03).
 ---
 
 <a name="imp-04"></a>
-## IMP-04 — The orchestrator's triage turn
+## IMP-04
+
+**The orchestrator's triage turn**
 
 **When.** Every turn the orchestrator has inbox traffic.
 
@@ -147,7 +163,9 @@ Templates: [T-04](TEMPLATES.md#t-04), [T-05](TEMPLATES.md#t-05).
 ---
 
 <a name="imp-05"></a>
-## IMP-05 — Running the sprint: mailbox, board, doctor
+## IMP-05
+
+**Running the sprint: mailbox, board, doctor**
 
 **The three executables**, all under `Tooling/v1.0.0/fleet-kit/`. None of them
 resolves a sibling by relative path — each takes its target from an argument or
@@ -200,8 +218,3 @@ per-inbox unread counts, and the last five §5 lines.
 Template: [T-01](TEMPLATES.md#t-01) (the board these operate on).
 
 ---
-
-## Honest gap
-
-No implementation above has an automated test in this repository. See
-[`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) and [`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md).
