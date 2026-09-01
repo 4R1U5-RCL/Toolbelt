@@ -1,0 +1,11 @@
+# Studio audit workflow — scope the baseline to what intrusion detection needs.
+# Container image layers are immutable and content-addressed: AIDE watching them
+# adds ~760k entries (90% of the DB) and emits a huge diff on every image pull,
+# which buries real findings. Excluded deliberately, not for convenience.
+!/var/lib/docker
+!/var/lib/containerd
+!/var/lib/snapd/cache
+!/var/cache
+!/var/log
+!/var/tmp
+!/tmp
