@@ -601,7 +601,7 @@ that tier, and keep the two classifications in parity — two implementations of
 
 ---
 
-## Adding an entry
+### Adding an entry
 
 New failure? Append it here in the same shape — signature first, so a future
 session can grep for the symptom — and reference the ID from the code that
@@ -702,7 +702,7 @@ bearing ones — are unchanged, so the issue-id itself did not move.
 
 ---
 
-## Path note (appended 2026-08-31, v2.1.0 migration)
+### Path note (appended 2026-08-31, v2.1.0 migration)
 
 Every code path referenced above — `poller/…`, `tests/…`, `n8n/…` — now lives
 under `Tooling/v2.1.0/`. So `grep -rn KI-07 poller/` reads
@@ -710,3 +710,78 @@ under `Tooling/v2.1.0/`. So `grep -rn KI-07 poller/` reads
 resolves at `Tooling/v2.1.0/n8n/README.md`. The entries themselves are left
 exactly as written: this file is append-only, and rewriting twenty-two recorded
 incidents to fix link targets would edit history to fix a path.
+
+---
+
+## packages-poller-failed-the-track-b-recip_d4d59cb2
+
+| Field | Value |
+|---|---|
+| **id** | `packages-poller-failed-the-track-b-recip_d4d59cb2` |
+| **summary** | Packages/Poller failed the Track B reciprocity check: fourteen level-2 headings across its entry documents are neither bare ids nor marked legacy |
+| **iteration** | Mark the nine pre-conformance implementation sections legacy under PROCESS.md §9 and demote the five prose sections to level 3 under decision 18 |
+| **status** | in-progress |
+| **resolved_by** | [`CHANGE_LOG.md#mark-the-nine-pre-conformance-implementa_42ed561b`](CHANGE_LOG.md#mark-the-nine-pre-conformance-implementa_42ed561b), fix-version `v2.1.0` |
+| **branch** | `fix/legacy-poller` |
+| **occurrences** | 1 — detected 2026-09-01 by `python3 bin/trackb-check.py Packages/Poller` |
+
+**Id derivation.** `hash8` = first 8 hex chars of `sha256` over the canonicalised
+`summary` field (`process.yaml` → `definitions.issue-id.hash8`, canonical steps
+1–5 including the decision-19 markup strip):
+
+```
+packages/poller failed the track b reciprocity check: fourteen level-2 headings across its entry documents are neither bare ids nor marked legacy
+```
+
+= `d4d59cb2`. `description` = that same summary slugified and truncated to 40
+characters.
+
+**Outcome (X).** `python3 bin/trackb-check.py Packages/Poller` reported
+**FAIL Reciprocity** with 28 problems, from 14 level-2 headings that are neither
+bare ids (§10.13) nor marked `legacy` (§9) — each therefore counted twice, once
+for heading form and once as a counterpart-less entry:
+
+- `IMPLEMENTATIONS.md` — nine guide sections: "Anatomy of a config", "Worked
+  example: Kaggle competition submissions", "Recipe: GitHub Actions runs",
+  "Recipe: a generic REST job queue", "When declarative is not enough: a Python
+  source", "Choosing rails", "Surviving the session that launched it", "Running
+  it", "Before you arm a watch".
+- `IMPLEMENTATIONS.md` — two 2026 section headings: "Template index (appended
+  2026-08-31, v2.1.0 migration)" and "Implementation entries (appended
+  2026-09-01)".
+- `KNOWN_ISSUES.md` — "Adding an entry" and "Path note (appended 2026-08-31,
+  v2.1.0 migration)".
+- `TEMPLATES.md` — "Adding a template".
+
+**Cause (Y).** Two distinct causes, which is why one remedy does not cover all
+fourteen:
+
+1. The nine `IMPLEMENTATIONS.md` guide sections predate PROCESS.md. They are
+   pre-conformance entries of the kind §9 grandfathers, but decision 17 — which
+   extended the grandfather from `KNOWN_ISSUES.md` to all four entry documents —
+   was settled after the v2.1.0 migration was written, so no `status` field was
+   ever added to them. The change entry
+   [`CHANGE_LOG.md#conformance-only-migration-of-the-existi_18d24e7c`](CHANGE_LOG.md#conformance-only-migration-of-the-existi_18d24e7c)
+   states under "Honest limits" that these sections stay uncited because
+   invariant 2 forbids rewriting them; correct as far as it goes, but adding
+   `status: legacy` is the one edit §9 permits and it was not taken.
+2. The other five are prose sections, not entries. Decision 18 puts prose
+   sections at level 3 or lower; all five were written at level 2, where any
+   heading IS an entry (`process.yaml` → `definitions.entry.not_an_entry`).
+
+**Iteration (Z).** Documents only, no behavioural change and no version bump —
+add `status: legacy` to the nine pre-conformance sections in the form
+`Packages/Scrape` already uses, and demote the five prose sections from level 2
+to level 3. Planned and recorded in
+[`CHANGE_LOG.md#mark-the-nine-pre-conformance-implementa_42ed561b`](CHANGE_LOG.md#mark-the-nine-pre-conformance-implementa_42ed561b).
+
+**Why this is a new entry rather than an edit.** Decision 22, settled 2026-09-01:
+a correction to an unmerged entry is **appended** as a new issue↔change pair,
+never written into the existing entry as a dated note. The
+`…_18d24e7c` change entry above is left exactly as written, including the
+"Honest limits" paragraph this entry corrects.
+
+**Still your job.** `status` reads `in-progress`: the iteration is executed and
+committed on `fix/legacy-poller`, but no PR exists and nothing is merged, so
+`merge_commit` is empty and `resolved` may not be written (`process.yaml` →
+`definitions.issue-status.note`). Whoever merges appends the closing entry.
