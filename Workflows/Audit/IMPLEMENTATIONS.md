@@ -7,7 +7,7 @@ in [`TEMPLATES.md`](TEMPLATES.md) (PROCESS.md §3).
 
 ---
 
-## Why this file is empty
+### Why this file is empty
 
 PROCESS.md §9 requires the five canonical files on every tool, "empty-but-valid"
 where the content does not exist yet, "because their absence is what makes
@@ -32,7 +32,7 @@ Writing a plausible-looking implementation here would be fabrication, and would
 do the opposite of what this repo is for: someone would copy it as a proven
 method. So nothing is written.
 
-## What a first entry will need
+### What a first entry will need
 
 When the workflow is implemented, append an entry — this file is append-only
 (PROCESS.md §5.2) — carrying at least:
@@ -45,7 +45,7 @@ When the workflow is implemented, append an entry — this file is append-only
 | Outputs | What it produces, and where that lands |
 | Template | A link to the corresponding [`TEMPLATES.md`](TEMPLATES.md) entry |
 
-## Reciprocity
+### Reciprocity
 
 Track B requires that every entry here cites a `TEMPLATES.md` entry and vice
 versa. With zero entries on both sides that check is satisfied vacuously — there

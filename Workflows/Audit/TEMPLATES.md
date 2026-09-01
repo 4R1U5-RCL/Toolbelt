@@ -7,7 +7,7 @@ The production-ready application forms of this tool, each cited from
 
 ---
 
-## What was actually looked for
+### What was actually looked for
 
 `Workflows/Audit` has **no `templates/` directory**, and no file anywhere in the
 tool that functions as a template — no prompt file, no config skeleton, no
@@ -22,7 +22,7 @@ $ find . -type f | sort
 That capture, with its timestamp and exit code, is preserved verbatim in
 [`Tests/v1.0.0/run-tests.log`](Tests/v1.0.0/run-tests.log).
 
-## Why nothing is invented here
+### Why nothing is invented here
 
 A template in this repo is a *proven, reusable* form — PROCESS.md §1 — something
 copied because it is known to work. Nothing about this workflow is known: the
@@ -34,7 +34,7 @@ template is worse than a missing one, because the missing one is visibly missing
 This file therefore exists to record the absence, which is exactly the
 "empty-but-valid" case PROCESS.md §9 provides for.
 
-## Adding the first template
+### Adding the first template
 
 When the workflow gains an implementation, add its application forms here — the
 actual files under `Tooling/v<version>/templates/` plus a description of each —
