@@ -257,8 +257,11 @@ branches:
   test_decision:
     at:           testing
     evaluated_by: ci
-    test:         "`./run-tests.sh` exits 0 AND the suite includes an end-to-end
-                  test that exercises the logged failure"
+    test:         "the tool's declared runner exits 0 AND the suite includes an
+                  end-to-end test that exercises the logged failure. For a
+                  code-less tool (PROCESS.md §4) a recorded Track-B conformance
+                  result satisfies this branch instead — such a tool never reaches
+                  on_unknown for want of a suite it cannot have"
     on_true:      awaiting_human
     on_false:     planning
     on_unknown:   escalate                   # suite crashed, timed out, never ran
@@ -321,10 +324,18 @@ definitions:
                of identity: the id must be computable at check_existing, which
                runs before determine_cause. occurred_at is excluded (it would
                never dedupe); tool is redundant (the file is already per-tool)
-        canonical: trim, lowercase, collapse whitespace runs to a single space,
-                   then strip trailing punctuation (. , ; : ! ?). Without the
-                   final step the same summary written with and without a full
-                   stop hashes to two different ids
+        canonical: applied in this order, and no other:
+                   1. strip markdown inline markup — backticks, asterisks,
+                      underscores used as emphasis. A field written with and
+                      without code-ticks must hash the same; Scratch's iteration
+                      field hashes c96a11ad literally and 42bb52c2 stripped, and
+                      the spec previously said which
+                   2. trim
+                   3. lowercase
+                   4. collapse whitespace runs to a single space
+                   5. strip trailing punctuation (. , ; : ! ?) — without it the
+                      same summary written with and without a full stop hashes
+                      to two different ids
     unique_in:   one tool's KNOWN_ISSUES.md — at most one entry per id. A repeated
                  identity yields a repeated id; existing_check routes that to
                  attach_occurrence rather than a duplicate entry
@@ -354,6 +365,17 @@ definitions:
     stable:      yes — derived from write-once identity fields
     cited_as:    CHANGE_LOG.md#retry-backoff-on-empty-body_9c1a44be
 
+  impl-id / template-id:
+    format:      free slug, matching issue-id.description's charset and regex
+    examples:    [imp-01, impl-lead-capture, tpl-01, memory-md-template]
+    assigned_by: agent
+    not_hashed:  "deliberately. An implementation is not an error and has no
+                  summary-that-is-an-identity; the pair only needs to resolve as
+                  an anchor. Previously undefined, which left every tool matching
+                  this pair on convention alone"
+    unique_in:   one tool's IMPLEMENTATIONS.md / TEMPLATES.md respectively
+    cited_as:    IMPLEMENTATIONS.md#imp-01, TEMPLATES.md#tpl-01
+
   fix-version-id:
     format:      v<major>.<minor>.<patch>
     example:     v2.1
@@ -364,6 +386,19 @@ definitions:
     unique_in:   one tool — never reused
     stable:      yes — a released version is immutable
     used_by:     <TOOL>/Tooling/v<version>/, <TOOL>/Tests/v<version>/
+
+  declared-runner:
+    means:       the command that runs a tool's suite, named in its README.md and
+                 in Tests/v<version>/RESULTS.md
+    why:         the repo has three, and hardcoding one made every tool using
+                 another fail test_decision for a reason unrelated to its code
+    known_forms:
+      - ./run-tests.sh          # Packages/Poller, Packages/Scrape, Packages/Telegram
+      - bash tests/verify.sh    # Skills/Errors, Handoff, Memory, Scratch
+      - python3 tests/selftest.py  # Workflows/Validate
+      - none                    # code-less tools; Track-B evidence stands in
+    trap:        "Workflows/Validate's runner is python3, not bash. Running it
+                  under bash yields a syntax error that reads as a failing suite"
 
   escalate:
     means:       stop the run, make no further changes, and report to the user
@@ -402,6 +437,12 @@ definitions:
                  anchor and make reciprocity unverifiable by grep
     fields_in:   a markdown table or a definition list inside the block; either
                  is valid, but one tool uses one form throughout
+    not_an_entry: "prose sections in an entry document — 'Adding an entry',
+                  'No templates exist', 'Honest gap' — are level-3 headings or
+                  lower. Any level-2 heading IS an entry, so a prose section left
+                  at level 2 registers as a counterpart-less entry and fails
+                  reciprocity. Three tools hit this independently"
+    exempt:      legacy entries (PROCESS.md §9) keep their original heading form
 
   issue-entry:
     fields:      [id, summary, outcome, cause, iteration, resolved_by, status,

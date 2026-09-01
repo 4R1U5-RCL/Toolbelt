@@ -81,6 +81,14 @@ An iteration never edits one; it seeds the next version from it and works there.
 The previous directory therefore remains a permanent, in-repo rollback point —
 this is safeguard 1 of §5 in concrete form, not a separate copy kept elsewhere.
 
+**Where a conformance checker lives.** A Track-B checker is neither a tool's code
+nor a recorded result, so it fits none of the three homes above — three tools hit
+this and each improvised. Repo-level tooling lives in **`bin/` at the repository
+root**. It is not a tool directory: §3 and §4 do not apply to it. Every Track-B
+result recorded so far is a human running checks by hand, and this repo has no CI
+at all, which leaves invariant 5 enforced only by an agent choosing to run tests.
+Wiring `bin/` into CI is a build, not a spec change, and is tracked separately.
+
 **Tools with no executable code.** Some tools *are* their documentation —
 `Workflows/Audit` and `Workflows/Review` describe a process rather than ship a
 program. They are not exempt from this section. The documents that constitute
@@ -278,9 +286,22 @@ counterpart, and one cannot be manufactured for them without inventing a change
 history that never happened — which invariant 6 forbids outright.
 
 They are therefore **grandfathered**. An entry predating a tool's first
-conformant version is marked `status: legacy` and is exempt from the reciprocity
-check in §7 Track B. Reciprocity binds every entry from that first conformant
-version onward.
+conformant version is marked `status: legacy` and is exempt from **both** the
+reciprocity check in §7 Track B **and** the heading form in
+`process.yaml: definitions.entry`. Reciprocity and heading form bind every entry
+from that first conformant version onward.
+
+The heading exemption is not a nicety. Poller's 22 and Scrape's 15 legacy entries
+use `## KI-NN — prose`; conforming them means rewriting recorded incidents, which
+this section forbids. Without the exemption every legacy entry is permanently
+non-conformant by construction.
+
+**The exemption covers all four entry documents.** `IMPLEMENTATIONS.md` and
+`TEMPLATES.md` carry pre-conformance entries too — Telegram has 8 and 16, Scrape
+6 — which cross-reference by template *name* rather than by id. They are
+grandfathered on the same terms. Appending fresh id-headed entries alongside them
+is permitted but never required, and it is not a way to make a failing
+reciprocity check pass: the old entries stay exempt, the new ones must be real.
 
 Marking an entry `legacy` is the one permitted edit to a pre-existing entry, and
 it adds a field rather than changing one — invariant 1 still holds, and nothing
@@ -334,6 +355,33 @@ exposed in *this document*, not in the tools.
 
 Decisions 9 and 10 are a pair: 9 says a code-less tool must conform, 10 removes
 the invariant that made conforming impossible for it.
+
+### Settled 2026-09-01, second pass
+
+The eleven per-tool fixes that followed the smoke test surfaced seven more gaps —
+including one introduced by the first pass. Six of the seven were reported
+independently by two or more tools.
+
+| # | Gap | Resolution | Reported by |
+|---|---|---|---|
+| 15 | `test_decision` hardcoded `./run-tests.sh`; the repo has three runners, and the branch was never amended alongside §5.5/§8 — so decision 10's deadlock survived in the half the preamble calls authoritative | Tests the tool's **declared runner**; code-less tools satisfy it with Track-B evidence | Handoff, Scratch, Validate, **Review** |
+| 16 | Decision 13's heading form made every legacy entry permanently non-conformant | Legacy entries are exempt from heading form as well as reciprocity | Poller, Scrape |
+| 17 | §9 grandfathered `KNOWN_ISSUES.md` only; `IMPLEMENTATIONS.md`/`TEMPLATES.md` have pre-conformance entries too | Exemption covers all four entry documents | **Telegram** (escalated), Poller, Scrape |
+| 18 | Any level-2 heading is an entry, so prose sections failed reciprocity as counterpart-less entries | Prose sections are level-3 or lower | Review, Sprint, Poller |
+| 19 | Canonicalisation defined no markdown-normalisation step | Strip inline markup first; full order given | Scratch |
+| 20 | `IMPLEMENTATIONS` ↔ `TEMPLATES` had no defined id format | Free slug, not hashed — the pair only needs to resolve as an anchor | Scratch, Poller |
+| 21 | A conformance checker fits none of the three homes §4 defines | Repo-level `bin/`, outside §3/§4 | Sprint, Scrape, Validate |
+
+**Decision 15 is a correction to this document, not to a tool.** The first pass
+amended `PROCESS.md` §5.5 and §8 so a code-less tool could merge on recorded
+evidence, but left `process.yaml: branches.test_decision` naming one runner with
+`on_unknown: escalate`. Since the preamble makes `process.yaml` authoritative on
+conflict, `Workflows/Audit` and `Workflows/Review` remained unmergeable until now.
+
+One finding is recorded here without a resolution, because it is not a spec
+question: **`Workflows/Audit` and `Workflows/Review` are one sentence each.**
+Both conform. Neither is useful. What they are meant to be is not written down
+anywhere in this repository.
 
 Identity deliberately excludes the cause: an id must be computable at
 `check_existing`, which runs before the cause is determined. It also excludes
