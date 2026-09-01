@@ -507,17 +507,75 @@ not to the tool root. So `cd Packages/Poller` in the snippets above reads
 **2. Reciprocity.** Each implementation section now cites its template entry in
 [`TEMPLATES.md`](TEMPLATES.md), as PROCESS.md §3 requires:
 
-| Implementation section (above) | Template |
-|---|---|
-| Worked example: Kaggle competition submissions | [TPL-01](TEMPLATES.md#tpl-kaggle-submissions) — `examples/kaggle-submissions.json` |
-| Surviving the session that launched it / The headless-session rail | [TPL-02](TEMPLATES.md#tpl-kaggle-fallback) — `examples/kaggle-with-fallback.json` |
-| Worked example → 5. Arm it (a single named watch) | [TPL-03](TEMPLATES.md#tpl-kaggle-v15scar) — `examples/kaggle-v15scar-final.json` |
-| Recipe: GitHub Actions runs | [TPL-04](TEMPLATES.md#tpl-github-actions) — `examples/github-actions.json` |
-| Recipe: a generic REST job queue / Auth schemes | [TPL-05](TEMPLATES.md#tpl-generic-http) — `examples/generic-http.json` |
-| Where n8n fits | [TPL-06](TEMPLATES.md#tpl-n8n-always-on) — `n8n/kaggle-submission-poller.json` + its builder |
+| Implementation section (above) | Entry id (below) | Template |
+|---|---|---|
+| Worked example: Kaggle competition submissions | [`impl-kaggle-submissions`](#impl-kaggle-submissions) | [`tpl-kaggle-submissions`](TEMPLATES.md#tpl-kaggle-submissions) — `examples/kaggle-submissions.json` |
+| Surviving the session that launched it / The headless-session rail | [`impl-kaggle-fallback`](#impl-kaggle-fallback) | [`tpl-kaggle-fallback`](TEMPLATES.md#tpl-kaggle-fallback) — `examples/kaggle-with-fallback.json` |
+| Worked example → 5. Arm it (a single named watch) | [`impl-kaggle-v15scar`](#impl-kaggle-v15scar) | [`tpl-kaggle-v15scar`](TEMPLATES.md#tpl-kaggle-v15scar) — `examples/kaggle-v15scar-final.json` |
+| Recipe: GitHub Actions runs | [`impl-github-actions`](#impl-github-actions) | [`tpl-github-actions`](TEMPLATES.md#tpl-github-actions) — `examples/github-actions.json` |
+| Recipe: a generic REST job queue / Auth schemes | [`impl-generic-http`](#impl-generic-http) | [`tpl-generic-http`](TEMPLATES.md#tpl-generic-http) — `examples/generic-http.json` |
+| Where n8n fits | [`impl-n8n-always-on`](#impl-n8n-always-on) | [`tpl-n8n-always-on`](TEMPLATES.md#tpl-n8n-always-on) — `n8n/kaggle-submission-poller.json` + its builder |
 
 Sections with no template entry — "Anatomy of a config", "When declarative is
 not enough: a Python source", "Choosing rails", "Running it", "Before you arm a
 watch" — are explanatory, not application forms. There is no `templates/`
 directory in this tool; see the header of `TEMPLATES.md` for what does and does
 not count as a template here.
+
+---
+
+## Implementation entries (appended 2026-09-01)
+
+The guide above predates PROCESS.md: its level-2 headings are section titles, not
+entry ids, and this file is append-only (§5.2) so they cannot be rewritten. The
+six entries below are therefore **appended**, each with a bare-id heading
+(`process.yaml` → `definitions.entry`), each naming the guide section it
+formalises and citing its reciprocal `TEMPLATES.md` id. This is what makes the §7
+Track-B reciprocity check verifiable by grep in both directions.
+
+## impl-kaggle-submissions
+
+**Use case.** Watch a Kaggle competition's submission queue and report each
+submission that settles, on file, Slack and Telegram rails.
+**Guide section.** "Worked example: Kaggle competition submissions" (above).
+**Template.** [`TEMPLATES.md#tpl-kaggle-submissions`](TEMPLATES.md#tpl-kaggle-submissions) — `Tooling/v2.1.0/examples/kaggle-submissions.json`
+
+## impl-kaggle-fallback
+
+**Use case.** The same watch, armed so it outlives the session that started it:
+a supervisor probe plus a headless `claude_code` rail that fires only after
+`supervisor_lost`.
+**Guide sections.** "Surviving the session that launched it" and "The
+headless-session rail" (above).
+**Template.** [`TEMPLATES.md#tpl-kaggle-fallback`](TEMPLATES.md#tpl-kaggle-fallback) — `Tooling/v2.1.0/examples/kaggle-with-fallback.json`
+
+## impl-kaggle-v15scar
+
+**Use case.** One named single-purpose watch on a final submission slot, seeded
+on first run so history is not reported.
+**Guide section.** "Worked example: Kaggle competition submissions" → step 5,
+"Arm it" (above).
+**Template.** [`TEMPLATES.md#tpl-kaggle-v15scar`](TEMPLATES.md#tpl-kaggle-v15scar) — `Tooling/v2.1.0/examples/kaggle-v15scar-final.json`
+
+## impl-github-actions
+
+**Use case.** Watch a repository's GitHub Actions runs declaratively over
+`http_json` and report each run that reaches a terminal conclusion.
+**Guide section.** "Recipe: GitHub Actions runs" (above).
+**Template.** [`TEMPLATES.md#tpl-github-actions`](TEMPLATES.md#tpl-github-actions) — `Tooling/v2.1.0/examples/github-actions.json`
+
+## impl-generic-http
+
+**Use case.** Any REST endpoint that returns a list of rows with a status field —
+the minimum viable config, and the auth schemes it supports.
+**Guide sections.** "Recipe: a generic REST job queue" and "Auth schemes"
+(above).
+**Template.** [`TEMPLATES.md#tpl-generic-http`](TEMPLATES.md#tpl-generic-http) — `Tooling/v2.1.0/examples/generic-http.json`
+
+## impl-n8n-always-on
+
+**Use case.** The deliberately less capable always-on tier: the poll loop as an
+n8n workflow on a VPS, for watches that must not die with the host that armed
+them (KI-22).
+**Guide section.** "Where n8n fits" (above).
+**Template.** [`TEMPLATES.md#tpl-n8n-always-on`](TEMPLATES.md#tpl-n8n-always-on) — `Tooling/v2.1.0/n8n/` (workflow JSON + its builder)

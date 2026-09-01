@@ -5,3 +5,19 @@ Ran 187 tests in 1.119s
 
 OK
 exit_code=0
+
+# --- re-run 2026-09-01T04:35:30Z, from Packages/Poller/Tooling/v2.1.0 on branch smoke/fix-packages-poller ---
+$ cd /studio/scratch/tb-wt/packages-poller/Packages/Poller/Tooling/v2.1.0 && ./run-tests.sh
+...........................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 187 tests in 1.060s
+
+OK
+exit_code=0
+
+$ ./bin/poller --version
+poller 2.1.0
+
+$ ./bin/poller status --config examples/generic-http.json
+example: NEVER_RAN — no heartbeat at /root/.poller/example.heartbeat.json
+exit_code=1
