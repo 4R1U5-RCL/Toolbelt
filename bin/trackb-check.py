@@ -60,9 +60,22 @@ def entries(path):
     """
     if not os.path.isfile(path):
         return []
-    out, ident, buf = [], None, []
+    out, ident, buf, fence = [], None, [], None
     for line in open(path, encoding="utf-8"):
-        if line.startswith("## "):
+        # A "## " inside a code fence is quoted content, not a heading. Without
+        # this, a tool that reproduces a template verbatim reads as having
+        # entries it does not have (found in Skills/Memory, 2026-09-01).
+        stripped = line.lstrip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            marker = stripped[:3]
+            if fence is None:
+                fence = marker
+            elif fence == marker:
+                fence = None
+            if ident is not None:
+                buf.append(line)
+            continue
+        if fence is None and line.startswith("## "):
             if ident is not None:
                 out.append((ident, "".join(buf)))
             ident, buf = line[3:].strip(), []
