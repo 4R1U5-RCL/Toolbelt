@@ -6,10 +6,23 @@ Every issue found with this tool, each linking to the iteration that fixed it in
 **Append-only** — PROCESS.md §5 invariant 1. Entries are never rewritten; a fix
 appends, carrying the version of the iteration that resolved it.
 
+
+> **Correction, 2026-09-01 (branch `smoke/fix-skills-scratch`).** The entry below
+> was written by the 2026-08-31 migration and has never been merged or released.
+> An audit found it non-conformant, so its **mutable** fields were corrected in
+> place: `status` (`resolved` → `in-progress`), the citation of the change-id
+> (recomputed under the amended identity rule), and the heading form. The
+> **immutable** fields — `id` and `summary` — are untouched, and the issue-id
+> still reproduces from the summary. Correcting an unreleased entry is not an
+> append-only violation; overwriting a released one would be.
+
 Ids follow `process.yaml: definitions.issue-id` — `<description>_<hash8>`, where
 the description is the summary slugified and truncated to 40 characters and the
-hash is the first 8 hex characters of `sha256` over the canonical (trimmed,
-lowercased, whitespace-collapsed) summary.
+hash is the first 8 hex characters of `sha256` over the canonical summary.
+**Canonical** = trim → lowercase → collapse whitespace runs to a single space →
+strip trailing punctuation (`. , ; : ! ?`). Identity is the `summary` field alone
+(PROCESS.md §10.3, §10.14). Every id below was recomputed with `sha256sum` on
+2026-09-01 and reproduces.
 
 > **Not yet entries.** `README.md` carries a "Known issues / caveats" section of
 > six numbered caveats (same-filesystem-only scratch; the ephemeral session
@@ -23,18 +36,18 @@ lowercased, whitespace-collapsed) summary.
 
 | ID | Summary | Status |
 |---|---|---|
-| [`skills-scratch-failed-track-b-conformanc_5a423163`](#skills-scratch-failed-track-b-conformanc_5a423163) | Failed Track B conformance — four canonical documents missing, no `Tooling/`, no `Tests/`, no version in the README | resolved (`v1.0.0`) |
+| [`skills-scratch-failed-track-b-conformanc_5a423163`](#skills-scratch-failed-track-b-conformanc_5a423163) | Skills/Scratch failed Track B conformance: four canonical documents missing, code not under Tooling/, no recorded results under Tests/, and README stated no version. | `in-progress` |
 
 ---
 
 <a name="skills-scratch-failed-track-b-conformanc_5a423163"></a>
-## `skills-scratch-failed-track-b-conformanc_5a423163`
+## skills-scratch-failed-track-b-conformanc_5a423163
 
 | Field | Value |
 |---|---|
 | **id** | `skills-scratch-failed-track-b-conformanc_5a423163` |
-| **status** | `resolved` |
-| **resolved_by** | [`CHANGE_LOG.md#migrate-skills-scratch-to-the-tooling-te_96add0eb`](CHANGE_LOG.md#migrate-skills-scratch-to-the-tooling-te_96add0eb) at fix-version `v1.0.0` |
+| **status** | `in-progress` — the iteration is written and executed on branch `smoke/fix-skills-scratch`, but nothing has merged. `resolved` is never written while `merge_commit` is empty (`process.yaml: definitions.issue-status`) |
+| **resolved_by** | [`CHANGE_LOG.md#move-the-implementation-into-tooling-v1_c96a11ad`](CHANGE_LOG.md#move-the-implementation-into-tooling-v1_c96a11ad) — the iteration that answers this issue, at fix-version `v1.0.0`. **Not yet merged**, so this cites the intended fix, not a completed one; the field is filled out in full when the merge lands (§6 step 7) |
 | **occurrences** | 1 — found 2026-08-31 by running the Track B checks of PROCESS.md §7 against this tool directory by hand |
 
 **summary.** Skills/Scratch failed Track B conformance: four canonical documents
@@ -73,7 +86,7 @@ been versioned starts at `v1.0.0`), repair the paths the move breaks, run the
 suite from its new location and record the verbatim output under `Tests/v1.0.0/`,
 create the four missing canonical files empty-but-valid, and state the current
 version in `README.md`. Planned and recorded in
-[`CHANGE_LOG.md#migrate-skills-scratch-to-the-tooling-te_96add0eb`](CHANGE_LOG.md#migrate-skills-scratch-to-the-tooling-te_96add0eb).
+[`CHANGE_LOG.md#move-the-implementation-into-tooling-v1_c96a11ad`](CHANGE_LOG.md#move-the-implementation-into-tooling-v1_c96a11ad).
 
 **What the move actually broke.** Recorded because it is the part §5 invariant 6
 exists to catch, and because the suite was run before, during and after the move
@@ -93,6 +106,12 @@ passed, 0 failed, exit 0, with that check reading `PASS`.
 
 **Still open after this iteration.** Stated rather than silently carried:
 
+- **Nothing has merged.** The work sits on branch `smoke/fix-skills-scratch`,
+  which is neither pushed nor merged, and no PR exists. There is therefore no
+  `merge_commit` to cite, which is why the status above reads `in-progress`
+  rather than `resolved`. Steps 5–7 of PROCESS.md §6 (open a PR → human
+  approval → record the version and close the issue) are outstanding, and the
+  human gate of §8 is unanswered — waiting, not escalated.
 - **No `run-tests.sh`.** This tool has never had one; the suite is invoked as
   `bash tests/verify.sh`. `process.yaml`'s `test_decision` branch tests
   "`./run-tests.sh` exits 0", so a strict reading of that branch cannot be
