@@ -5,6 +5,11 @@ session (or a teammate, or triage tooling) can **recognize** a problem from its 
 the known fix, and **catch the whole class upfront** via the recorded guard. The one habit that makes
 it pay off: **grep the registry before you debug.**
 
+**Current version: `v1.0.0`.** The code (templates + tests) lives in
+[`Tooling/v1.0.0/`](Tooling/v1.0.0/); recorded test results for that version live in
+[`Tests/v1.0.0/`](Tests/v1.0.0/). Canonical documents: [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md),
+[`TEMPLATES.md`](TEMPLATES.md), [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md), [`CHANGE_LOG.md`](CHANGE_LOG.md).
+
 Not a `/command` — a discipline plus a fixed entry format, like **[Memory](../Memory/)**. Where Memory
 holds durable *facts*, this registry holds durable *failures*.
 
@@ -12,9 +17,9 @@ holds durable *facts*, this registry holds durable *failures*.
 
 | Path | Installs to | Role |
 |------|-------------|------|
-| `templates/ERRORS_AND_FINDINGS.md.template` | repo root | The **hub**: purpose/how-to block, the per-area Index, Part 1 (recurring `PAT-*` classes), Part 3 (open-items rollup). |
-| `templates/errors-area.md.template` | `errors/<area>.md` | A **per-area** incident catalog skeleton. |
-| `templates/incident-entry.md.template` | (snippet) | The atomic **single-incident** entry format. |
+| `Tooling/v1.0.0/templates/ERRORS_AND_FINDINGS.md.template` | repo root | The **hub**: purpose/how-to block, the per-area Index, Part 1 (recurring `PAT-*` classes), Part 3 (open-items rollup). |
+| `Tooling/v1.0.0/templates/errors-area.md.template` | `errors/<area>.md` | A **per-area** incident catalog skeleton. |
+| `Tooling/v1.0.0/templates/incident-entry.md.template` | (snippet) | The atomic **single-incident** entry format. |
 
 The templates ship **pre-seeded with a portable generic `PAT-*` taxonomy** and **correct the drift
 traps** the live system exhibits (see Known issues).
@@ -87,6 +92,10 @@ which is exactly why *signature-first* and *stable IDs* are load-bearing, not co
 
 ## Known issues / caveats
 
+*(Issues with **this tool** are tracked in [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md). The list below is
+about the **live registry this tool was distilled from**; the shipped templates correct the first
+three and standardize the fourth.)*
+
 *(The live registry exhibits these; the shipped templates correct the first three and standardize the
 fourth.)*
 
@@ -118,7 +127,7 @@ the signature-first entry format.
 # 1. hit an error → GREP the registry FIRST (hub + area files)
 grep -rn "ECONNREFUSED" ERRORS_AND_FINDINGS.md errors/
 
-# 2. not found? copy templates/incident-entry.md.template to the bottom of the
+# 2. not found? copy Tooling/v1.0.0/templates/incident-entry.md.template to the bottom of the
 #    matching topical section in errors/<area>.md — Signature line FIRST
 
 # 3. close the loop: Status: FIXED <sha>, and add a Guard so the class can't recur
@@ -138,4 +147,4 @@ verify-time known-fix matching. The templates here are the generic, drift-correc
 that system.
 
 
-**Committed self-check:** `bash tests/verify.sh` — **32/32**. It checks the template structure and the drift-fixes, then on a fixture registry verifies signature greppability, the compact-grep-vs-`ID-[0-9]+` fragmentation caveat (live), index↔catalog consistency, and a duplicate-ID guard that reproduces the live `IN-38` bug.
+**Committed self-check:** from `Tooling/v1.0.0/`, run `bash tests/verify.sh` — **32/32**, exit 0, last run 2026-09-01 and recorded verbatim at [`Tests/v1.0.0/verify.log`](Tests/v1.0.0/verify.log). There is no `run-tests.sh` in this tool; `tests/verify.sh` is the whole suite. It checks the template structure and the drift-fixes, then on a fixture registry verifies signature greppability, the compact-grep-vs-`ID-[0-9]+` fragmentation caveat (live), index↔catalog consistency, and a duplicate-ID guard that reproduces the live `IN-38` bug.

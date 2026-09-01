@@ -14,8 +14,25 @@ into other repos. The same tree runs in a container, on a VPS, or under cron.
   writing a template.
 - **[IMPLEMENTATIONS.md](IMPLEMENTATIONS.md)** — wiring a new caller, adding a
   template, and the Poller worked end to end.
-- **[n8n/README.md](n8n/README.md)** — the two workflows this ships, why the
+- **[Tooling/v1.0.0/n8n/README.md](Tooling/v1.0.0/n8n/README.md)** — the two workflows this ships, why the
   live fan-out is not touched, and what activating them costs.
+
+## Layout and current version
+
+**Current version: `v1.0.0`.** The tool follows the repository convention in
+`PROCESS.md` §3 and §4:
+
+```
+Packages/Telegram/
+  README.md IMPLEMENTATIONS.md TEMPLATES.md KNOWN_ISSUES.md CHANGE_LOG.md
+  Tooling/v1.0.0/     the code at that version — telegram/ bin/ templates/
+                      n8n/ examples/ tests/ run-tests.sh
+  Tests/v1.0.0/       the recorded output of running that version's tests
+```
+
+Every command in this file and in `IMPLEMENTATIONS.md` / `TEMPLATES.md` is run
+from `Tooling/v1.0.0/`, which is where `bin/telegram`, `templates/` and
+`run-tests.sh` now live.
 
 ## Why this exists
 
@@ -34,13 +51,13 @@ So the catalogue is data. Adding a message shape means adding a file. Changing
 how every settle report reads means changing one.
 
 Every failure in `KNOWN_ISSUES.md` has a guard in code and a test, and each is
-annotated with the `TG-` id it came from — `grep -rn TG-03 telegram/` finds the
+annotated with the `TG-` id it came from — `grep -rn TG-03 Tooling/v1.0.0/telegram/` finds the
 code an incident bought.
 
 ## Quickstart
 
 ```bash
-cd Packages/Telegram
+cd Packages/Telegram/Tooling/v1.0.0
 ./run-tests.sh                                   # full suite, offline, ~1s
 
 ./bin/telegram templates                         # what can I send?
@@ -111,7 +128,7 @@ this package's own smoke test: the live fan-out discards an inline keyboard
 silently (TG-19, TG-20), and the two incumbent receivers reject **every** inbound
 callback 401 because they check an HMAC Telegram never sends — then Telegram
 retries each refusal into a storm (TG-21). Neither half of the interactive rail
-had ever worked. Both are fixed in `n8n/`.
+had ever worked. Both are fixed in `Tooling/v1.0.0/n8n/`.
 
 ## What is proven, and how
 

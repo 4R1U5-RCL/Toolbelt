@@ -1,0 +1,32 @@
+# Workflows/Audit — attempted test run, version v1.0.0
+# Captured: 2026-08-31T15:25:02Z (UTC)
+# Working directory: /studio/scratch/tb/Workflows/Audit
+# Every block below is the verbatim command and its verbatim output.
+
+$ find . -type f -not -path "./Tests/*" | sort
+./README.md
+exit_code=0
+
+$ ls -la
+total 4
+drwxr-xr-x 1 root root 28 Aug 31 15:25 .
+drwxr-xr-x 1 root root 68 Aug 31 15:14 ..
+-rw-r--r-- 1 root root 41 Aug 31 15:14 README.md
+drwxr-xr-x 1 root root 12 Aug 31 15:25 Tests
+exit_code=0
+
+$ ./run-tests.sh
+/bin/bash: line 46: ./run-tests.sh: No such file or directory
+exit_code=127
+
+$ ls tests/
+ls: cannot access 'tests/': No such file or directory
+exit_code=2
+
+$ python3 -m unittest discover -v
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.000s
+
+OK
+exit_code=0

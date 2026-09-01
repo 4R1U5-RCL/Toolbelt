@@ -1,0 +1,110 @@
+$ python3 check-track-b.py Packages/Scrape        # method described in RESULTS.md
+== heading form (process.yaml: definitions.entry -> '## <id>') ==
+  KNOWN_ISSUES.md     ## KI-01 — One slow/broken page aborts the whole batch  DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-02 — A 2xx with an empty body looks like success  DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-03 — A giant page blows the context window        DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-04 — The API key leaks into a log or URL          DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-05 — Retrying a fatal error hammers the API       DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-06 — Chunk sizes overrun a real tokenizer         DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-07 — An HTML error/login page at 200 is parsed as DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## KI-08 — Boilerplate/nav noise pollutes the LLM input DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## Adding an entry                                      DEVIATION (legacy)
+  KNOWN_ISSUES.md     ## track-b-conformance-failure-scrape-code_76631893     OK 
+  KNOWN_ISSUES.md     ## reciprocity-check-narrowed-to-fit-the-re_b2d3262b    OK 
+  CHANGE_LOG.md       ## a-layout-and-documents-migration-only-no_e4cf77a9    OK 
+  CHANGE_LOG.md       ## restore-the-7-track-b-reciprocity-wordin_e86f7789    OK 
+  IMPLEMENTATIONS.md  ## Anatomy of a config                                  DEVIATION (legacy)
+  IMPLEMENTATIONS.md  ## Worked example: one docs page, ready for a model     DEVIATION (legacy)
+  IMPLEMENTATIONS.md  ## Recipe: batch a list of URLs                         DEVIATION (legacy)
+  IMPLEMENTATIONS.md  ## Recipe: chunking for a context window                DEVIATION (legacy)
+  IMPLEMENTATIONS.md  ## Adding a backend                                     DEVIATION (legacy)
+  IMPLEMENTATIONS.md  ## Before you scrape                                    DEVIATION (legacy)
+  IMPLEMENTATIONS.md  ## IMP-01                                               OK 
+  IMPLEMENTATIONS.md  ## IMP-02                                               OK 
+  IMPLEMENTATIONS.md  ## IMP-03                                               OK 
+  IMPLEMENTATIONS.md  ## IMP-04                                               OK 
+  TEMPLATES.md        ## TPL-01                                               OK 
+  TEMPLATES.md        ## TPL-02                                               OK 
+  TEMPLATES.md        ## TPL-03                                               OK 
+  TEMPLATES.md        ## TPL-04                                               OK 
+  TEMPLATES.md        ## TPL-05                                               OK 
+
+== reciprocity (every level-2 heading; legacy is the only exemption) ==
+  KNOWN_ISSUES.md     KI-01 — One slow/broken page aborts the whole batch  EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-02 — A 2xx with an empty body looks like success  EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-03 — A giant page blows the context window        EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-04 — The API key leaks into a log or URL          EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-05 — Retrying a fatal error hammers the API       EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-06 — Chunk sizes overrun a real tokenizer         EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-07 — An HTML error/login page at 200 is parsed as EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     KI-08 — Boilerplate/nav noise pollutes the LLM input EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     Adding an entry                                      EXEMPT §9 status: legacy
+  KNOWN_ISSUES.md     track-b-conformance-failure-scrape-code_76631893     CITES a-layout-and-documents-migration-only-no_e4cf77a9
+  KNOWN_ISSUES.md     reciprocity-check-narrowed-to-fit-the-re_b2d3262b    CITES a-layout-and-documents-migration-only-no_e4cf77a9,restore-the-7-track-b-reciprocity-wordin_e86f7789
+  CHANGE_LOG.md       a-layout-and-documents-migration-only-no_e4cf77a9    CITES track-b-conformance-failure-scrape-code_76631893
+  CHANGE_LOG.md       restore-the-7-track-b-reciprocity-wordin_e86f7789    CITES reciprocity-check-narrowed-to-fit-the-re_b2d3262b
+  IMPLEMENTATIONS.md  Anatomy of a config                                  EXEMPT §9 status: legacy
+  IMPLEMENTATIONS.md  Worked example: one docs page, ready for a model     EXEMPT §9 status: legacy
+  IMPLEMENTATIONS.md  Recipe: batch a list of URLs                         EXEMPT §9 status: legacy
+  IMPLEMENTATIONS.md  Recipe: chunking for a context window                EXEMPT §9 status: legacy
+  IMPLEMENTATIONS.md  Adding a backend                                     EXEMPT §9 status: legacy
+  IMPLEMENTATIONS.md  Before you scrape                                    EXEMPT §9 status: legacy
+  IMPLEMENTATIONS.md  IMP-01                                               CITES TPL-01
+  IMPLEMENTATIONS.md  IMP-02                                               CITES TPL-02,TPL-04
+  IMPLEMENTATIONS.md  IMP-03                                               CITES TPL-03
+  IMPLEMENTATIONS.md  IMP-04                                               CITES TPL-05
+  TEMPLATES.md        TPL-01                                               CITES IMP-01
+  TEMPLATES.md        TPL-02                                               CITES IMP-02
+  TEMPLATES.md        TPL-03                                               CITES IMP-03
+  TEMPLATES.md        TPL-04                                               CITES IMP-02
+  TEMPLATES.md        TPL-05                                               CITES Adding a backend,IMP-04
+
+== canonical files ==
+  KNOWN_ISSUES.md     present, non-empty (21357 bytes)
+  CHANGE_LOG.md       present, non-empty (16330 bytes)
+  IMPLEMENTATIONS.md  present, non-empty (9608 bytes)
+  TEMPLATES.md        present, non-empty (5373 bytes)
+  README.md           present, non-empty (7178 bytes)
+
+Disclosed deviations (legacy entries, heading is not a bare id — not
+fixable: PROCESS.md §9 permits adding `status: legacy` and nothing else):
+  KNOWN_ISSUES.md ## KI-01 — One slow/broken page aborts the whole batch
+  KNOWN_ISSUES.md ## KI-02 — A 2xx with an empty body looks like success
+  KNOWN_ISSUES.md ## KI-03 — A giant page blows the context window
+  KNOWN_ISSUES.md ## KI-04 — The API key leaks into a log or URL
+  KNOWN_ISSUES.md ## KI-05 — Retrying a fatal error hammers the API
+  KNOWN_ISSUES.md ## KI-06 — Chunk sizes overrun a real tokenizer
+  KNOWN_ISSUES.md ## KI-07 — An HTML error/login page at 200 is parsed as data
+  KNOWN_ISSUES.md ## KI-08 — Boilerplate/nav noise pollutes the LLM input
+  KNOWN_ISSUES.md ## Adding an entry
+  IMPLEMENTATIONS.md ## Anatomy of a config
+  IMPLEMENTATIONS.md ## Worked example: one docs page, ready for a model
+  IMPLEMENTATIONS.md ## Recipe: batch a list of URLs
+  IMPLEMENTATIONS.md ## Recipe: chunking for a context window
+  IMPLEMENTATIONS.md ## Adding a backend
+  IMPLEMENTATIONS.md ## Before you scrape
+
+RESULT: PASS
+EXIT=0
+
+$ python3 check-ids.py Packages/Scrape            # method described in RESULTS.md
+== KNOWN_ISSUES.md (identity = the `summary` field alone) ==
+  as written : track-b-conformance-failure-scrape-code_76631893
+  recomputed : track-b-conformance-failure-scrape-code_76631893   REPRODUCES
+  sha256sum  : 76631893  (over 184 canonical bytes)
+
+  as written : reciprocity-check-narrowed-to-fit-the-re_b2d3262b
+  recomputed : reciprocity-check-narrowed-to-fit-the-re_b2d3262b   REPRODUCES
+  sha256sum  : b2d3262b  (over 276 canonical bytes)
+
+== CHANGE_LOG.md (identity = the `iteration` field alone) ==
+  as written : a-layout-and-documents-migration-only-no_e4cf77a9
+  recomputed : a-layout-and-documents-migration-only-no_e4cf77a9   REPRODUCES
+  sha256sum  : e4cf77a9  (over 341 canonical bytes)
+
+  as written : restore-the-7-track-b-reciprocity-wordin_e86f7789
+  recomputed : restore-the-7-track-b-reciprocity-wordin_e86f7789   REPRODUCES
+  sha256sum  : e86f7789  (over 343 canonical bytes)
+
+RESULT: PASS — every id reproduces
+EXIT=0

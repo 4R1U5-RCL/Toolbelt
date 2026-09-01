@@ -1,0 +1,22 @@
+$ cd /studio/scratch/tb-wt/skills-memory/Skills/Memory/Tooling/v1.0.0 && bash tests/verify.sh
+  PASS · install: MEMORY.md.template placed
+  PASS · install: memory-entry.md.template placed
+  PASS · entry template has name/description/metadata.type + type enum
+  PASS · build: two entries + index created from templates
+  PASS · frontmatter valid on every entry (keys+enum+name==stem)
+  PASS · index-is-recall: every entry is indexed (no orphans)
+  PASS · no dangling index links (every row resolves to a file)
+  PASS · MEMORY.md carries no frontmatter block
+  PASS · index rows well-formed (- [t](f.md) — hook)
+  PASS · index under 200-line ceiling
+  PASS · wikilink resolves ([[reference_toolbelt-repo]] <-> file)
+  PASS · wikilink resolves ([[project_toolbelt-skills]] <-> file)
+  PASS · dangling wikilink flagged, not fatal ([[project_future-thing]])
+  PASS · drift: un-indexed entry detected as orphan
+  PASS · drift: INDEXED_OK flips to 0 while orphan present
+  PASS · drift: adding the index pointer clears the orphan
+  PASS · dangling index row (missing file) is flagged
+  PASS · restored: index clean again
+
+== memory smoke: 18 passed, 0 failed ==
+exit=0

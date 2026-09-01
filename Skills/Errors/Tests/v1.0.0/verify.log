@@ -1,0 +1,34 @@
+  PASS · template present: ERRORS_AND_FINDINGS.md.template
+  PASS · template present: errors-area.md.template
+  PASS · template present: incident-entry.md.template
+  PASS · hub: grep-first purpose block
+  PASS · hub: Index table
+  PASS · hub: Part 1 (recurring classes)
+  PASS · hub: Part 3 (open items)
+  PASS · hub: intentionally NO Part 2
+  PASS · hub: seed PAT-1/2/3 present
+  PASS · hub drift-fix: no hardcoded PAT range
+  PASS · hub drift-fix: compile-stamp clarified
+  PASS · area: binds to hub
+  PASS · area: states entry format
+  PASS · area: Open items section
+  PASS · area drift-fix: duplicate-ID guard note
+  PASS · area drift-fix: PAT-* not hardcoded range
+  PASS · entry has field: Signature
+  PASS · entry has field: Cause
+  PASS · entry has field: Fix
+  PASS · entry has field: Guard
+  PASS · entry has field: Status
+  PASS · entry has field: Source
+  PASS · entry: Signature is the FIRST field
+  PASS · style standardized: no compact **XX-N entries
+  PASS · greppable: signature string locates the incident
+  PASS · caveat: '^\*\*BE-' finds only the 1 compact entry (misses headers)
+  PASS · reliable locator: BE-[0-9]+ finds all 3 IDs
+  PASS · index link resolves (errors/backend.md exists)
+  PASS · dangling index row detected (errors/ghost.md missing)
+  PASS · restored: index clean again
+  PASS · clean catalog has no duplicate IDs
+  PASS · guard: duplicate BE-2 is detected
+
+== errors smoke: 32 passed, 0 failed ==

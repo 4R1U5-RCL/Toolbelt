@@ -1,5 +1,7 @@
 # Handoff — session → durable handoff document
 
+**Version:** v1.0.0 — code under [`Tooling/v1.0.0/`](Tooling/v1.0.0/), recorded test results under [`Tests/v1.0.0/`](Tests/v1.0.0/).
+
 `/handoff` compiles the current Claude Code session into a single, curated **handoff document** — what
 was accomplished, current state, open questions, concrete next steps, environment facts, and the
 load-bearing memory nodes — and writes it to `~/.claude/data/handoffs/` under a timestamped,
@@ -13,8 +15,8 @@ Invoked by the `/handoff` slash command (optionally `/handoff <topic-slug>`).
 
 | Path | Installs to | Role |
 |------|-------------|------|
-| `commands/handoff.md` | `~/.claude/commands/handoff.md` | The `/handoff` slash command — the procedure itself. |
-| `templates/handoff-template.md` | `~/.claude/data/templates/handoff-template.md` | The fixed section structure every handoff fills. |
+| `Tooling/v1.0.0/commands/handoff.md` | `~/.claude/commands/handoff.md` | The `/handoff` slash command — the procedure itself. |
+| `Tooling/v1.0.0/templates/handoff-template.md` | `~/.claude/data/templates/handoff-template.md` | The fixed section structure every handoff fills. |
 
 Both are shipped **verbatim** from the live system — this package is a faithful mirror, not a
 re-implementation.
@@ -22,9 +24,9 @@ re-implementation.
 ## Install
 
 ```sh
-cp commands/handoff.md            ~/.claude/commands/
+cp Tooling/v1.0.0/commands/handoff.md            ~/.claude/commands/
 mkdir -p ~/.claude/data/handoffs ~/.claude/data/templates
-cp templates/handoff-template.md  ~/.claude/data/templates/
+cp Tooling/v1.0.0/templates/handoff-template.md  ~/.claude/data/templates/
 ```
 
 The skill writes into `~/.claude/data/handoffs/` — create it once (above) so the first run has a home.
@@ -80,4 +82,4 @@ including the handoffs produced during the session that authored this package. T
 template check and the incremental/full scope switch are both exercised in normal operation.
 
 
-**Committed self-check:** `bash tests/verify.sh` — **15/15** (install, fail-closed template guard, the 4h scope rule across all three cases, filename convention, and end-to-end section conformance).
+**Committed self-check:** `bash Tooling/v1.0.0/tests/verify.sh` — **15/15** (recorded run: [`Tests/v1.0.0/`](Tests/v1.0.0/)) (install, fail-closed template guard, the 4h scope rule across all three cases, filename convention, and end-to-end section conformance).
