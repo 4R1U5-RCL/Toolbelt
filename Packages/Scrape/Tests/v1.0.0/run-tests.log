@@ -1,4 +1,4 @@
-$ cd /studio/scratch/tb/Packages/Scrape/Tooling/v1.0.0 && ./run-tests.sh
+$ cd /studio/scratch/tb-wt/packages-scrape/Packages/Scrape/Tooling/v1.0.0 && ./run-tests.sh
 .....usage: scrape url [-h] [-c CONFIG] [-v] [-o OUT]
                   [--format {markdown,json,text}] [--formats FORMATS]
                   [--no-clean] [--chunk] [--max-tokens MAX_TOKENS]

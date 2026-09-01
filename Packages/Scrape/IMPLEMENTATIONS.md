@@ -12,6 +12,10 @@ render) do the rest. The questions you answer:
 
 ## Anatomy of a config
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 Flags override the file, so a config carries your defaults and the command line
 carries the exceptions.
 
@@ -37,6 +41,10 @@ carries the exceptions.
 
 ## Worked example: one docs page, ready for a model
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 ```bash
 export FIRECRAWL_API_KEY=fc-...
 ./bin/scrape url https://docs.example.com/guide --format markdown -o guide.md
@@ -48,6 +56,10 @@ prompt, and the frontmatter tells the model (and you) where it came from and
 whether it was cut.
 
 ## Recipe: batch a list of URLs
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
 
 One URL per line; blank lines and `#` comments are ignored. The batch survives a
 bad page (KI-01).
@@ -65,6 +77,10 @@ a success.
 
 ## Recipe: chunking for a context window
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 ```bash
 ./bin/scrape url https://long.example.com/whitepaper \
     --chunk --max-tokens 1000 --overlap 100 --format json -o chunks.json
@@ -74,6 +90,10 @@ a success.
 Sizes are the ~4-char estimate (KI-06) — target ~80% of your model's real limit.
 
 ## Adding a backend
+
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
 
 The engine only knows a backend is "a thing with `.scrape(url) -> data`", where
 `data` is a dict shaped like Firecrawl's (`{"markdown", "metadata", "links"}`). To
@@ -100,6 +120,10 @@ retry and batch policies apply unchanged.
 
 ## Before you scrape
 
+**status.** `legacy` — predates v1.0.0, this tool's first conformant version;
+exempt from the §7 Track B reciprocity check (PROCESS.md §9). This field is the
+only edit made to the section.
+
 - [ ] `FIRECRAWL_API_KEY` (or your `--api-key-env`) is exported, not committed.
 - [ ] `--max-chars` / `--max-tokens` match the model you'll feed.
 - [ ] For a batch, you've decided `--on-error continue` (default) vs `stop`.
@@ -108,22 +132,84 @@ retry and batch policies apply unchanged.
 
 ---
 
-## Template index (appended 2026-08-31, v1.0.0)
+# Conformant implementation entries (v1.0.0)
 
-Reciprocal citations for [`TEMPLATES.md`](TEMPLATES.md), added when this tool was
-brought into PROCESS.md §3/§4 conformance. The implementations above predate
-`TEMPLATES.md`; this section supplies the link each of them owes its template
-rather than rewriting them (IMPLEMENTATIONS.md is append-only, PROCESS.md §5.2).
+The six sections above predate `v1.0.0`, this tool's first conformant version.
+They are prose with titles, not `## <id>` entries, and `IMPLEMENTATIONS.md` is
+append-only (PROCESS.md §5.2) — the one edit PROCESS.md §9 permits to a
+pre-existing entry is adding `status: legacy`, which is what each of them
+carries. Their content is not restated here.
 
-| Implementation above | Template |
-|---|---|
-| "Worked example: one docs page, ready for a model" | [TEMPLATES.md#tpl-01](TEMPLATES.md#tpl-01) — single URL → markdown (`examples/single-url.json`) |
-| "Recipe: batch a list of URLs" | [TEMPLATES.md#tpl-02](TEMPLATES.md#tpl-02) — batch → JSON (`examples/batch-json.json`) and [TEMPLATES.md#tpl-04](TEMPLATES.md#tpl-04) — URL-list file (`examples/urls.txt`) |
-| "Recipe: chunking for a context window" | [TEMPLATES.md#tpl-03](TEMPLATES.md#tpl-03) — chunked config (`examples/llm-chunks.json`) |
-| "Adding a backend" | [TEMPLATES.md#tpl-05](TEMPLATES.md#tpl-05) — new backend class form |
-| "Anatomy of a config" | no dedicated template file — it is the annotated superset of TPL-01/02/03, not a shipped form |
+The entries below are the conformant form. Each is a `## <id>` heading, names the
+use case, cites its `TEMPLATES.md` id, and is cited back by that template — the
+reciprocity PROCESS.md §7 Track B requires, running in both directions and
+resolvable by grep. Each also points at the legacy section that holds the long
+prose. They carry no `status` field: `process.yaml: definitions.issue-status` is
+the vocabulary for *issue* entries, and asserting one of its values on an
+implementation entry would be a category error. All four were appended at
+`v1.0.0` on branch `smoke/fix-packages-scrape` and are not merged.
 
-Note on paths: every relative path in the sections above (`./bin/scrape`,
-`examples/`, `scrape/`, `tests/`, `./run-tests.sh`) is now relative to
-`Tooling/v1.0.0/`, not to the tool root. See
-[`CHANGE_LOG.md`](CHANGE_LOG.md) → `migrate-scrape-to-the-tooling-tests-layo_70b30a3b`.
+Two of the legacy sections get no entry here, and that is a real gap rather than
+a tidy one: `Anatomy of a config` is an annotated superset of TPL-01/02/03 and
+ships as no single form, and `Before you scrape` is a pre-flight checklist, not a
+use case. Neither has a template to cite. They stay `legacy` and exempt.
+
+Every relative path below and in the sections above (`./bin/scrape`, `examples/`,
+`scrape/`, `tests/`, `./run-tests.sh`) is relative to `Tooling/v1.0.0/`, not to
+the tool root — see
+[`CHANGE_LOG.md#a-layout-and-documents-migration-only-no_e4cf77a9`](CHANGE_LOG.md#a-layout-and-documents-migration-only-no_e4cf77a9).
+
+<a name="IMP-01"></a>
+## IMP-01
+
+**One docs page, ready for a model.** Scrape a single URL and write clean
+markdown with provenance frontmatter, sized for a prompt.
+
+```bash
+export FIRECRAWL_API_KEY=fc-...
+./bin/scrape url https://docs.example.com/guide -c examples/single-url.json -o guide.md
+```
+
+- **Template.** [`TEMPLATES.md#TPL-01`](TEMPLATES.md#TPL-01) — single URL → markdown (`examples/single-url.json`).
+- **Prose.** "Worked example: one docs page, ready for a model" above (legacy).
+
+<a name="IMP-02"></a>
+## IMP-02
+
+**A list of URLs that survives a bad page.** One URL per line, blank lines and
+`#` comments ignored; a failed page is recorded, not fatal (KI-01). The process
+exits `2` only if every URL failed.
+
+```bash
+./bin/scrape batch --input examples/urls.txt -c examples/batch-json.json -o pages.json
+cat examples/urls.txt | ./bin/scrape batch --format markdown > pages.md
+```
+
+- **Templates.** [`TEMPLATES.md#TPL-02`](TEMPLATES.md#TPL-02) — batch → JSON (`examples/batch-json.json`), and [`TEMPLATES.md#TPL-04`](TEMPLATES.md#TPL-04) — the URL-list input file (`examples/urls.txt`).
+- **Prose.** "Recipe: batch a list of URLs" above (legacy).
+
+<a name="IMP-03"></a>
+## IMP-03
+
+**Chunking for a context window.** Split one page into token-bounded pieces you
+can feed one per request. Sizes are the ~4-chars-per-token estimate (KI-06) —
+target ~80% of the model's real limit.
+
+```bash
+./bin/scrape url https://long.example.com/whitepaper -c examples/llm-chunks.json -o chunks.json
+```
+
+- **Template.** [`TEMPLATES.md#TPL-03`](TEMPLATES.md#TPL-03) — chunked config (`examples/llm-chunks.json`).
+- **Prose.** "Recipe: chunking for a context window" above (legacy).
+
+<a name="IMP-04"></a>
+## IMP-04
+
+**A backend that is not Firecrawl.** Implement `scrape(url) -> data` returning a
+Firecrawl-shaped dict, register the class in `BUILTIN_BACKENDS`, and select it
+with `--backend`. Take the injected `http` client so it stays offline-testable,
+never log the key (KI-04), and raise the package's error types so the engine's
+retry and batch policies apply unchanged.
+
+- **Template.** [`TEMPLATES.md#TPL-05`](TEMPLATES.md#TPL-05) — the new-backend class form.
+- **Prose.** "Adding a backend" above (legacy).
