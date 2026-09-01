@@ -118,7 +118,7 @@ is its output.
 
 ---
 
-## Adding a template
+### Adding a template
 
 A new API that fits the declarative shape is a new config in
 `Tooling/v<version>/examples/` and an entry here — heading = the bare id —

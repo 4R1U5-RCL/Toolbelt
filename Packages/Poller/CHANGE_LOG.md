@@ -115,3 +115,86 @@ edited, only its path.
   `IMPLEMENTATIONS.md` — those are section headings, not ids, and rewriting them
   is forbidden by invariant 2 (append-only). The appended entries point back at
   the sections they formalise.
+
+---
+
+## mark-the-nine-pre-conformance-implementa_42ed561b
+
+| Field | Value |
+|---|---|
+| **id** | `mark-the-nine-pre-conformance-implementa_42ed561b` |
+| **resolves** | [`KNOWN_ISSUES.md#packages-poller-failed-the-track-b-recip_d4d59cb2`](KNOWN_ISSUES.md#packages-poller-failed-the-track-b-recip_d4d59cb2) |
+| **iteration** | Mark the nine pre-conformance implementation sections legacy under PROCESS.md §9 and demote the five prose sections to level 3 under decision 18 |
+| **version** | v2.1.0 |
+| **branch** | `fix/legacy-poller` |
+| **merge_commit** | *(empty)* — not merged. Committed on `fix/legacy-poller`, awaiting the PR and human gate (PROCESS.md §6 steps 5–6) |
+
+**Id derivation.** `change-id` identity is the `iteration` field alone
+(`process.yaml` → `definitions.change-id.hash8.identity`). Canonicalised — strip
+inline markup (decision 19), trim, lowercase, collapse whitespace, strip trailing
+punctuation — that field reads
+
+```
+mark the nine pre-conformance implementation sections legacy under process.md §9 and demote the five prose sections to level 3 under decision 18
+```
+
+whose `sha256` begins `42ed561b`. `description` = the same field slugified and
+truncated to 40 characters.
+
+**No version bump.** Nothing under `Tooling/v2.1.0/` was touched; this iteration
+edits root documents only. `v2.1.0` is still unreleased and unmerged, so a bump
+would claim a release that never happened and orphan the rollback point — the
+same reasoning as `conformance-only-migration-of-the-existi_18d24e7c`.
+
+**Cause (Y).** Decision 17 (the grandfather covers all four entry documents) and
+decision 18 (prose sections are level 3 or lower) were both settled after the
+v2.1.0 conformance migration was written. The migration therefore left the nine
+pre-conformance `IMPLEMENTATIONS.md` guide sections without a `status` field and
+left five prose sections at level 2.
+
+**Outcome (X).** Track B failed Reciprocity on 14 level-2 headings — the nine
+guide sections plus five prose sections — each reported twice, for heading form
+and for citing no counterpart. Under §7 a tool failing Track B cannot release a
+new version, so `v2.1.0` was blocked.
+
+**Iteration (Z).** Mark the nine pre-conformance implementation sections legacy
+under PROCESS.md §9 and demote the five prose sections to level 3 under decision
+18. Explicitly **not** a rewrite: no recorded content is reworded, deleted or
+reordered, and no entry is edited in place.
+
+**Expected result (V).** Checkably:
+
+1. `python3 bin/trackb-check.py Packages/Poller` reports `PASS` on Reciprocity.
+2. Every one of the nine marked sections keeps its text verbatim; the only
+   addition is the `status` field §9 permits.
+3. The five demoted headings keep their text verbatim; only the `##` → `###`
+   level changes, which leaves their markdown anchors (`#adding-an-entry` and so
+   on) unchanged, so no existing link breaks.
+4. `Tooling/v2.1.0/` and `Tests/v2.1.0/` are untouched.
+
+**Change (W).**
+
+| What | Where | Verified by |
+|---|---|---|
+| Nine pre-conformance guide sections gained a `status` field reading `legacy` | `IMPLEMENTATIONS.md` | Checker counts 31 legacy entries (22 `KI-` + 9); form copied from `Packages/Scrape/IMPLEMENTATIONS.md` |
+| "Template index (appended 2026-08-31, v2.1.0 migration)" and "Implementation entries (appended 2026-09-01)" demoted to level 3 | `IMPLEMENTATIONS.md` | Both are section headings over appended material, not use cases — neither names a use case nor cites a template of its own |
+| "Adding an entry" and "Path note (appended 2026-08-31, v2.1.0 migration)" demoted to level 3 | `KNOWN_ISSUES.md` | Neither records an issue; "Path note" is a 2026-08-31 addition, so `legacy` would have been false |
+| "Adding a template" demoted to level 3 | `TEMPLATES.md` | Instructions for adding a template, not a template |
+| This entry and its issue counterpart appended | `CHANGE_LOG.md`, `KNOWN_ISSUES.md` | Decision 22 — a correction is appended, never written into the entry it corrects |
+
+**Honest limits of this iteration.**
+
+- The nine marked sections stay uncited by `TEMPLATES.md` and cite nothing back.
+  That is what the §9 grandfather means, not a reciprocity that now holds:
+  reciprocity is carried by the six `impl-*` entries appended at v2.1.0.
+- Five of the nine ("Anatomy of a config", "When declarative is not enough: a
+  Python source", "Choosing rails", "Running it", "Before you arm a watch") are
+  explanatory rather than application forms and have no template to cite, as the
+  Template index already records. They are marked `legacy` rather than demoted
+  because they are pre-conformance content in an append-only document (§5.2), and
+  `status: legacy` is the one edit §9 permits; demoting them would restructure
+  the guide, which invariant 2 forbids.
+- No test run accompanies this change and none is claimed. The logged failure is
+  a document-conformance failure, so the evidence that resolves it is the Track-B
+  result itself (§5.5, decision 10), not the `Tooling/v2.1.0/` suite — which was
+  not touched and whose recorded run under `Tests/v2.1.0/` still stands.
