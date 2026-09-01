@@ -1,0 +1,227 @@
+# Workflows/Review — Track-B conformance transcript, v1.0.0
+# branch: smoke/fix-workflows-review
+# host date (UTC): 2026-09-01T04:43:56Z
+# cwd: /studio/scratch/tb-wt/workflows-review/Workflows/Review
+#
+# This tool has no executable suite. Under PROCESS.md §4 (code-less tools)
+# and §5 invariant 5 as amended, the Track-B conformance result below IS the
+# recorded evidence. Nothing here was invented and nothing was re-worded to
+# make a check pass.
+
+###############################################################
+# PART 1 — is there an executable suite to run?
+###############################################################
+
+$ ls run-tests.sh Tooling/v1.0.0/run-tests.sh
+ls: cannot access 'run-tests.sh': No such file or directory
+ls: cannot access 'Tooling/v1.0.0/run-tests.sh': No such file or directory
+exit=2
+
+$ ls -d tests Tooling/v1.0.0/tests
+ls: cannot access 'tests': No such file or directory
+ls: cannot access 'Tooling/v1.0.0/tests': No such file or directory
+exit=2
+
+$ find . -type f \( -name '*.py' -o -name '*.sh' -o -name '*.ts' -o -name '*.js' -o -name '*.rb' -o -name '*.go' \) -print
+exit=0
+
+# -> no runner, no test directory, no executable file of any kind.
+#    VERDICT: no executable suite exists. None was run and none is claimed.
+
+###############################################################
+# PART 2 — the five Track-B checks of PROCESS.md §7
+###############################################################
+
+--- CHECK 1/5  Canonical files: all five of §3 exist and are non-empty
+$ for f in README.md IMPLEMENTATIONS.md TEMPLATES.md KNOWN_ISSUES.md CHANGE_LOG.md; do if [ -s "$f" ]; then printf 'PASS %-20s %6s bytes\n' "$f" "$(wc -c < "$f")"; else printf 'FAIL %-20s missing or empty\n' "$f"; fi; done
+PASS README.md              2592 bytes
+PASS IMPLEMENTATIONS.md     1840 bytes
+PASS TEMPLATES.md           1538 bytes
+PASS KNOWN_ISSUES.md       10916 bytes
+PASS CHANGE_LOG.md         14420 bytes
+exit=0
+
+--- CHECK 2/5  Reciprocity: every non-legacy entry cites its counterpart
+#   'entry' = a level-2 heading whose text is the bare id (definitions.entry).
+$ grep -n '^## ' KNOWN_ISSUES.md CHANGE_LOG.md IMPLEMENTATIONS.md TEMPLATES.md
+KNOWN_ISSUES.md:22:## workflows-review-fails-track-b-conforman_0b0b4b59
+KNOWN_ISSUES.md:97:## workflows-review-v1-0-0-migration-output_d18c44d1
+CHANGE_LOG.md:21:## create-the-process-md-section-3-document_cddfd0f4
+CHANGE_LOG.md:102:## repair-the-workflows-review-v1-0-0-migra_23ca8994
+exit=0
+
+$ grep -h '^| \*\*status\*\* |' KNOWN_ISSUES.md | grep -c 'legacy'; echo '(0 = no entry is legacy, so the §9 exemption applies to neither; both postdate PROCESS.md and reciprocity binds both)'
+0
+(0 = no entry is legacy, so the §9 exemption applies to neither; both postdate PROCESS.md and reciprocity binds both)
+exit=0
+
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/recip.py
+KNOWN_ISSUES.md entries: 2   CHANGE_LOG.md entries: 2
+  PASS  issue  workflows-review-fails-track-b-conforman_0b0b4b59
+        legacy=False  cites CHANGE_LOG: ['create-the-process-md-section-3-document_cddfd0f4']
+  PASS  issue  workflows-review-v1-0-0-migration-output_d18c44d1
+        legacy=False  cites CHANGE_LOG: ['repair-the-workflows-review-v1-0-0-migra_23ca8994']
+  PASS  change create-the-process-md-section-3-document_cddfd0f4
+        cites KNOWN_ISSUES: ['workflows-review-fails-track-b-conforman_0b0b4b59']
+  PASS  change repair-the-workflows-review-v1-0-0-migra_23ca8994
+        cites KNOWN_ISSUES: ['workflows-review-fails-track-b-conforman_0b0b4b59', 'workflows-review-v1-0-0-migration-output_d18c44d1']
+
+IMPLEMENTATIONS.md entries: 0   TEMPLATES.md entries: 0
+  PASS (vacuous) — zero entries on both sides, so no entry fails the check.
+        Stated as vacuous, not as a demonstrated pass. Nothing was
+        invented to populate either file and the check wording is unchanged.
+
+RECIPROCITY: PASS
+exit=0
+
+--- CHECK 3/5  Code layout: the tool sits under Tooling/v<version>/
+$ find Tooling -type f | sort
+Tooling/v1.0.0/REVIEW.md
+exit=0
+
+$ test -s Tooling/v1.0.0/REVIEW.md && echo 'PASS — Tooling/v1.0.0/REVIEW.md is the document that constitutes the tool (§4, code-less rule)'
+PASS — Tooling/v1.0.0/REVIEW.md is the document that constitutes the tool (§4, code-less rule)
+exit=0
+
+$ ls Tooling/v1.0.0/NOTE.md; echo '(exit 2 = the marker file the migration invented is gone)'
+ls: cannot access 'Tooling/v1.0.0/NOTE.md': No such file or directory
+(exit 2 = the marker file the migration invented is gone)
+exit=0
+
+$ grep -rc 'contains no code' Tooling/; echo '(0 = nothing under Tooling/ exists merely to announce emptiness)'
+Tooling/v1.0.0/REVIEW.md:0
+(0 = nothing under Tooling/ exists merely to announce emptiness)
+exit=0
+
+--- CHECK 4/5  Test layout: recorded results exist for the current version
+$ find Tests -type f | sort
+Tests/v1.0.0/RESULTS.md
+Tests/v1.0.0/track-b-checks.log
+exit=0
+
+$ test -s Tests/v1.0.0/RESULTS.md && echo 'PASS — Tests/v1.0.0/RESULTS.md is present and non-empty'
+PASS — Tests/v1.0.0/RESULTS.md is present and non-empty
+exit=0
+
+--- CHECK 5/5  Version agreement: README, newest Tooling/, newest CHANGE_LOG entry
+$ grep -o 'Current version: `v[0-9.]*`' README.md
+Current version: `v1.0.0`
+exit=0
+
+$ ls -1 Tooling/ | sort -V | tail -1
+v1.0.0
+exit=0
+
+$ grep -n '^| \*\*version\*\* |' CHANGE_LOG.md | tail -1 | cut -c1-60
+113:| **version** | **v1.0.0** — no bump. v1.0.0 has never
+exit=0
+
+###############################################################
+# PART 3 — vocabulary, heading form, ids, branch claims
+###############################################################
+
+--- Entry heading form: '## <bare id>', nothing else on the line
+$ grep -hn '^## ' KNOWN_ISSUES.md CHANGE_LOG.md | grep -Ev '^[0-9]+:## [a-z0-9]+(-[a-z0-9]+)*_[0-9a-f]{8}$'; echo '(exit 1 = every level-2 heading in both files is a bare id)'
+(exit 1 = every level-2 heading in both files is a bare id)
+exit=0
+
+$ grep -c '^<a name=' KNOWN_ISSUES.md CHANGE_LOG.md; echo '(0 in both = no standalone anchor tags remain, so the heading IS the anchor the citations resolve against)'
+KNOWN_ISSUES.md:0
+CHANGE_LOG.md:0
+(0 in both = no standalone anchor tags remain, so the heading IS the anchor the citations resolve against)
+exit=0
+
+--- Status vocabulary: the closed set of seven
+$ grep -h '^| \*\*status\*\* |' KNOWN_ISSUES.md
+| **status** | in-progress |
+| **status** | in-progress |
+exit=0
+
+$ grep -h '^| \*\*status\*\* |' KNOWN_ISSUES.md | grep -Ev '\| (open|planned|in-progress|resolved|escalated|legacy|wont-fix) \|'; echo '(exit 1 = every status is inside the closed set)'
+(exit 1 = every status is inside the closed set)
+exit=0
+
+--- Invariant: 'resolved' is never written with an empty merge_commit
+$ grep -h '^| \*\*merge_commit\*\* |' CHANGE_LOG.md
+| **merge_commit** | *(empty)* — not merged |
+| **merge_commit** | *(empty)* — not merged |
+exit=0
+
+$ grep -h '^| \*\*status\*\* |' KNOWN_ISSUES.md | grep -c 'resolved'; echo '(0 status fields read resolved, and both merge_commit fields are empty — consistent)'
+0
+(0 status fields read resolved, and both merge_commit fields are empty — consistent)
+exit=0
+
+--- Branch claims: every one names the real branch
+$ grep -rn 'smoke/fix-workflows-review' --include='*.md' . | wc -l
+12
+exit=0
+
+$ grep -h '^| \*\*branch\*\* |' CHANGE_LOG.md
+| **branch** | `smoke/fix-workflows-review` |
+| **branch** | `smoke/fix-workflows-review` |
+exit=0
+
+$ grep -rn 'No branch was created' --include='*.md' . | cut -c1-40; echo '(both hits are the round-1 claim QUOTED inside the defect record, not asserted)'
+./CHANGE_LOG.md:173:5. **Branch claims.*
+./Tests/v1.0.0/RESULTS.md:49:| Branch cl
+./KNOWN_ISSUES.md:141:5. **False branch 
+(both hits are the round-1 claim QUOTED inside the defect record, not asserted)
+exit=0
+
+--- Id reproduction with sha256sum, one identity field at a time
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/canon.py KNOWN_ISSUES.md summary 1; echo
+workflows/review fails track b conformance: four canonical documents missing, no tooling/ or tests/ directories, readme names no version, and the tool has no implementation at all
+exit=0
+
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/canon.py KNOWN_ISSUES.md summary 1 | sha256sum | cut -c1-8
+0b0b4b59
+exit=0
+
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/canon.py KNOWN_ISSUES.md summary 2 | sha256sum | cut -c1-8
+d18c44d1
+exit=0
+
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/canon.py CHANGE_LOG.md iteration 1 | sha256sum | cut -c1-8
+cddfd0f4
+exit=0
+
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/canon.py CHANGE_LOG.md iteration 2 | sha256sum | cut -c1-8
+23ca8994
+exit=0
+
+--- Id reproduction: full sweep, every entry, hash and slug compared to the heading
+$ python3 /tmp/claude-0/-studio/1b79d3ad-aaf8-4f11-bce8-765408a87d3b/scratchpad/ids.py
+== KNOWN_ISSUES.md  (identity = the `summary` field alone) ==
+  heading  : workflows-review-fails-track-b-conforman_0b0b4b59
+  summary   field: Workflows/Review fails Track B conformance: four canonical documents missing, no Tooling/ or Tests/ directories, README names no version, and the tool has no implementation at all
+  canonical: workflows/review fails track b conformance: four canonical documents missing, no tooling/ or tests/ directories, readme names no version, and the tool has no implementation at all
+  sha256   : 0b0b4b595f151433adecc5dff5ba9b31d3526abeb6c1c4d5645976ecdba7c542
+  computed : workflows-review-fails-track-b-conforman_0b0b4b59
+  PASS — reproduces
+
+  heading  : workflows-review-v1-0-0-migration-output_d18c44d1
+  summary   field: Workflows/Review v1.0.0 migration output fails Track B: an invented marker file stands in for the tool's documents under Tooling/, entry headings are backticked, the issue status is outside the closed set, the change-id derives from a non-identity field, and the change entry's branch claim is false
+  canonical: workflows/review v1.0.0 migration output fails track b: an invented marker file stands in for the tool's documents under tooling/, entry headings are backticked, the issue status is outside the closed set, the change-id derives from a non-identity field, and the change entry's branch claim is false
+  sha256   : d18c44d1d4959748e40a2d93e95b4f3caeee61c7427c333ee7ce8e2ecd960ee2
+  computed : workflows-review-v1-0-0-migration-output_d18c44d1
+  PASS — reproduces
+
+== CHANGE_LOG.md  (identity = the `iteration` field alone) ==
+  heading  : create-the-process-md-section-3-document_cddfd0f4
+  iteration field: Create the PROCESS.md section 3 document set and the section 4 version directories for Workflows/Review at v1.0.0, without inventing a workflow, a template or a test result
+  canonical: create the process.md section 3 document set and the section 4 version directories for workflows/review at v1.0.0, without inventing a workflow, a template or a test result
+  sha256   : cddfd0f43010257b313ee3a9555e067647a39c512822dfeacde64567bd1de854
+  computed : create-the-process-md-section-3-document_cddfd0f4
+  PASS — reproduces
+
+  heading  : repair-the-workflows-review-v1-0-0-migra_23ca8994
+  iteration field: Repair the Workflows/Review v1.0.0 migration output in place: delete the invented marker file, place the tool's constituting document under Tooling/v1.0.0/, restate both entry headings as bare ids, put every status inside the closed set, recompute both ids from their identity fields, and record the Track-B checks in Tests/v1.0.0/RESULTS.md as the tool's evidence
+  canonical: repair the workflows/review v1.0.0 migration output in place: delete the invented marker file, place the tool's constituting document under tooling/v1.0.0/, restate both entry headings as bare ids, put every status inside the closed set, recompute both ids from their identity fields, and record the track-b checks in tests/v1.0.0/results.md as the tool's evidence
+  sha256   : 23ca8994e1da1810e05d3eb6c5ffdb327553906527bae6e393f8ad4446650bc2
+  computed : repair-the-workflows-review-v1-0-0-migra_23ca8994
+  PASS — reproduces
+
+ID REPRODUCTION: PASS
+exit=0
+
