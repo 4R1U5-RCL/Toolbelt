@@ -13,8 +13,9 @@ Current version: **v1.0.0** — the files below live under
 
 ---
 
-<a name="tmpl-01"></a>
-## `TMPL-01` — `handoff-template.md`, the handoff document form
+## TMPL-01
+
+**`handoff-template.md` — the handoff document form.**
 
 **Used by** [`IMPL-01`](IMPLEMENTATIONS.md#impl-01),
 [`IMPL-02`](IMPLEMENTATIONS.md#impl-02),
@@ -55,8 +56,9 @@ asserts that every `## ` header in this file appears in a generated document.
 
 ---
 
-<a name="tmpl-02"></a>
-## `TMPL-02` — `commands/handoff.md`, the `/handoff` slash command
+## TMPL-02
+
+**`commands/handoff.md` — the `/handoff` slash command.**
 
 **Used by** [`IMPL-01`](IMPLEMENTATIONS.md#impl-01),
 [`IMPL-02`](IMPLEMENTATIONS.md#impl-02),

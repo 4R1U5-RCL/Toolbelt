@@ -1,4 +1,4 @@
-$ cd /studio/scratch/tb/Skills/Handoff/Tooling/v1.0.0 && bash tests/verify.sh
+$ cd /studio/scratch/tb-wt/skills-handoff/Skills/Handoff/Tooling/v1.0.0 && bash tests/verify.sh
   PASS · install: command file placed
   PASS · install: template placed
   PASS · guard passes when template present+non-empty
