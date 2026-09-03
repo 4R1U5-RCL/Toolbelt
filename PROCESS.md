@@ -383,6 +383,16 @@ question: **`Workflows/Audit` and `Workflows/Review` are one sentence each.**
 Both conform. Neither is useful. What they are meant to be is not written down
 anywhere in this repository.
 
+**Answered for `Workflows/Audit` on 2026-09-03, half of it.** The owner decision
+that finding called for was taken: the name is **retired at `v1.1.0`** rather
+than filled in, because "audit" named three unrelated capabilities (host
+integrity, app-surface security review, PROCESS.md conformance) and no single
+implementation could honour a name all three answer to. The host-integrity
+capability was built as **`Packages/Sentinel`**, which is a program and so
+belongs under `Packages/` rather than `Workflows/` (§2). See
+`Workflows/Audit/KNOWN_ISSUES.md#workflows-audit-is-a-reserved-name-carry_1ec09cf6`.
+**`Workflows/Review` is unchanged and the finding still stands for it.**
+
 Identity deliberately excludes the cause: an id must be computable at
 `check_existing`, which runs before the cause is determined. It also excludes
 `occurred_at` (which would prevent any two occurrences matching) and the tool

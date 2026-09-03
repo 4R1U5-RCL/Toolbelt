@@ -1,64 +1,69 @@
-# Workflows/Audit
+# Workflows/Audit — retired
 
-**Current version: `v1.0.0`** — the document that constitutes this tool is
-[`Tooling/v1.0.0/WORKFLOW.md`](Tooling/v1.0.0/WORKFLOW.md).
+**Current version: `v1.1.0`** — the document that constitutes this tool is
+[`Tooling/v1.1.0/WORKFLOW.md`](Tooling/v1.1.0/WORKFLOW.md).
+
+> **This name is retired. The capability lives at
+> [`Packages/Sentinel`](../../Packages/Sentinel).**
+
+## What was here
+
+Nothing that ran. From this directory's creation until the conformance migration
+of 2026-08-31, its entire content was one file containing one sentence:
 
 > This folder contains the audit workflow.
 
-That sentence, preserved above exactly as written, was the entire content of this
-file — and of this tool — until 2026-08-31. It is the only authored statement
-about `Workflows/Audit` anywhere in the repository, and it is what
-`Tooling/v1.0.0/` holds.
+That sentence named a folder rather than describing a process. It specified no
+audit target, no trigger, no standard, no output and no steps, and no other
+statement about this workflow existed anywhere in the repository. It is
+preserved verbatim at [`Tooling/v1.0.0/WORKFLOW.md`](Tooling/v1.0.0/WORKFLOW.md),
+which is immutable under PROCESS.md §4.
 
-## What is actually here
+The migration recorded in [`CHANGE_LOG.md`](CHANGE_LOG.md) made the tool
+conformant at `v1.0.0` — five canonical documents, version anchors, a recorded
+Track-B result — and deliberately authored no workflow logic, because composing
+steps from a sentence that names none would have been inventing a method and
+publishing it as a proven one. That left the tool conformant and inert, which is
+what `v1.1.0` resolves.
 
-**No program of any kind.** No script, no `bin/`, no `lib/`, no `commands/`, no
-`examples/`, no `templates/`, no `n8n/`, no config, no `tests/` and no
-`run-tests.sh`. Before the conformance migration recorded in
-[`CHANGE_LOG.md`](CHANGE_LOG.md) this directory contained exactly one file: this
-README. The verbatim `find` output establishing that is kept in
-[`Tests/v1.0.0/run-tests.log`](Tests/v1.0.0/run-tests.log).
+## Why it was retired instead of implemented
 
-`Workflows/Audit` is a **code-less tool** in the sense of PROCESS.md §4 — one
-that would be its documentation rather than a program. The difference here is
-that the documentation has not been written either: what sits under
-`Tooling/v1.0.0/` is the single sentence above, which names the workflow without
-describing it.
+"Audit" named three unrelated capabilities:
 
-## What the audit workflow does
+| The thing | Where it lives |
+|---|---|
+| Host integrity / rootkit sweeping | [`Packages/Sentinel`](../../Packages/Sentinel) |
+| App-surface security review — RLS, response headers, dependency scanning | a separate tool outside this repo |
+| Conformance of a tool against PROCESS.md | the Track-B checks of §7, run per tool |
 
-**Unknown from this repository.** The sentence above does not say which audit is
-meant, what it inspects, what triggers it, what it produces, or which tools or
-agents take part. A full-text search for "audit" across the Toolbelt repo turns
-up only this file, the `Workflows/Audit` row of the PROCESS.md §9 backlog table,
-and unrelated uses of the phrase "audit trail" in `Packages/Poller`,
-`Packages/Telegram` and `Workflows/Sprint`.
+No single implementation could honour a name all three answer to, and a reader
+who found this directory could not tell which of the three they had found.
+Sentinel is also a program, and `Workflows/` is for processes rather than
+programs (PROCESS.md §2). The reasoning in full:
+[`Tooling/v1.1.0/WORKFLOW.md`](Tooling/v1.1.0/WORKFLOW.md).
 
-Nothing further is claimed here, because anything further would be invented.
-PROCESS.md §1 notes that this repo is v2.0 of `operand-packages` and that not
-every tool has been transferred yet — an audit workflow may well exist elsewhere,
-but it has not landed here, and this README describes only what has.
+## If you want a workflow-shaped audit
+
+Open a new tool under a name that says which audit it is, and start at `v1.0.0`
+via PROCESS.md §6 step 1. Do not revive this directory — a live tool behind a
+document that says "retired" reads as a reversal rather than a supersession.
 
 ## Status
 
-**A reserved name awaiting its first implementation.** There is nothing here to
-run, copy or follow. If you came looking for a working audit workflow, this is
-not one yet — that gap is logged as
-[`workflows-audit-failed-track-b-conforman_fb119cc2`](KNOWN_ISSUES.md#workflows-audit-failed-track-b-conforman_fb119cc2)
-and closing it needs an owner decision about what this workflow should be.
-
-The tool is document-conformant at `v1.0.0` and its Track-B result is recorded
-in [`Tests/v1.0.0/RESULTS.md`](Tests/v1.0.0/RESULTS.md). **Conformance is not
-capability**: the checks describe the records, not the workflow.
+Retired at `v1.1.0`, superseded by `Packages/Sentinel`. Nothing here runs, and
+nothing here is expected to. The directory is kept because the record of a
+reserved name that was never built is the finding that produced the retirement.
 
 ## Files
 
 | Path | Holds |
 |---|---|
 | [`README.md`](README.md) | This file |
-| [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md) | Empty-but-valid — no implementation exists to describe |
+| [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md) | Empty-but-valid — no implementation ever existed to describe |
 | [`TEMPLATES.md`](TEMPLATES.md) | Empty-but-valid — no `templates/` directory and no template file exists |
-| [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | Two entries: the Track B conformance failure found 2026-08-31, and the defects found in its migration on 2026-09-01 |
-| [`CHANGE_LOG.md`](CHANGE_LOG.md) | Two entries: the migration, and the correction of its records |
-| [`Tooling/v1.0.0/`](Tooling/v1.0.0/) | The document that constitutes the tool at v1.0.0 — its complete authored substance, which is one sentence |
-| [`Tests/v1.0.0/`](Tests/v1.0.0/) | Recorded evidence for v1.0.0: **no executable suite exists**, plus the Track-B conformance checks run in its place (PROCESS.md §4, §5.5) |
+| [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | Three entries: the Track B failure, the defects in its migration, and the retirement |
+| [`CHANGE_LOG.md`](CHANGE_LOG.md) | Three entries: the migration, the correction of its records, and the retirement |
+| [`Tooling/v1.0.0/`](Tooling/v1.0.0/) | The tool's complete authored substance before retirement — one sentence. Immutable |
+| [`Tooling/v1.1.0/`](Tooling/v1.1.0/) | The retirement, and why the name was not filled in |
+| [`Tests/v1.0.0/`](Tests/v1.0.0/) | Recorded evidence for v1.0.0 — no executable suite exists; Track-B checks stand in |
+| [`Tests/v1.1.0/`](Tests/v1.1.0/) | Recorded evidence for v1.1.0 — same, for the retirement |

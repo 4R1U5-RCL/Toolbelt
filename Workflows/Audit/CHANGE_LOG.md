@@ -189,3 +189,41 @@ workflow itself is invented — no process steps, no program, no test run.
   the tool is one sentence. The check is satisfied as written; the tool is not
   useful. Both statements are true and neither is softened here.
 - **Nothing is merged.** Both issues stay `in-progress`.
+
+---
+
+## retire-workflows-audit-at-v1-1-0-keep-th_add8a5e2
+
+| Field | Value |
+|---|---|
+| **id** | `retire-workflows-audit-at-v1-1-0-keep-th_add8a5e2` |
+| **resolves** | [`KNOWN_ISSUES.md#workflows-audit-is-a-reserved-name-carry_1ec09cf6`](KNOWN_ISSUES.md#workflows-audit-is-a-reserved-name-carry_1ec09cf6) |
+| **cause** | The directory was created as a reserved name and no implementation was ever written; "audit" meanwhile named three unrelated capabilities across the system this repo serves, so the empty name could plausibly mean any of them |
+| **outcome** | A reader finding `Workflows/Audit` could not tell which audit they had found, or whether it was working, broken, superseded or never built |
+| **iteration** | Retire Workflows/Audit at v1.1.0: keep the directory as a signpost whose Tooling document records that the name is retired and where the capability went, and author no workflow logic for it |
+| **expected_result** | The repository answers "where does auditing live" unambiguously, and the history of a name reserved and never built stays readable rather than being deleted |
+| **change** | `Tooling/v1.1.0/WORKFLOW.md` — the retirement, the replacement, and why the name is retired rather than filled in; `Tests/v1.1.0/RESULTS.md` + `track-b.log`; `README.md` restated at v1.1.0. `Tooling/v1.0.0/` untouched |
+| **version** | `v1.1.0` |
+| **merge_commit** | — |
+
+**Why (Y → X → Z).** Because the directory was a reserved name that three
+different capabilities could answer to (cause Y), the repository could not tell a
+reader which audit lived here or whether it existed at all (outcome X). Iteration
+Z retires the name and points at
+[`Packages/Sentinel`](../../Packages/Sentinel), which is where the host-integrity
+capability was actually built.
+
+**Why not fill the name in.** Sentinel ships a program, and `Workflows/` is for
+processes rather than programs (PROCESS.md §2). Putting it here would have meant
+either mis-filing it or loosening the taxonomy to accommodate a single tool. And
+naming one of the three audits "Audit" silently excludes the other two behind a
+directory that looks general.
+
+**Why not delete the directory.** PROCESS.md §4 makes a released version
+directory immutable, and the record of a name that was reserved and never built
+is the useful history here — deleting it would erase the finding that produced
+this retirement.
+
+**Evidence.** [`Tests/v1.1.0/track-b.log`](Tests/v1.1.0/track-b.log). No
+executable suite exists; §5.5 and §8 make a recorded Track-B result the evidence
+a code-less tool merges on.
