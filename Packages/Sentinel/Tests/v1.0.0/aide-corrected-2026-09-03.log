@@ -32,8 +32,32 @@ exit=7   (1 new | 2 removed | 4 changed, OR'd)
   checksum. The deltas are a distribution upgrade, corroborated three ways.
 
 ## <host-b> — 132,000-entry host
-  Still executing at 1021s, 100% CPU, output buffered (AIDE writes at the end).
-  The 900s ssh session timeout fired first; the remote process survived it.
+exit=7
+  Total number of entries:  132038
+  Added entries:            54
+  Removed entries:          14
+  Changed entries:          3502
+
+  Changed, grouped by path:
+    2973  /usr/share      255  /opt/<app>      118  /usr/lib
+      92  /var/lib         14  /run/systemd     13  /usr/bin
+
+  ATTRIBUTION, two distinct causes:
+    a) /usr/*  -- unattended-upgrades ran 2026-09-01 06:38 (util-linux, bind9,
+       coreutils, libattr1, libssh, zlib). debsums exits 0 on this host: every
+       packaged file matches the distribution's checksum.
+    b) /opt/<app> (255 changed, plus most of the 54 added and 14 removed) --
+       the application's OWN live data: rotated backups, daily logs, per-player
+       plugin state, profiler temp files. This directory changes continuously by
+       design and is NOT excluded from the AIDE config.
+
+  TUNING GAP: watching an application's live data directory guarantees hundreds
+  of "changes" per day forever. Same class as the container-image-layer exclusion
+  already applied on <host-a>, which cut that baseline from 846,423 entries to
+  87,847. This one has not been done.
+
+  TIMING: this walk ran ~1,100s+ and the 900s ssh session timeout fired first;
+  the remote process survived it, which is the only reason a result exists.
   -> KNOWN_ISSUES.md#the-runner-s-fixed-900-second-command-ti_b1115836
   -> DEFAULT_TIMEOUT raised 900 -> 3600, per-host override, timeout given its
      own verdict so a slow check never again reads as an unreachable host.
