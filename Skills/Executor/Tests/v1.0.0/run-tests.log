@@ -1,0 +1,38 @@
+Executor v1.0.0 — process-gate self-test
+python3: Python 3.11.2
+
+test_approval_always_defers (__main__.Checks.test_approval_always_defers) ... ok
+test_bare_hash_is_not_a_citation (__main__.Checks.test_bare_hash_is_not_a_citation) ... ok
+test_clean_t1_passes_everything (__main__.Checks.test_clean_t1_passes_everything) ... ok
+test_failing_runner_fails (__main__.Checks.test_failing_runner_fails) ... ok
+test_missing_change_record_fails (__main__.Checks.test_missing_change_record_fails) ... ok
+test_missing_issue_citation_fails_reciprocity (__main__.Checks.test_missing_issue_citation_fails_reciprocity) ... ok
+test_pipeline_owned_path_fails_scope (__main__.Checks.test_pipeline_owned_path_fails_scope) ... ok
+test_t0_skips_record_checks (__main__.Checks.test_t0_skips_record_checks) ... ok
+test_t2_path_declared_t1_fails_floor (__main__.Checks.test_t2_path_declared_t1_fails_floor) ... ok
+test_t2_path_declared_t2_passes_floor (__main__.Checks.test_t2_path_declared_t2_passes_floor) ... ok
+test_t2_with_empty_rollback_heading_fails (__main__.Checks.test_t2_with_empty_rollback_heading_fails) ... ok
+test_t2_without_rollback_fails (__main__.Checks.test_t2_without_rollback_fails) ... ok
+test_undeclared_tier_fails (__main__.Checks.test_undeclared_tier_fails) ... ok
+test_unfilled_runner_defers (__main__.Checks.test_unfilled_runner_defers) ... ok
+test_unknown_runner_defers_on_t0 (__main__.Checks.test_unknown_runner_defers_on_t0) ... ok
+test_unknown_runner_fails_t1_per_inv4 (__main__.Checks.test_unknown_runner_fails_t1_per_inv4) ... ok
+test_clean_change_exits_zero (__main__.EndToEnd.test_clean_change_exits_zero) ... ok
+test_every_check_reports_a_status (__main__.EndToEnd.test_every_check_reports_a_status) ... ok
+test_unadopted_repo_defers_and_exits_zero (__main__.EndToEnd.test_unadopted_repo_defers_and_exits_zero) ... ok
+test_violation_exits_one (__main__.EndToEnd.test_violation_exits_one) ... ok
+test_block_list (__main__.SlotsParser.test_block_list) ... ok
+test_inline_list (__main__.SlotsParser.test_inline_list) ... ok
+test_missing_config_is_none (__main__.SlotsParser.test_missing_config_is_none) ... ok
+test_placeholder_detection (__main__.SlotsParser.test_placeholder_detection) ... ok
+test_scalar (__main__.SlotsParser.test_scalar) ... ok
+test_stops_at_next_top_level_key (__main__.SlotsParser.test_stops_at_next_top_level_key) ... ok
+test_every_invariant_in_prose_exists_in_yaml (__main__.Templates.test_every_invariant_in_prose_exists_in_yaml) ... ok
+test_prose_declares_yaml_normative (__main__.Templates.test_prose_declares_yaml_normative) ... ok
+test_yaml_template_ships_unfilled (__main__.Templates.test_yaml_template_ships_unfilled) ... ok
+test_yaml_template_slots_parse (__main__.Templates.test_yaml_template_slots_parse) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.125s
+
+OK

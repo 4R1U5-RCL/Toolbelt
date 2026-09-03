@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+"""process-gate — conformance checks for the Executor change process.
+
+Reads the adopting repo's `process.yaml` slots block, a pull-request body, and
+the list of changed paths, and reports one line per check.
+
+Stdlib only, deliberately: adopting repos must be able to run this without
+installing anything, and the `slots` block is specified flat so a narrow parser
+is sufficient.
+
+Exit 0 = no failures. Exit 1 = at least one FAIL.
+A check that cannot be answered reports DEFER and says why — it never passes
+quietly (EXECUTOR_PROCESS.md §11, INV-5).
+"""
+
+import argparse
+import fnmatch
+import os
+import re
+import sys
+
+PASS, FAIL, DEFER, SKIP = "PASS", "FAIL", "DEFER", "SKIP"
+
+
+# ---------------------------------------------------------------- slots parser
+def parse_slots(path):
+    """Parse the flat `slots:` block. Scalars, inline lists, and block lists."""
+    if not os.path.exists(path):
+        return None
+    slots, in_block, cur_key = {}, False, None
+    with open(path, encoding="utf-8") as fh:
+        for raw in fh:
+            line = raw.rstrip("\n")
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            if re.match(r"^slots:\s*$", line):
+                in_block = True
+                continue
+            if in_block and re.match(r"^\S", line):
+                break  # dedented to a new top-level key: block is over
+            if not in_block:
+                continue
+
+            m = re.match(r"^\s{2}([A-Za-z0-9_]+):\s*(.*)$", line)
+            if m:
+                cur_key, val = m.group(1), m.group(2).strip()
+                slots[cur_key] = _scalar(val) if val else []
+                continue
+            m = re.match(r"^\s{4,}-\s*(.+)$", line)
+            if m and cur_key:
+                if not isinstance(slots.get(cur_key), list):
+                    slots[cur_key] = []
+                slots[cur_key].append(_unquote(m.group(1).strip()))
+    return slots
+
+
+def _scalar(val):
+    if val.startswith("["):
+        inner = val[1:val.rindex("]")] if "]" in val else val[1:]
+        return [_unquote(p.strip()) for p in inner.split(",") if p.strip()]
+    return _unquote(val)
+
+
+def _unquote(val):
+    if val and val[0] in "\"'":
+        q = val[0]
+        end = val.find(q, 1)
+        if end > 0:
+            return val[1:end]
+    return val.split(" #")[0].strip()
+
+
+def is_placeholder(val):
+    return isinstance(val, str) and val.startswith("<") and val.endswith(">")
+
+
+# --------------------------------------------------------------------- helpers
+def matches_any(path, globs):
+    return any(fnmatch.fnmatch(path, g) for g in globs or [])
+
+
+def detect_tier(body):
+    m = re.search(r"\b(T[012])\b", body or "")
+    return m.group(1) if m else None
+
+
+def has_section(body, name):
+    """A named section with non-empty content beneath it."""
+    pat = re.compile(
+        rf"^\s*(?:#+\s*)?(?:\*\*)?{name}(?:\*\*)?\s*:?\s*$(.*?)(?=^\s*(?:#+\s*)?(?:\*\*)?\w[\w ]*(?:\*\*)?\s*:?\s*$|\Z)",
+        re.M | re.S | re.I,
+    )
+    m = pat.search(body or "")
+    if m:
+        return bool(m.group(1).strip())
+    inline = re.search(rf"^\s*(?:\*\*)?{name}(?:\*\*)?\s*:\s*(.+)$", body or "", re.M | re.I)
+    return bool(inline and inline.group(1).strip())
+
+
+def cites_issue(body, scheme):
+    body = body or ""
+    if scheme == "github":
+        return bool(re.search(r"\b(?:closes|fixes|resolves)\s+#\d+", body, re.I))
+    if scheme == "registry":
+        return bool(re.search(r"\b[A-Z]{2,4}-\d+\b", body))
+    return bool(re.search(r"\b[a-z0-9-]{3,40}_[0-9a-f]{8}\b", body))
+
+
+# ---------------------------------------------------------------------- checks
+def run_checks(slots, body, changed, runner_status):
+    results = []
+
+    def add(name, status, detail):
+        results.append((name, status, detail))
+
+    tier = detect_tier(body)
+    if tier:
+        add("tier-declared", PASS, f"declared {tier}")
+    else:
+        add("tier-declared", FAIL, "PR body names no tier (expected T0, T1 or T2)")
+
+    t2_globs = slots.get("s8_t2_paths") or []
+    hits = [p for p in changed if matches_any(p, t2_globs)]
+    if not t2_globs:
+        add("tier-floor", SKIP, "s8_t2_paths is empty — nothing forces T2")
+    elif hits and tier != "T2":
+        add("tier-floor", FAIL,
+            f"{len(hits)} path(s) match s8_t2_paths but tier is {tier or 'undeclared'}: {hits[:3]}")
+    else:
+        add("tier-floor", PASS, f"{len(hits)} T2-forcing path(s)")
+
+    ex_globs = slots.get("s9_excluded") or []
+    ex_hits = [p for p in changed if matches_any(p, ex_globs)]
+    if not ex_globs:
+        add("scope", SKIP, "s9_excluded is empty — nothing is out of scope")
+    elif ex_hits:
+        add("scope", FAIL,
+            f"{len(ex_hits)} path(s) are pipeline-owned and must not change here: {ex_hits[:3]}")
+    else:
+        add("scope", PASS, "no pipeline-owned paths touched")
+
+    needs_record = tier in ("T1", "T2")
+    scheme = slots.get("s5_id_scheme") or "github"
+
+    if not needs_record:
+        add("reciprocity", SKIP, f"tier {tier or '?'} carries no record")
+        add("change-record", SKIP, f"tier {tier or '?'} carries no record")
+    else:
+        if cites_issue(body, scheme):
+            add("reciprocity", PASS, f"PR cites an issue record ({scheme} scheme)")
+        else:
+            add("reciprocity", FAIL, f"PR cites no issue record ({scheme} scheme)")
+
+        cr = slots.get("s6_change_record")
+        if not cr or is_placeholder(cr):
+            add("change-record", DEFER, "s6_change_record is unfilled")
+        elif any(fnmatch.fnmatch(p, cr) or p == cr for p in changed):
+            add("change-record", PASS, f"{cr} updated")
+        else:
+            add("change-record", FAIL, f"{cr} carries no entry for this change")
+
+    if tier == "T2":
+        if has_section(body, "Rollback"):
+            add("rollback", PASS, "Rollback section present and non-empty")
+        else:
+            add("rollback", FAIL, "T2 change has no non-empty Rollback section")
+    else:
+        add("rollback", SKIP, f"tier {tier or '?'} does not require one")
+
+    runner = slots.get("s1_runner")
+    if runner_status == "pass":
+        add("evidence", PASS, f"{runner} passed on the head commit")
+    elif runner_status == "fail":
+        add("evidence", FAIL, f"{runner} did not pass")
+    elif not runner or is_placeholder(runner):
+        add("evidence", DEFER, "s1_runner is unfilled — no declared runner to check")
+    elif needs_record:
+        add("evidence", FAIL,
+            "runner result unknown, and INV-4 forbids merging a T1+ change without a recorded run")
+    else:
+        add("evidence", DEFER, "runner result unknown")
+
+    add("approval", DEFER,
+        "INV-8 is not mechanically enforceable without branch protection; "
+        "reported, never enforced")
+
+    return results
+
+
+# ------------------------------------------------------------------------ main
+def main():
+    ap = argparse.ArgumentParser(description="Executor conformance gate")
+    ap.add_argument("--config", default="process.yaml", help="repo process.yaml")
+    ap.add_argument("--body-file", help="file holding the PR body")
+    ap.add_argument("--changed-file", help="file holding changed paths, one per line")
+    ap.add_argument("--runner-status", choices=["pass", "fail", "unknown"], default="unknown")
+    args = ap.parse_args()
+
+    slots = parse_slots(args.config)
+    if slots is None:
+        print(f"DEFER  config          {args.config} not found — repo has not adopted Executor")
+        return 0
+
+    if args.body_file and os.path.exists(args.body_file):
+        with open(args.body_file, encoding="utf-8") as fh:
+            body = fh.read()
+    else:
+        body = os.environ.get("PR_BODY", "")
+
+    changed = []
+    if args.changed_file and os.path.exists(args.changed_file):
+        with open(args.changed_file, encoding="utf-8") as fh:
+            changed = [l.strip() for l in fh if l.strip()]
+
+    results = run_checks(slots, body, changed, args.runner_status)
+
+    width = max(len(n) for n, _, _ in results)
+    failures = 0
+    for name, status, detail in results:
+        print(f"{status:<6} {name:<{width}}  {detail}")
+        if status == FAIL:
+            failures += 1
+
+    print()
+    print(f"process-gate: {failures} failure(s)")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,28 @@
+<!-- Executor PR template. Install to .github/PULL_REQUEST_TEMPLATE.md.
+     process-gate reads this body — the headings below are what it looks for. -->
+
+**Tier:** T0 | T1 | T2
+<!-- T0 trivial · T1 standard · T2 blast-radius (see EXECUTOR_PROCESS.md §3).
+     A path matching slots.s8_t2_paths may not be declared below T2. -->
+
+Closes #
+<!-- T1+ only. The issue record this change resolves — reciprocity, §4. -->
+
+### X — outcome / need / trigger
+
+### Y — cause / rationale
+
+### Z — the change
+
+### V — expected result
+<!-- Checkable: a reviewer answers yes or no without re-deriving the problem.
+     "works correctly" fails this. "returns 429 with Retry-After" passes. -->
+
+### W — what changes, where, and how it is verified
+
+### Evidence
+<!-- The CI run. A committed artifact only where a human must SEE the output. -->
+
+**Rollback:**
+<!-- T2 only, and REQUIRED. The exact steps, validated before execution —
+     not asserted. Delete this line for T0/T1. -->
