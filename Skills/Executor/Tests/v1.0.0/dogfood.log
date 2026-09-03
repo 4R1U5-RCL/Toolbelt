@@ -1,0 +1,10 @@
+PASS   tier-declared  declared T1
+SKIP   tier-floor     s8_t2_paths is empty — nothing forces T2
+SKIP   scope          s9_excluded is empty — nothing is out of scope
+PASS   reciprocity    PR cites an issue record (github scheme)
+PASS   change-record  Skills/Executor/CHANGE_LOG.md updated
+SKIP   rollback       tier T1 does not require one
+PASS   evidence       bash Skills/Executor/Tooling/v1.0.0/tests/verify.sh passed on the head commit
+DEFER  approval       INV-8 is not mechanically enforceable without branch protection; reported, never enforced
+
+process-gate: 0 failure(s)

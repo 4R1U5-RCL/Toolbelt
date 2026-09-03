@@ -1,0 +1,34 @@
+Track B — conformance check, Skills/Executor, 2026-09-03T09:29:01Z
+
+== canonical files (all five exist and are non-empty) ==
+PASS  README.md            5413 bytes
+PASS  IMPLEMENTATIONS.md   5265 bytes
+PASS  TEMPLATES.md         4530 bytes
+PASS  KNOWN_ISSUES.md      5634 bytes
+PASS  CHANGE_LOG.md        4008 bytes
+
+== no bare README placeholder ==
+PASS  no extensionless README
+
+== reciprocity: KNOWN_ISSUES <-> CHANGE_LOG ==
+PASS  issue the-executor-placeholder-was-committed-a_e6332913 -> rename-the-placeholder-to-readme-md-and_2049c2a8
+PASS  issue process-gate-cannot-enforce-the-approval_de559760 -> report-approval-as-defer-rather-than-pas_5c19c849
+PASS  change rename-the-placeholder-to-readme-md-and_2049c2a8 -> the-executor-placeholder-was-committed-a_e6332913
+PASS  change report-approval-as-defer-rather-than-pas_5c19c849 -> process-gate-cannot-enforce-the-approval_de559760
+
+2 issue entries, 2 change entries, reciprocity HOLDS
+
+== reciprocity: IMPLEMENTATIONS <-> TEMPLATES ==
+PASS  impl imp-adopt-a-repo -> ['tpl-executor-process-md', 'tpl-executor-process-yaml']
+PASS  impl imp-install-the-gate -> ['tpl-process-gate-workflow']
+PASS  impl imp-run-a-t1-change -> ['tpl-pr-body']
+PASS  impl imp-run-a-t2-change -> ['tpl-pr-body']
+PASS  tmpl tpl-executor-process-yaml -> ['imp-adopt-a-repo']
+PASS  tmpl tpl-executor-process-md -> ['imp-adopt-a-repo']
+PASS  tmpl tpl-process-gate-workflow -> ['imp-install-the-gate']
+PASS  tmpl tpl-pr-body -> ['imp-run-a-t1-change', 'imp-run-a-t2-change']
+
+4 implementations, 4 templates, reciprocity HOLDS
+
+== version agreement ==
+README v1.0.0: 9 refs | Tooling: v1.0.0 | Tests: v1.0.0 | CHANGE_LOG: v1.0.0

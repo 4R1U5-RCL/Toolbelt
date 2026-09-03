@@ -1,0 +1,250 @@
+# Change Process — Executor template v1.0.0
+
+Binding rules for every change to this repository, and for any executor — human
+or agent — working in it.
+
+**Authority.** `executor-process.yaml` alongside this file is the **normative**
+form. This document explains and motivates; it states no rule the yaml does not.
+Where the two appear to disagree, **the yaml wins and this prose is the defect.**
+
+> Why that way round: in the source repo the prose carried rules the yaml lacked,
+> the yaml was authoritative, and two tools stayed silently unmergeable as a
+> result. Making the prose non-normative removes the failure class rather than
+> managing it.
+
+---
+
+## 1. Scope
+
+This governs changes made by an **executor** — anything that edits a tracked
+artifact and pushes it, whether a person or an agent. The repository is the unit
+of truth: if a change is not in git, it did not happen.
+
+It does **not** govern paths an automated pipeline owns (`s9_excluded`). Where a
+pipeline plans, generates, evaluates and deploys a change, that pipeline's own
+gates **are** the process and this document defers to them entirely. Two
+processes over one tree is worse than either alone.
+
+---
+
+## 2. Slots
+
+This repo fills the `slots` block of `executor-process.yaml`. Nothing is
+hardcoded in the template — a hardcoded test runner is what broke conformance for
+four tools in the source repo.
+
+| Slot | What it is |
+|---|---|
+| `s1_runner` | the command that runs this repo's suite |
+| `s2_gate_jobs` | CI job names that must be green |
+| `s3_branch` / `s3_naming` | default branch, and branch naming |
+| `s4_approver_t1` / `s4_approver_t2` | who may approve, per tier |
+| `s5_id_scheme` | how records are identified |
+| `s6_change_record` | where the change record lives |
+| `s7_issue_record` | where the issue record lives |
+| `s8_t2_paths` | globs that force tier T2 |
+| `s9_excluded` | globs a pipeline owns — out of scope |
+| `s10_adoption` | the adoption commit; everything before it is legacy |
+| `s11_rollback` | the exact revert command or steps |
+
+---
+
+## 3. Change tiers
+
+Every change declares a tier, and the tier selects how much process applies. A
+uniform ritual is fatal both ways: too heavy and it gets bypassed, too light and
+it is useless where it matters — **and a bypassed process is worse than none,
+because the record looks complete when it is not.**
+
+| Tier | Covers | Required |
+|---|---|---|
+| **T0** | typo, comment, docs, formatting, dependency bump with no behaviour change | branch → PR → green runner |
+| **T1** | bug fix, feature, refactor | the full path, §6 |
+| **T2** | schema migration, production deploy, credential rotation, data deletion, any shared or hosted rail, anything matching `s8_t2_paths` | T1 **plus** §10 |
+
+**Tier is declared, not inferred** — in the PR body, and checked (§11). A change
+touching `s8_t2_paths` may not be declared below T2. Spanning tiers, the highest
+applies.
+
+---
+
+## 4. The record
+
+Every T1+ change opens with a record written **before any source file is
+touched**. Five slots. The trigger renames the first two; the schema, the
+reciprocity rule and the conformance check never change.
+
+| Slot | Fix | Addition | Chore |
+|---|---|---|---|
+| **X** | outcome — what the error produced | need — what is missing | trigger — what prompted it |
+| **Y** | cause — the mechanism, not the symptom | rationale — why now, what it unblocks | rationale |
+| **Z** | the planned change | the planned change | the planned change |
+| **V** | expected result, checkable | expected result, checkable | expected result |
+| **W** | what changes, where, how verified | (same) | (same) |
+
+**V is the load-bearing slot.** "Checkable" means a reviewer can answer yes or no
+without re-deriving the problem. `works correctly` is not an expected result;
+`returns 429 with Retry-After instead of hanging` is.
+
+**Reciprocity.** The issue record and the change record each cite the other. A
+record that does not cite its counterpart is **incomplete**, and incompleteness
+is a conformance failure, not a style note. Where GitHub issues are the scheme
+this is free: `Closes #<n>` in the PR body links both directions.
+
+---
+
+## 5. Invariants
+
+Absolute. An executor that cannot proceed without breaking one **escalates**
+(§7) rather than proceeding.
+
+1. **Issue records are append-only.** A fix appends; it never edits the original
+   account of what happened.
+2. **Never fix blindly.** The record exists before any source file is touched.
+3. **Never commit to the default branch.** All work arrives through a PR.
+4. **No merge without a recorded run** of `s1_runner` that **exercises the stated
+   failure**. A green suite that does not touch the failure is not corroboration.
+5. **Never falsify a result.** A failing, skipped or unrun check is recorded as
+   failing, skipped or unrun. This binds hardest on agents, which can always
+   produce a plausible summary of a run that did not happen.
+6. **Same-turn recording.** If a session fixes something mid-work to continue, the
+   record is written in the same turn as the fix — so it cannot evaporate when
+   the session moves on.
+7. **The reviewer is never the author.** For an agent-authored change the reviewer
+   is a different model. Self-review is a rubber stamp, not a gate.
+8. **Approval and merge are separate acts.** A human approves; the executor
+   merges. An executor never merges without a recorded approval.
+
+---
+
+## 6. The procedure (T1)
+
+1. **Record.** Write the five slots of §4 as an issue record and a change record,
+   each citing the other. Nothing is touched before this exists.
+2. **Fix the rollback point.** Record the merge-base SHA and current release tag.
+   Git already holds the old bytes — no copy is taken, no directory frozen.
+3. **Branch** off `s3_branch`, named per `s3_naming`.
+4. **Iterate under the loop** (§7).
+5. **Open a PR** citing the issue record, declaring its tier, carrying evidence.
+6. **Human approval, then merge**, per `s4_approver_<tier>`. An unanswered gate
+   leaves the PR open and waiting — not a rejection, and never auto-advancing.
+7. **Record the outcome.** The change record gains the merge commit and version;
+   the issue record is appended `resolved`.
+
+---
+
+## 7. The loop and escalation
+
+`planning → executing → reviewing → testing → awaiting_human`. Review, test or
+the human may each send the work back to planning. On re-entry the failure is
+appended to the issue record **before** replanning.
+
+Bounded to **3 rounds**. Exhausting the bound escalates.
+
+**Escalate** means: stop the run, make no further changes, and report the current
+state — the issue, the PR, the branch, the round reached, and why the check could
+not be answered.
+
+An escalation is **neither a rejection nor a failure verdict. It is the absence
+of a verdict** — the work is left where it stands for a human to judge. Waiting
+on an unanswered human gate is not an escalation; the process is running, it is
+simply waiting.
+
+---
+
+## 8. Versioning
+
+**Git is the version system.** Version the artifact, never the directory.
+
+- Semver on the released artifact; annotated tags mark releases.
+- `s6_change_record` gains an entry per change.
+- The rollback point is a SHA and a tag, not a retained copy.
+
+Copying a source directory to `v<next>/` is right in a template repo, where files
+have no importers. **In a codebase it is not**: it doubles the tree, breaks
+import paths, forks the suite, and forces every later fix across every retained
+copy — for a guarantee git already provides.
+
+---
+
+## 9. Evidence
+
+The default carrier is **the CI run** — job, logs and result, linked from the PR.
+Not an assertion in the PR body.
+
+A committed `evidence/` artifact is required only where a human must *see* the
+output to judge it: a rendered surface, a migration's before/after, a deploy's
+live check. The exception, not the default home.
+
+---
+
+## 10. T2 — rollback and irreversible operations
+
+Additional to T1, and required **before execution**, not before merge:
+
+1. **A written rollback plan** naming the exact steps (`s11_rollback`),
+   **validated** — not asserted.
+2. **A named human gate** (`s4_approver_t2`), recorded.
+3. **Post-execution evidence** recorded verbatim, including what a partial
+   failure would have looked like.
+
+**Genuinely irreversible operations** — a dropped column, a sent message, a
+deleted host — are decomposed into reversible stages (expand/contract or
+equivalent) so each gate has something to reverse. **Never a bare irreversible
+step behind a single gate.** If it cannot be decomposed, it escalates to a human
+to execute, not to an executor agent.
+
+---
+
+## 11. Conformance — `process-gate`
+
+Checks run in CI, because a process enforced only by an executor choosing to
+comply is not enforced. Each **defers visibly rather than passing quietly** when
+it cannot run.
+
+| Check | Passes when |
+|---|---|
+| Tier declared | the PR body names T0, T1 or T2 |
+| Tier floor | no path matching `s8_t2_paths` in a PR declared below T2 |
+| Scope | no path matching `s9_excluded` (those belong to the pipeline) |
+| Reciprocity | a T1+ PR cites an issue record |
+| Change record | a T1+ PR adds an entry to `s6_change_record` |
+| Rollback | a T2 PR body has a non-empty `Rollback:` section |
+| Evidence | `s1_runner` passed on the head commit |
+
+**Approval (INV-8) is deliberately absent from this table.** On a free private
+repo GitHub offers no branch protection, so nothing can *prevent* a merge. The
+gate reports approval status; it cannot enforce it. Treating an unenforceable
+check as enforced is exactly the falsification INV-5 forbids.
+
+---
+
+## 12. Adoption and legacy
+
+Records predating `s10_adoption` are marked `legacy` and are **exempt from
+reciprocity**. A counterpart cannot be manufactured for them without inventing a
+change history that never happened, which INV-5 forbids outright.
+
+Marking a record `legacy` is the one permitted edit to a pre-existing record, and
+it adds a field rather than changing one — INV-1 still holds.
+
+The rules bind from `s10_adoption` forward. **Nothing is backfilled.**
+
+---
+
+## 13. Decisions
+
+Settled 2026-09-03, at adoption of this template.
+
+| # | Question | Resolution |
+|---|---|---|
+| 1 | Version directories in a codebase | **No.** Git + tags + change record (§8) |
+| 2 | Id scheme | **GitHub issue/PR numbers** where issues are used; an existing registry's prefixes otherwise; hashed slugs only where neither exists |
+| 3 | Evidence home | **The CI run** by default; a committed artifact only for human-judgement changes (§9) |
+| 4 | Risk tiers | **Three** — T0 / T1 / T2, declared in the PR and checked (§3) |
+| 5 | Triggers | **Three** — fix / addition / chore, over one five-slot schema (§4) |
+| 6 | Prose vs yaml authority | **Yaml normative, prose explanatory** — removes the drift class outright |
+| 7 | Reviewer | **Must differ from the author**; cross-model for agent-authored changes (INV-7) |
+| 8 | Canonical files per directory | **No per-directory rule.** A repo-root record; per-package only where the boundary is real |
+| 9 | Scope vs an automated pipeline | **Pipeline-owned paths defer to the pipeline** (`s9_excluded`, §1) |
+| 10 | Adoption | **Grandfather everything before `s10_adoption`** (§12) |

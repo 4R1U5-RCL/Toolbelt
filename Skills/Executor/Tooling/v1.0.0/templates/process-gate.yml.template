@@ -1,0 +1,66 @@
+# Executor — process-gate workflow.
+#
+# Install to .github/workflows/process-gate.yml in the adopting repo.
+# Vendor Tooling/v1.0.0/bin/process-gate to .github/bin/process-gate.
+#
+# Reads the repo's process.yaml slots; nothing is hardcoded here.
+name: process-gate
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  runner:
+    # The evidence check: the repo's declared runner (slots.s1_runner).
+    # Replace the run: step with that command — it is the ONE thing this
+    # template cannot fill for you.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Declared runner
+        run: |
+          echo "::error::replace this with slots.s1_runner before enabling the gate"
+          exit 1
+
+  gate:
+    needs: [runner]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: printf '%s' "$PR_BODY" > /tmp/pr-body.txt
+
+      - name: Collect changed paths
+        run: |
+          git diff --name-only \
+            "origin/${{ github.base_ref }}...${{ github.event.pull_request.head.sha }}" \
+            > /tmp/changed.txt
+          cat /tmp/changed.txt
+
+      - name: Map runner result
+        id: runner
+        run: |
+          case "${{ needs.runner.result }}" in
+            success) echo "status=pass"    >> "$GITHUB_OUTPUT" ;;
+            failure) echo "status=fail"    >> "$GITHUB_OUTPUT" ;;
+            *)       echo "status=unknown" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: process-gate
+        run: |
+          python3 .github/bin/process-gate \
+            --config process.yaml \
+            --body-file /tmp/pr-body.txt \
+            --changed-file /tmp/changed.txt \
+            --runner-status "${{ steps.runner.outputs.status }}"

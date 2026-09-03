@@ -1,0 +1,367 @@
+# =============================================================================
+# Executor — change procedure, machine-readable spec
+#
+# NORMATIVE. EXECUTOR_PROCESS.md alongside this file explains and motivates; it
+# states no rule this file does not. Where the two disagree, THIS FILE WINS and
+# the prose is the defect.
+#
+# Conventions:
+#   needs      = AND. Every id listed must have succeeded.
+#   gate       = `requires` (runs only if predecessors succeeded)
+#                `after`    (runs regardless of predecessor outcome)
+#   status     = succeeded | failed | skipped
+#   <S n>      = a per-repo slot, filled in `slots` below. NEVER hardcoded.
+# =============================================================================
+
+meta:
+  applies_to:    any repository that adopts this template and fills `slots`
+  template:      Skills/Executor
+  version:       1.0.0
+  governs:       "every change to a tracked artifact made by an executor —
+                  human or agent. The unit of truth is the repository"
+
+# ---------- SECTION 0: SLOTS -------------------------------------------------
+# A flat map. The gate parses this block only; keep it flat — scalars and
+# single-level lists. Every value below is a placeholder until an adopting repo
+# fills it.
+slots:
+  s1_runner:        "<command that runs this repo's suite>"
+  s2_gate_jobs:     ["process-gate"]
+  s3_branch:        "main"
+  s3_naming:        "<fix|feat|chore>/<slug>"
+  s4_approver_t1:   "<who may approve a T1 change>"
+  s4_approver_t2:   "<who may approve a T2 change>"
+  s5_id_scheme:     "github"          # github | registry | slug-hash
+  s6_change_record: "CHANGELOG.md"
+  s7_issue_record:  "github-issues"
+  s8_t2_paths:      []                # globs that force tier T2
+  s9_excluded:      []                # globs a pipeline owns; out of scope
+  s10_adoption:     "<sha>"           # everything before this is legacy
+  s11_rollback:     "<the exact revert command or steps>"
+
+# ---------- SECTION 1: SCOPE -------------------------------------------------
+scope:
+  governs:     paths not matching slots.s9_excluded
+  defers:      "paths matching slots.s9_excluded are owned by an automated
+                pipeline whose own gates ARE the process; this spec makes no
+                claim over them"
+  rationale:   "two processes over one tree is worse than either alone"
+
+# ---------- SECTION 2: TRIGGERS ----------------------------------------------
+# One record schema, five slots. The trigger renames X and Y only.
+triggers:
+  fix:
+    fires_when: an artifact produces an incorrect result or fails to run
+    x: outcome      # what the error produced
+    y: cause        # the mechanism, not the symptom
+  addition:
+    fires_when: a capability is wanted that does not exist
+    x: need         # what is missing
+    y: rationale    # why now, what it unblocks
+  chore:
+    fires_when: maintenance with no behaviour change intended
+    x: trigger      # what prompted it
+    y: rationale
+  common:
+    z: iteration        # the planned change
+    v: expected_result  # stated checkably
+    w: change           # what changes, where, how verified
+    carries: [summary, source, occurred_at, tier]
+
+# ---------- SECTION 3: TIERS -------------------------------------------------
+tiers:
+  t0:
+    covers:   typo, comment, docs, formatting, dependency bump with no
+              behaviour change
+    requires: [branch, pull_request, green_runner]
+    skips:    [record, loop, change_record]
+  t1:
+    covers:   bug fix, feature, refactor
+    requires: [record, rollback_point, branch, change_loop, pull_request,
+               evidence, human_approval, change_record]
+  t2:
+    covers:   schema migration, production deploy, credential rotation, data
+              deletion, any change to a shared or hosted rail, any path matching
+              slots.s8_t2_paths
+    requires: [t1, rollback_plan_validated, named_gate, post_execution_evidence]
+  rules:
+    - "tier is DECLARED by the author in the pull request, never inferred"
+    - "a change touching slots.s8_t2_paths may not be declared below t2"
+    - "when a change spans tiers, the highest applies"
+
+# ---------- SECTION 4: THE GRAPH ---------------------------------------------
+tasks:
+
+  capture:
+    needs:     []
+    consumes:  trigger payload
+    produces:  record_draft
+    gate:      —
+    actor:     executor
+    done_when: record_draft holds summary, source, occurred_at and tier
+
+  check_existing:
+    needs:     [capture]
+    produces:  existing_verdict
+    gate:      requires
+    actor:     executor
+    done_when: existing_verdict is `known` or `new`; if `known` it names the
+               matching record in slots.s7_issue_record
+    branches:  existing_check
+
+  attach_occurrence:
+    needs:     [check_existing]
+    produces:  <issue-ref> (occurrence appended)
+    gate:      requires
+    actor:     executor
+    done_when: the existing record gained one occurrence; no new record created
+
+  determine_x:
+    needs:     [check_existing]
+    produces:  x_statement
+    gate:      requires
+    actor:     executor
+    done_when: x_statement describes the observable effect, per triggers.<t>.x
+
+  determine_y:
+    needs:     [check_existing]
+    produces:  y_statement
+    gate:      requires
+    actor:     executor
+    done_when: y_statement names the mechanism, not the symptom
+
+  propose_z:
+    needs:     [determine_x, determine_y]
+    produces:  z_statement
+    gate:      requires
+    actor:     executor
+    done_when: z_statement names one planned change
+
+  state_v:
+    needs:     [propose_z]
+    produces:  expected_result
+    gate:      requires
+    actor:     executor
+    done_when: "expected_result is checkable — a reviewer can answer yes or no to
+                it without re-deriving the problem. `works correctly` fails this;
+                `returns 429 with Retry-After instead of hanging` passes"
+
+  state_w:
+    needs:     [state_v]
+    produces:  change_statement
+    gate:      requires
+    actor:     executor
+    done_when: change_statement names what changes, where, and how it is verified
+
+  write_issue:
+    needs:     [determine_x, determine_y, propose_z]
+    produces:  <issue-ref>
+    gate:      requires
+    actor:     executor
+    done_when: a record exists in slots.s7_issue_record with every `required`
+               field of issue-entry populated
+    invariant: INV-1 append only; INV-2 recorded before any source file is touched
+
+  write_change:
+    needs:     [write_issue, state_w]
+    produces:  <change-ref>
+    gate:      requires
+    actor:     executor
+    done_when: a change record exists citing <issue-ref>, and that issue record
+               cites <change-ref> back
+    invariant: reciprocity — a record not citing its counterpart is incomplete
+
+  fix_rollback_point:
+    needs:     []
+    produces:  rollback_ref
+    gate:      —
+    actor:     executor
+    done_when: the merge-base sha and current release tag are recorded
+    invariant: "git holds the old bytes. No copy is taken and no directory is
+                frozen — see EXECUTOR_PROCESS.md §8"
+
+  create_branch:
+    needs:     [fix_rollback_point, write_change]
+    produces:  branch_ref
+    gate:      requires
+    actor:     executor
+    done_when: a branch exists off slots.s3_branch named per slots.s3_naming and
+               the working tree is on it
+    invariant: INV-3 no commits to the default branch
+
+  run_change_loop:
+    needs:     [create_branch, write_change]
+    invokes:   change_loop
+    produces:  approved_change
+    gate:      requires
+    actor:     executor
+    done_when: change_loop exited via `approve`
+
+  open_pr:
+    needs:     [run_change_loop]
+    produces:  pull_request
+    gate:      requires
+    actor:     executor
+    done_when: the PR declares its tier, cites <issue-ref>, and carries evidence
+    invariant: INV-4 evidence is a run, never an assertion in the PR body
+
+  merge:
+    needs:     [open_pr]
+    produces:  merge_commit
+    gate:      requires
+    actor:     executor
+    done_when: the PR is merged and the branch deleted
+    invariant: INV-3 sole path to the default branch; INV-8 only after a
+               recorded approval from slots.s4_approver_<tier>
+
+  record_outcome:
+    needs:     [merge]
+    produces:  [<change-ref> (version + merge commit), <issue-ref> (resolved)]
+    gate:      requires
+    actor:     executor
+    done_when: the change record names the merge commit and released version, and
+               the issue record reads `resolved` citing it
+    invariant: INV-1 appended, never overwritten
+
+# ---------- SECTION 5: THE LOOP ----------------------------------------------
+loops:
+  change_loop:
+    inputs:  [record, branch_ref]
+    states:  [planning, executing, reviewing, testing, awaiting_human]
+    entry:   planning
+    transitions:
+      - "planning       --plan validated--> executing"
+      - "executing      --change written--> reviewing"
+      - "reviewing      --review_decision accept--> testing"
+      - "reviewing      --review_decision iterate--> planning"
+      - "testing        --test_decision pass--> awaiting_human"
+      - "testing        --test_decision fail--> planning"
+      - "awaiting_human --human_decision approve--> EXIT"
+      - "awaiting_human --human_decision reject--> planning"
+    on_reentry:    append the failure to the issue record BEFORE replanning
+    max_rounds:    3
+    on_exhaustion: escalate; do not continue iterating
+    returns:       approved_change
+
+# ---------- SECTION 6: THE BRANCHES ------------------------------------------
+branches:
+  existing_check:
+    at:           check_existing
+    evaluated_by: executor
+    test:         a record in slots.s7_issue_record already describes this
+    on_true:      attach_occurrence
+    on_false:     determine_x
+    on_unknown:   treat as new, and flag the record for review
+
+  review_decision:
+    at:           reviewing
+    evaluated_by: reviewer
+    test:         every item of expected_result is demonstrably met by the change
+    on_true:      testing
+    on_false:     planning
+    on_unknown:   escalate
+    invariant:    "INV-7 — the reviewer is never the author. For an
+                   agent-authored change the reviewer is a different model"
+
+  test_decision:
+    at:           testing
+    evaluated_by: ci
+    test:         "slots.s1_runner exits 0 AND the suite includes a test that
+                   exercises the stated failure"
+    on_true:      awaiting_human
+    on_false:     planning
+    on_unknown:   escalate
+    invariant:    "INV-4 — a green suite that does not touch the failure is not
+                   corroboration"
+
+  human_decision:
+    at:           awaiting_human
+    evaluated_by: human
+    test:         the approver named in slots.s4_approver_<tier> approves
+    on_true:      EXIT
+    on_false:     planning
+    on_unknown:   leave the PR open and wait; never auto-advance
+
+# ---------- SECTION 7: THE INVARIANTS ----------------------------------------
+# Absolute. An executor that cannot proceed without breaking one escalates.
+invariants:
+  INV-1: issue records are append-only; a fix appends and never edits the
+         original account of what happened
+  INV-2: never fix blindly — the record exists before any source file is touched
+  INV-3: never commit to slots.s3_branch; all work arrives through a pull request
+  INV-4: no merge without a recorded run of slots.s1_runner that exercises the
+         stated failure
+  INV-5: never falsify a result; a failing, skipped or unrun check is recorded as
+         failing, skipped or unrun
+  INV-6: same-turn recording — if a session fixes something mid-work to continue,
+         the record is written in the same turn as the fix
+  INV-7: the reviewer is never the author
+  INV-8: approval and merge are separate acts; an executor never merges without a
+         recorded approval
+
+# ---------- SECTION 8: CONSTRAINTS -------------------------------------------
+constraints:
+  - "task status is one of: succeeded | failed | skipped"
+  - "`gate: requires` passes on succeeded only; a skipped task's dependents are
+     themselves skipped, never blocked"
+  - "no task may write to slots.s3_branch; merge is the sole path"
+  - "records predating slots.s10_adoption are `legacy` and exempt from
+     reciprocity; nothing is backfilled"
+  - "marking a record `legacy` adds a field and changes none — INV-1 still holds"
+  - "a t2 change validates its rollback before EXECUTION, not before merge"
+  - "an irreversible operation is decomposed into reversible stages, or it
+     escalates to a human to execute"
+
+# ---------- SECTION 9: DEFINITIONS -------------------------------------------
+definitions:
+  escalate:
+    means:    stop the run, make no further changes, and report the current state
+              — the issue, the pull request, the branch, the round reached, and
+              why the check could not be answered
+    used_by:  [change_loop.on_exhaustion, review_decision.on_unknown,
+               test_decision.on_unknown]
+    not:      "a rejection, and not a failure verdict — it is the ABSENCE of a
+               verdict. The work is left where it stands for a human to judge.
+               Waiting on an unanswered human gate is NOT an escalation; the
+               process is running, it is simply waiting"
+
+  evidence:
+    default:  the run of slots.s1_runner in CI — job, logs and result, linked
+              from the pull request
+    artifact: "a committed file only where a human must SEE the output to judge
+               it — a rendered surface, a migration's before/after, a deploy's
+               live check. The exception, not the default home"
+    never:    an assertion in the pull request body
+
+  status:
+    values:     [open, planned, in-progress, resolved, escalated, legacy,
+                 wont-fix]
+    closed_set: yes — any other string is a conformance failure
+    meanings:
+      open:        recorded, no change planned yet
+      planned:     a change is written, not yet executed
+      in-progress: the loop is running on it
+      resolved:    merged; cites a merge commit
+      escalated:   the bound was exhausted or a check could not be answered
+      legacy:      predates slots.s10_adoption; exempt from reciprocity
+      wont-fix:    accepted and closed without a change; requires a reason
+    note:       "`resolved` is never written while the merge commit is empty — an
+                 approved-but-unmerged change is still `in-progress`"
+
+  issue-entry:
+    fields:    [id, summary, x, y, z, status, resolved_by, occurrences]
+    required:  [id, summary, x, y, z, status]
+    immutable: [id, summary]
+
+  change-entry:
+    fields:    [id, resolves, x, y, z, expected_result, change, version,
+                merge_commit]
+    required:  [id, resolves, z, expected_result, change]
+    immutable: [id, resolves]
+
+  version:
+    means:  semver on the RELEASED ARTIFACT, marked by an annotated tag
+    not:    "a directory. Copying a source tree to v<next>/ is correct in a
+             template repo where files have no importers; in a codebase it
+             doubles the tree, breaks import paths, forks the suite, and forces
+             every later fix across every retained copy. Git already holds it"
