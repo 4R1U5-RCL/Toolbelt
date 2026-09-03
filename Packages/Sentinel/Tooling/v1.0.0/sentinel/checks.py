@@ -16,7 +16,7 @@ from pathlib import Path
 from . import classify
 from .classify import CheckResult
 from .config import Host, SweepConfig
-from .errors import TransportError
+from .errors import CheckTimeout, TransportError
 from .runner import Runner
 
 # `aide --check` is run WITHOUT any `set -e` wrapper and its exit code is read
@@ -34,31 +34,31 @@ CHKROOTKIT_CMD = "chkrootkit -q"
 
 
 def run_aide(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:
-    result = runner.run(aide_command(host.aide_config))
+    result = runner.run(aide_command(host.aide_config), timeout=host.timeout)
     return classify.classify_aide(host.name, result.exit_code, result.stdout,
                                   result.stderr, config_path=host.aide_config)
 
 
 def run_aide_db_fingerprint(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:
     recorded = read_recorded_fingerprint(config.fingerprint_path(host))
-    result = runner.run(f"sha256sum {host.aide_db}")
+    result = runner.run(f"sha256sum {host.aide_db}", timeout=host.timeout)
     observed = result.stdout if result.exit_code == 0 else None
     return classify.classify_fingerprint(host.name, observed, recorded)
 
 
 def run_debsums(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:
-    result = runner.run(DEBSUMS_CMD)
+    result = runner.run(DEBSUMS_CMD, timeout=host.timeout)
     return classify.classify_debsums(host.name, result.exit_code, result.stdout, result.stderr)
 
 
 def run_rkhunter(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:
-    result = runner.run(RKHUNTER_CMD)
+    result = runner.run(RKHUNTER_CMD, timeout=host.timeout)
     return classify.classify_rootkit(host.name, "rkhunter", result.exit_code,
                                      result.stdout, result.stderr)
 
 
 def run_chkrootkit(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:
-    result = runner.run(CHKROOTKIT_CMD)
+    result = runner.run(CHKROOTKIT_CMD, timeout=host.timeout)
     return classify.classify_rootkit(host.name, "chkrootkit", result.exit_code,
                                      result.stdout, result.stderr)
 
@@ -91,6 +91,13 @@ def sweep_host(runner: Runner, host: Host, config: SweepConfig) -> list[CheckRes
     for name in host.checks:
         try:
             results.append(CHECKS[name](runner, host, config))
+        except CheckTimeout as exc:
+            # One slow check, not a dead host — keep sweeping.
+            results.append(CheckResult(
+                host.name, name, classify.ERROR,
+                f"check timed out after {host.timeout}s",
+                detail=f"{exc}. The host is reachable; raise this host's "
+                       f"`timeout` if the check legitimately takes longer."))
         except TransportError as exc:
             results.append(CheckResult(host.name, name, classify.ERROR,
                                        "host unreachable", detail=str(exc)))

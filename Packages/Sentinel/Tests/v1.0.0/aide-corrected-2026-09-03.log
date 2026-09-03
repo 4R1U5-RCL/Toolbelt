@@ -1,0 +1,46 @@
+# Packages/Sentinel — corrected AIDE run, 2026-09-03
+#
+# The run that proves the --config fix, and that produced the 900s timeout
+# finding. Executed by hand, not through the sweep, because the fix was still
+# being written when it started.
+#
+# Command: aide --config /etc/aide/aide.conf --check
+# Host identifiers redacted.
+
+## <host-a> — 88,000-entry host
+exit=7   (1 new | 2 removed | 4 changed, OR'd)
+  Total number of entries:  87854
+  Added entries:            27
+  Removed entries:          18
+  Changed entries:          1843
+
+  Changed, grouped by path:
+    995  /usr/share      206  /usr/bin       183  /var/lib
+    182  /usr/lib         47  /usr/sbin       34  /run/user
+      6  /etc/pam.d        6  /run/docker      5  /run/systemd
+  -> 1774 of 1843 under /usr (package-owned paths)
+
+  Removed entries are the superseded bind9 libraries:
+    libdns-9.20.24-1ubuntu0.2-Ubuntu.so   (upgraded to 1ubuntu0.3)
+    libisc / libisccc / libisccfg / libns  same version bump
+    + rotated dpkg backup files, + ephemeral journal stream sockets
+
+  ATTRIBUTION: unattended-upgrades ran 2026-09-02 06:07 and replaced
+  util-linux, login, diffutils, gnu-coreutils, openssl, bind9, zlib, cpio.
+  The AIDE baseline was taken 2026-09-01. debsums exited 0 on the same host
+  in the same window -- every packaged file matches the distribution's own
+  checksum. The deltas are a distribution upgrade, corroborated three ways.
+
+## <host-b> — 132,000-entry host
+  Still executing at 1021s, 100% CPU, output buffered (AIDE writes at the end).
+  The 900s ssh session timeout fired first; the remote process survived it.
+  -> KNOWN_ISSUES.md#the-runner-s-fixed-900-second-command-ti_b1115836
+  -> DEFAULT_TIMEOUT raised 900 -> 3600, per-host override, timeout given its
+     own verdict so a slow check never again reads as an unreachable host.
+
+## What this run establishes about the TOOL
+  1. --config fix works: AIDE executed and returned a real verdict (exit 7),
+     where the sweep of the same day returned exit 17 having checked nothing.
+  2. 900s was too short, measured rather than guessed this time.
+  3. The classifier's bitmask decode was correct on real output: exit 7
+     decomposes to new + removed + changed, and all three were present.

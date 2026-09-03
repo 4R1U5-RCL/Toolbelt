@@ -38,6 +38,7 @@ class Host:
     checks: tuple[str, ...]
     aide_db: str = "/var/lib/aide/aide.db"
     aide_config: str = "/etc/aide/aide.conf"
+    timeout: int = 3600
     local: bool = False
     identity: str = ""
     notes: str = ""
@@ -162,6 +163,7 @@ def _parse_host(entry: dict, index: int, manifest: Path) -> Host:
         checks=checks,
         aide_db=entry.get("aide_db", "/var/lib/aide/aide.db"),
         aide_config=entry.get("aide_config", "/etc/aide/aide.conf"),
+        timeout=int(entry.get("timeout", 3600)),
         local=local,
         identity=entry.get("identity", ""),
         notes=entry.get("notes", ""),

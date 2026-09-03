@@ -15,8 +15,9 @@ hashed over the `iteration` field alone.
 | [add-an-identity-field-to-the-host-config_09a88e07](#add-an-identity-field-to-the-host-config_09a88e07) | Configurable ssh identity | [the-ssh-runner-had-no-way-to-name-an-ide_86ed9055](KNOWN_ISSUES.md#the-ssh-runner-had-no-way-to-name-an-ide_86ed9055) | `v1.0.0` |
 | [pass-an-explicit-config-path-to-aide-con_ab659d01](#pass-an-explicit-config-path-to-aide-con_ab659d01) | AIDE gets an explicit `--config` | [aide-check-was-invoked-without-config-so_7932f6e0](KNOWN_ISSUES.md#aide-check-was-invoked-without-config-so_7932f6e0) | `v1.0.0` |
 | [capture-the-indented-file-and-hash-lines_c597ad8e](#capture-the-indented-file-and-hash-lines_c597ad8e) | rkhunter warnings name their file | [rkhunter-evidence-captured-only-the-warn_f8ba0431](KNOWN_ISSUES.md#rkhunter-evidence-captured-only-the-warn_f8ba0431) | `v1.0.0` |
+| [make-the-command-timeout-configurable-pe_e9639fc9](#make-the-command-timeout-configurable-pe_e9639fc9) | Per-host timeout, 3600s default | [the-runner-s-fixed-900-second-command-ti_b1115836](KNOWN_ISSUES.md#the-runner-s-fixed-900-second-command-ti_b1115836) | `v1.0.0` |
 
-All six carry an empty `merge_commit`: the work is on branch
+All seven carry an empty `merge_commit`: the work is on branch
 `feat/packages-sentinel` and has not merged. PROCESS.md §6 step 7 fills these in
 and moves the issues to `resolved`.
 
@@ -184,3 +185,35 @@ held; the report simply did not carry it.
 
 **Evidence.** `Tests/v1.0.0/rkhunter-format-2026-09-03.log` — the real three-line record
 format this parses, captured from the run that exposed the defect.
+
+
+---
+
+## make-the-command-timeout-configurable-pe_e9639fc9
+
+| Field | Value |
+|---|---|
+| **id** | `make-the-command-timeout-configurable-pe_e9639fc9` |
+| **resolves** | [`KNOWN_ISSUES.md#the-runner-s-fixed-900-second-command-ti_b1115836`](KNOWN_ISSUES.md#the-runner-s-fixed-900-second-command-ti_b1115836) |
+| **iteration** | Make the command timeout configurable per host and raise the sweep default to 3600 seconds, and report a timeout as its own verdict rather than as a transport failure |
+| **expected_result** | A full AIDE walk on a large host completes inside the timeout; a check that genuinely overruns is reported as having timed out, naming the check and the limit, and the host's remaining checks still run |
+| **change** | `sentinel/config.py` — `Host.timeout`; `sentinel/errors.py` — `CheckTimeout`; `sentinel/runner.py` — raises `CheckTimeout`, accepts a per-call timeout; `sentinel/checks.py` — `sweep_host` passes the host's timeout and handles a timeout separately from a transport failure; `tests/test_sweep.py` — `TestTimeout` |
+| **version** | `v1.0.0` |
+| **merge_commit** | — |
+
+**Why (Y → X → Z).** Because 900 seconds was guessed before any check had touched a real
+host, and because `FakeRunner` returns instantly so no test could contradict it (cause Y),
+a working AIDE check on the larger host was cut off at 920 seconds and would have been
+recorded as **"host unreachable"** (outcome X). Iteration Z raises the default to a
+measured 3600, makes it per-host, and gives a timeout its own vocabulary.
+
+**Why the wrong word mattered more than the wrong number.** A too-short timeout costs a
+re-run. Calling the result "unreachable" invents an infrastructure fault, and — because
+`sweep_host` breaks out of the loop on transport failure — silently drops the remaining
+checks for that host, including the `debsums` pass that would have shown the box was fine.
+
+**A timeout no longer ends the host's sweep.** It is one failed check, not a dead machine,
+so the sweep continues to the next check rather than abandoning the host.
+
+**Evidence.** `TestTimeout` in `Tests/v1.0.0/run-tests.log`, and the measured 920-second
+run recorded in `Tests/v1.0.0/aide-corrected-2026-09-03.log`.

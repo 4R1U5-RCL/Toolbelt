@@ -204,3 +204,60 @@ class TestOnlyFilter(unittest.TestCase):
             with contextlib.redirect_stderr(io.StringIO()):
                 code = cli.main(["--baselines", tmp, "sweep", "--only", "rkhunter"])
         self.assertEqual(code, 2)
+
+
+class TestTimeout(unittest.TestCase):
+    """A slow check is not an unreachable host.
+
+    Found when a corrected AIDE run on the larger host was still going at 920s
+    against a 900s limit. Reporting that as "host unreachable" invents an
+    infrastructure fault and — because a transport failure ends the host's sweep
+    — hides the checks that would have disproved it.
+    """
+
+    class Slow(Runner):
+        def run(self, command, timeout=0):
+            from sentinel.errors import CheckTimeout
+            if "aide" in command:
+                raise CheckTimeout(f"timed out after {timeout}s: {command}")
+            return type("R", (), {"command": command, "exit_code": 0,
+                                  "stdout": "", "stderr": "", "ok": True})()
+
+    def test_timeout_is_an_error_not_unreachable(self):
+        host = Host("h", "root@h", ("aide",), timeout=900)
+        results = checks.sweep_host(self.Slow(), host, SweepConfig(baselines_dir=Path("/x")))
+        self.assertEqual(results[0].verdict, classify.ERROR)
+        self.assertIn("timed out", results[0].headline)
+        self.assertNotIn("unreachable", results[0].headline)
+
+    def test_timeout_does_not_end_the_host_sweep(self):
+        """The debsums pass that would show the box is fine must still run."""
+        host = Host("h", "root@h", ("aide", "debsums"), timeout=900)
+        results = checks.sweep_host(self.Slow(), host, SweepConfig(baselines_dir=Path("/x")))
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[1].check, "debsums")
+        self.assertEqual(results[1].verdict, classify.CLEAN)
+
+    def test_unreachable_still_ends_the_host_sweep(self):
+        class Dead(Runner):
+            def run(self, command, timeout=0):
+                raise TransportError("ssh could not reach root@h")
+        host = Host("h", "root@h", ("aide", "debsums"), timeout=900)
+        results = checks.sweep_host(Dead(), host, SweepConfig(baselines_dir=Path("/x")))
+        self.assertEqual(len(results), 1)
+
+    def test_host_timeout_reaches_the_runner(self):
+        host = Host("h", "root@h", ("debsums",), timeout=1234)
+        seen = {}
+        class Recorder(Runner):
+            def run(self, command, timeout=0):
+                seen["timeout"] = timeout
+                return type("R", (), {"command": command, "exit_code": 0,
+                                      "stdout": "", "stderr": "", "ok": True})()
+        checks.sweep_host(Recorder(), host, SweepConfig(baselines_dir=Path("/x")))
+        self.assertEqual(seen["timeout"], 1234)
+
+    def test_default_timeout_is_measured_not_the_old_guess(self):
+        from sentinel.runner import DEFAULT_TIMEOUT
+        self.assertEqual(DEFAULT_TIMEOUT, 3600)
+        self.assertEqual(Host("h", "t", ()).timeout, 3600)

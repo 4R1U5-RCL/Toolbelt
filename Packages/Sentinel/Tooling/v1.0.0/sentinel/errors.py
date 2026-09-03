@@ -25,3 +25,14 @@ class BoundaryError(SentinelError):
 
 class TransportError(SentinelError):
     """A host could not be reached, or the remote command could not be started."""
+
+
+class CheckTimeout(SentinelError):
+    """A check overran its time limit.
+
+    Deliberately NOT a TransportError. A slow check is one failed check on a
+    reachable host; a transport failure means the host is gone. Conflating them
+    invents an infrastructure fault and — because a transport failure ends the
+    host's sweep — hides every check that would have disproved it. See
+    KNOWN_ISSUES.md#the-runner-s-fixed-900-second-command-ti_b1115836.
+    """

@@ -8,9 +8,9 @@ entry carrying the version that resolved it. Ids follow `process.yaml` →
 `definitions.issue-id`: `<description>_<hash8>`, hashed over the `summary` field
 alone (PROCESS.md §10.3).
 
-**Note on history.** All six entries were found while building `v1.0.0` —
-four of them by running the tool rather than by reading it, and the last two by the
-first full production sweep, before release. None is `legacy`:
+**Note on history.** All seven entries were found while building `v1.0.0` —
+five of them by running the tool rather than by reading it, and the last three by the
+first full production sweep and the corrected AIDE run that followed it, before release. None is `legacy`:
 no prior version exists for them to predate, so all four are bound by the §7
 reciprocity check.
 
@@ -22,8 +22,9 @@ reciprocity check.
 | [the-ssh-runner-had-no-way-to-name-an-ide_86ed9055](#the-ssh-runner-had-no-way-to-name-an-ide_86ed9055) | The SSH runner could not name an identity file, so a working key returned Permission denied | in-progress |
 | [aide-check-was-invoked-without-config-so_7932f6e0](#aide-check-was-invoked-without-config-so_7932f6e0) | `aide --check` ran without `--config`, so AIDE exited 17 and the primary integrity check never ran on either host | in-progress |
 | [rkhunter-evidence-captured-only-the-warn_f8ba0431](#rkhunter-evidence-captured-only-the-warn_f8ba0431) | rkhunter evidence named no file — 22 changed-file warnings rendered as 22 identical lines | in-progress |
+| [the-runner-s-fixed-900-second-command-ti_b1115836](#the-runner-s-fixed-900-second-command-ti_b1115836) | The 900s command timeout is shorter than a full AIDE check on a large host, so a slow check reads as an unreachable host | in-progress |
 
-**Why all six are `in-progress` and not `resolved`.** `merge_commit` is empty in
+**Why all seven are `in-progress` and not `resolved`.** `merge_commit` is empty in
 every cited change entry: the work sits unmerged on branch
 `feat/packages-sentinel`. `process.yaml → definitions.issue-status` is explicit —
 "`resolved` is never written while merge_commit is empty; an approved-but-unmerged
@@ -296,3 +297,46 @@ carries no information, for exactly the warning class that matters most.
 their header, emitting one evidence entry per record with the file named. Covered by
 `test_classify.py::TestRootkitScanners::test_property_warning_names_the_file`, which asserts
 against the real three-line rkhunter format captured in this run.
+
+
+---
+
+## the-runner-s-fixed-900-second-command-ti_b1115836
+
+| Field | Value |
+|---|---|
+| **id** | `the-runner-s-fixed-900-second-command-ti_b1115836` |
+| **summary** | The runner's fixed 900-second command timeout is shorter than a full AIDE check on a large host, so the check is cut off and reported as an unreachable host rather than as a slow one |
+| **outcome** | A corrected AIDE run on the larger host was still executing at 920 seconds when its SSH session was cut. In a sweep this would have raised `TransportError` and been recorded as **"host unreachable"** — a verdict that is not merely unhelpful but actively wrong: the host was reachable and the check was working |
+| **cause** | `runner.DEFAULT_TIMEOUT = 900` was chosen before any check had been run against a real host. A full `aide --check` walks every watched file and hashes it; on 132,000 entries that exceeds 900 seconds. The timeout was a guess, and nothing in the suite could contradict it because `FakeRunner` returns instantly |
+| **iteration** | Make the command timeout configurable per host and raise the sweep default to 3600 seconds, and report a timeout as its own verdict rather than as a transport failure |
+| **status** | `in-progress` |
+| **resolved_by** | [`CHANGE_LOG.md#make-the-command-timeout-configurable-pe_e9639fc9`](CHANGE_LOG.md#make-the-command-timeout-configurable-pe_e9639fc9), fix-version `v1.0.0` |
+| **occurrences** | 1 — 2026-09-03, corrected AIDE run following the first full sweep |
+
+### Outcome (X)
+
+Measured on the host: `aide` at 920 seconds elapsed, 100% CPU, output file still empty
+(AIDE buffers its report until the walk completes). The SSH session had already been
+terminated; the remote process survived it, which is why a result was recoverable at all.
+
+The damage is in the vocabulary. `sweep_host` catches `TransportError` and records
+**"host unreachable"**, then *stops sweeping that host* — so a merely slow machine would
+be reported as an unreachable one, with its remaining checks silently skipped. Of the two
+ways to be wrong here, this is the worse one: it invents an infrastructure problem that
+does not exist and hides the checks that would have disproved it.
+
+### Cause (Y)
+
+An unvalidated constant, and a test seam that could not challenge it. `FakeRunner` returns
+immediately by construction, so no test — however many — could have discovered that 900
+seconds is the wrong number. This is the same shape as
+[`…_7932f6e0`](#aide-check-was-invoked-without-config-so_7932f6e0): the suite exercises
+everything except the values that only contact with a real host can validate.
+
+### Iteration (Z)
+
+`Host.timeout` (default 3600), threaded through `sweep_host` to the runner, and a distinct
+`TimeoutError` mapped to its own message so a slow check never again reads as an
+unreachable host. The 3600 default is drawn from measurement — the larger host's full walk
+— not from a second guess.

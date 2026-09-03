@@ -45,6 +45,11 @@ human (a finding, or a host with no baseline), **2** a check could not be run at
 all. A finding outranks an error, so a sweep that both errored and found
 something exits 1 — a wrapper watching for 1 cannot miss it.
 
+**Cost.** A full sweep is minutes to tens of minutes per host: `aide --check`
+hashes every watched file. Measured at ~15 min for 88,000 entries and longer for
+132,000. `--only aide_db_fingerprint` is one `sha256sum` and takes seconds — use
+it for the frequent check and reserve the full sweep for a weekly slot.
+
 ## The checks
 
 | Check | Command | Needs a prior baseline? |
@@ -95,6 +100,16 @@ Re-baseline after any legitimate change to system binaries or config, and update
 the recorded hash **in the same change**, with a note saying what caused it. A
 baseline whose hash is stale is worse than none, because it trains the reader to
 ignore mismatches.
+
+**On a host running unattended upgrades, that is not an occasional event.** Both
+hosts this was built against auto-upgrade daily, and both baselines went stale
+within 24 hours of being taken: a security update replaced `util-linux`,
+`coreutils`, `login` and `openssl`, and the next sweep reported 1,843 changed
+entries — every one of them legitimate, and every one of them indistinguishable
+from a real finding *in the report*. Corroborating with `debsums` is what
+separates the two, since it compares against the distribution rather than
+against a local baseline. Plan for this before scheduling a sweep, or the sweep
+will cry wolf daily and be ignored inside a fortnight.
 
 ## Tests
 

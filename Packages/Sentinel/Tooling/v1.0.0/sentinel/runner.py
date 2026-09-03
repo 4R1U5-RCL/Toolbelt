@@ -18,9 +18,12 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import TransportError
+from .errors import CheckTimeout, TransportError
 
-DEFAULT_TIMEOUT = 900
+# Measured, not guessed: a full `aide --check` over ~132,000 entries exceeded 900s
+# on the larger host. The first value here was a guess and FakeRunner returns
+# instantly, so no test could have contradicted it.
+DEFAULT_TIMEOUT = 3600
 
 
 @dataclass(frozen=True)
@@ -126,5 +129,5 @@ def _spawn(argv: list[str], command: str, timeout: int) -> CommandResult:
     except FileNotFoundError as exc:
         raise TransportError(f"cannot execute {shlex.join(argv[:1])}: {exc}") from exc
     except subprocess.TimeoutExpired as exc:
-        raise TransportError(f"timed out after {timeout}s: {command}") from exc
+        raise CheckTimeout(f"timed out after {timeout}s: {command}") from exc
     return CommandResult(command, proc.returncode, proc.stdout or "", proc.stderr or "")

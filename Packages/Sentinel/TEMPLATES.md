@@ -68,6 +68,7 @@ Goes in the **baselines directory** — never in this repo.
       "identity": "~/.ssh/id_ed25519_sweep",
       "aide_db": "/var/lib/aide/aide.db",
       "aide_config": "/etc/aide/aide.conf",
+      "timeout": 3600,
       "checks": ["aide", "aide_db_fingerprint", "debsums", "rkhunter"],
       "notes": "Baseline 2026-09-01. Container layers excluded — see aide.conf.d/."
     },
@@ -85,7 +86,9 @@ Goes in the **baselines directory** — never in this repo.
 is how an unattended sweep authenticates: without it, ssh picks whatever key it
 likes and a working key reads as a host problem. `aide_config` defaults to
 `/etc/aide/aide.conf` and is required on Debian/Ubuntu, where AIDE has no
-compiled-in default and exits 17 without one.
+compiled-in default and exits 17 without one. `timeout` defaults to 3600
+seconds per check — a full AIDE walk over ~132,000 entries took more than 900,
+so raise it rather than lower it on a large or slow host.
 
 ---
 

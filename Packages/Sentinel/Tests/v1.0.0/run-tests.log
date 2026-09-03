@@ -1,11 +1,11 @@
 # Packages/Sentinel v1.0.0 — declared runner
 # Command: ./run-tests.sh
-# Host: container at /studio, python3 3.11.2
-# Date: 2026-09-03T08:41:54Z
+# Date: 2026-09-03T09:00:36Z
 #
-# 67 tests. The 12 added on 2026-09-03 close the gap the first production
-# sweep exposed: tests/test_checks.py asserts on the COMMAND STRINGS, which
-# nothing did when 55 tests passed over a tool whose primary check could not run.
+# 72 tests. The 17 added on 2026-09-03 close what the first production sweep
+# and the corrected AIDE run exposed: command strings, rkhunter record parsing,
+# and timeout-vs-unreachable. None of these could fail before, because every
+# test fed a pure function inputs the test itself supplied.
 
 test_config_error_is_not_a_finding_about_the_host (tests.test_checks.TestAideConfigError.test_config_error_is_not_a_finding_about_the_host) ... ok
 test_config_error_names_the_path (tests.test_checks.TestAideConfigError.test_config_error_names_the_path) ... ok
@@ -81,8 +81,14 @@ test_tampered_host_reports_a_finding (tests.test_sweep.TestSweepHost.test_tamper
 test_unreachable_host_is_an_error_and_stops_that_host (tests.test_sweep.TestSweepHost.test_unreachable_host_is_an_error_and_stops_that_host)
 An unreachable host must never render as a clean one. ... ok
 test_unrecorded_host_is_unbaselined (tests.test_sweep.TestSweepHost.test_unrecorded_host_is_unbaselined) ... ok
+test_default_timeout_is_measured_not_the_old_guess (tests.test_sweep.TestTimeout.test_default_timeout_is_measured_not_the_old_guess) ... ok
+test_host_timeout_reaches_the_runner (tests.test_sweep.TestTimeout.test_host_timeout_reaches_the_runner) ... ok
+test_timeout_does_not_end_the_host_sweep (tests.test_sweep.TestTimeout.test_timeout_does_not_end_the_host_sweep)
+The debsums pass that would show the box is fine must still run. ... ok
+test_timeout_is_an_error_not_unreachable (tests.test_sweep.TestTimeout.test_timeout_is_an_error_not_unreachable) ... ok
+test_unreachable_still_ends_the_host_sweep (tests.test_sweep.TestTimeout.test_unreachable_still_ends_the_host_sweep) ... ok
 
 ----------------------------------------------------------------------
-Ran 67 tests in 0.016s
+Ran 72 tests in 0.017s
 
 OK
