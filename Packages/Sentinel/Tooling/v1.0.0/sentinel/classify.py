@@ -36,6 +36,11 @@ AIDE_DIFF_BITS = AIDE_NEW | AIDE_REMOVED | AIDE_CHANGED  # 7
 # unimplemented function, invalid config line, IO error, version mismatch).
 AIDE_ERROR_FLOOR = 14
 
+# 15 (invalid argument) and 17 (invalid config line) are how AIDE reports that it
+# could not read a config. Worth naming the path in the message: the operator's
+# next move is to check that file, not to suspect the host.
+AIDE_CONFIG_ERRORS = (15, 17)
+
 AIDE_BIT_LABELS = ((AIDE_NEW, "new files"),
                    (AIDE_REMOVED, "removed files"),
                    (AIDE_CHANGED, "changed files"))
@@ -64,7 +69,8 @@ def describe_aide_bits(code: int) -> str:
     return ", ".join(found) if found else "differences"
 
 
-def classify_aide(host: str, exit_code: int, stdout: str, stderr: str = "") -> CheckResult:
+def classify_aide(host: str, exit_code: int, stdout: str, stderr: str = "",
+                  config_path: str = "") -> CheckResult:
     """Classify an `aide --check` run.
 
     0            -> clean
@@ -85,6 +91,16 @@ def classify_aide(host: str, exit_code: int, stdout: str, stderr: str = "") -> C
             exit_code=exit_code,
             evidence=_entry_lines(stdout),
         )
+
+    if exit_code in AIDE_CONFIG_ERRORS:
+        where = f" — could not read {config_path}" if config_path else ""
+        return CheckResult(
+            host, "aide", ERROR,
+            f"AIDE could not read its configuration (exit {exit_code}){where}",
+            detail=("AIDE ran but never checked anything. Debian and Ubuntu ship no "
+                    "default config path, so --config is required. This is a setup "
+                    "fault, not a finding about the host."),
+            exit_code=exit_code)
 
     if exit_code >= AIDE_ERROR_FLOOR:
         return CheckResult(host, "aide", ERROR,
@@ -170,8 +186,7 @@ def classify_rootkit(host: str, tool: str, exit_code: int, stdout: str,
         return CheckResult(host, tool, SKIPPED, f"{tool} is not installed",
                            exit_code=exit_code)
 
-    warnings = [line.strip() for line in stdout.splitlines()
-                if "Warning:" in line or "INFECTED" in line]
+    warnings = _rootkit_records(stdout)
     if warnings:
         return CheckResult(host, tool, FINDING,
                            f"{tool} raised {len(warnings)} warning(s)",
@@ -204,6 +219,40 @@ def _not_installed(exit_code: int, stdout: str, stderr: str) -> bool:
         return True
     complaint = stderr.lower()
     return "command not found" in complaint or ": not found" in complaint
+
+
+def _rootkit_records(stdout: str) -> list[str]:
+    """Group each rkhunter/chkrootkit warning with the lines that describe it.
+
+    A property warning is a RECORD, not a line: a `Warning:` header followed by
+    indented `File:` / `Current hash:` / `Stored hash:` lines that carry the only
+    information an operator can act on. Filtering for `Warning:` alone keeps the
+    header and throws away the subject — 22 warnings that all read the same and
+    name nothing. See
+    KNOWN_ISSUES.md#rkhunter-evidence-captured-only-the-warn_f8ba0431.
+    """
+    records: list[str] = []
+    current: list[str] | None = None
+    for raw in stdout.splitlines():
+        line = raw.rstrip()
+        if not line:
+            continue
+        is_header = "Warning:" in line or "INFECTED" in line
+        # A continuation is indented and belongs to the header above it.
+        is_continuation = raw[:1].isspace() and current is not None
+
+        if is_header:
+            if current:
+                records.append(" ".join(current))
+            current = [line.strip()]
+        elif is_continuation:
+            current.append(line.strip())
+        elif current:
+            records.append(" ".join(current))
+            current = None
+    if current:
+        records.append(" ".join(current))
+    return records
 
 
 def _entry_lines(stdout: str) -> list[str]:

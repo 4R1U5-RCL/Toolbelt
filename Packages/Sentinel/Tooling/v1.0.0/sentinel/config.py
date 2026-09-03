@@ -37,6 +37,7 @@ class Host:
     target: str
     checks: tuple[str, ...]
     aide_db: str = "/var/lib/aide/aide.db"
+    aide_config: str = "/etc/aide/aide.conf"
     local: bool = False
     identity: str = ""
     notes: str = ""
@@ -160,6 +161,7 @@ def _parse_host(entry: dict, index: int, manifest: Path) -> Host:
         target=target,
         checks=checks,
         aide_db=entry.get("aide_db", "/var/lib/aide/aide.db"),
+        aide_config=entry.get("aide_config", "/etc/aide/aide.conf"),
         local=local,
         identity=entry.get("identity", ""),
         notes=entry.get("notes", ""),

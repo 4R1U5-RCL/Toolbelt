@@ -1,0 +1,32 @@
+# rkhunter warning format — captured 2026-09-03
+#
+# The record shape classify._rootkit_records parses. A property warning is a
+# HEADER plus indented continuation lines; the header alone names nothing,
+# which is the defect logged as
+# KNOWN_ISSUES.md#rkhunter-evidence-captured-only-the-warn_f8ba0431.
+#
+# Source: /var/log/rkhunter.log on <host-a>. File paths are real; hashes are
+# real; the host is redacted.
+
+Warning: The file properties have changed:
+         File: /usr/bin/su
+         Current hash: 45886109bfb4ae626eb861bd949f17cec9e1eb1b345587cb22582c37a5f61c7b
+Warning: The file properties have changed:
+         File: /usr/bin/sudo
+         Current hash: 2eb5d31f91a12d75a2a05b54b7f79775e5565898af0b3263414fcabaad922afb
+Warning: The SSH configuration option 'PermitRootLogin' has not been set.
+Warning: Hidden file found: /etc/.updated: ASCII text
+
+# The 22 files flagged in that run, in full:
+#   /usr/sbin/fsck  /usr/sbin/nologin  /usr/sbin/sulogin
+#   /usr/bin/cp  /usr/bin/df  /usr/bin/diff  /usr/bin/dmesg  /usr/bin/ipcs
+#   /usr/bin/logger  /usr/bin/login  /usr/bin/more  /usr/bin/mount  /usr/bin/mv
+#   /usr/bin/newgrp  /usr/bin/su  /usr/bin/sudo  /usr/bin/whereis
+#   /usr/bin/gnucp  /usr/bin/gnudf  /usr/bin/gnumv
+#   /usr/lib/cargo/bin/su  /usr/lib/cargo/bin/sudo
+#
+# Attribution, established after the run: the rkhunter property database was
+# built 2026-09-01 06:19; unattended-upgrades replaced util-linux, login,
+# diffutils and gnu-coreutils on 2026-09-02 06:07. debsums passed on the same
+# host in the same sweep, confirming every one of these matches the
+# distribution's own checksum. Stale local baseline, not a finding.

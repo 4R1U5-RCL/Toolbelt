@@ -134,3 +134,43 @@ class TestWorst(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRootkitRecordParsing(unittest.TestCase):
+    """rkhunter warnings are three-line RECORDS, not lines.
+
+    The real format, captured from the sweep of 2026-09-03 that exposed the
+    defect: a Warning: header, then indented File: / Current hash: lines.
+    """
+
+    REAL = """Warning: The file properties have changed:
+         File: /usr/bin/su
+         Current hash: 45886109bfb4ae626eb861bd949f17cec9e1eb1b345587cb22582c37a5f61c7b
+         Stored hash: 0e8d1e0f0f7c9c9a1a1e0c8b7a6f5e4d3c2b1a09876543210fedcba987654321
+Warning: The file properties have changed:
+         File: /usr/bin/sudo
+         Current hash: 2eb5d31f91a12d75a2a05b54b7f79775e5565898af0b3263414fcabaad922afb
+Warning: The SSH configuration option 'PermitRootLogin' has not been set.
+"""
+
+    def test_property_warning_names_the_file(self):
+        result = classify.classify_rootkit("h", "rkhunter", 1, self.REAL)
+        self.assertEqual(result.verdict, classify.FINDING)
+        joined = " ".join(result.evidence)
+        self.assertIn("/usr/bin/su", joined)
+        self.assertIn("/usr/bin/sudo", joined)
+
+    def test_one_record_per_warning_not_per_line(self):
+        result = classify.classify_rootkit("h", "rkhunter", 1, self.REAL)
+        self.assertEqual(len(result.evidence), 3)
+
+    def test_records_are_distinguishable_from_each_other(self):
+        result = classify.classify_rootkit("h", "rkhunter", 1, self.REAL)
+        self.assertEqual(len(set(result.evidence)), 3,
+                         "identical evidence lines are what this fix removes")
+
+    def test_standalone_warning_still_captured(self):
+        result = classify.classify_rootkit("h", "rkhunter", 1,
+                                           "Warning: Hidden file found: /etc/.updated\n")
+        self.assertEqual(len(result.evidence), 1)
+        self.assertIn("/etc/.updated", result.evidence[0])

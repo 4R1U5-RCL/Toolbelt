@@ -1,26 +1,27 @@
 # Packages/Sentinel v1.0.0 — Track B conformance (PROCESS.md §7)
-# Date: 2026-09-03T08:13:19Z
-# Run by hand, as every Track-B result in this repo so far has been (PROCESS.md §4).
+# Date: 2026-09-03T08:42:43Z
+# Re-run after the two defects found by the first production sweep were fixed.
 
 ## Check 1 — canonical files: all five of §3 exist and are non-empty
-  PASS  README.md            5528 bytes
-  PASS  IMPLEMENTATIONS.md   3550 bytes
-  PASS  TEMPLATES.md         3274 bytes
-  PASS  KNOWN_ISSUES.md      12183 bytes
-  PASS  CHANGE_LOG.md        8136 bytes
+  PASS  README.md            5767 bytes
+  PASS  IMPLEMENTATIONS.md   3895 bytes
+  PASS  TEMPLATES.md         3464 bytes
+  PASS  KNOWN_ISSUES.md      18176 bytes
+  PASS  CHANGE_LOG.md        12502 bytes
 
 ## Check 2 — reciprocity: every non-legacy entry cites its counterpart
-  KNOWN_ISSUES.md -> CHANGE_LOG.md
-    PASS  aide-check-exits-non-zero-when-it-succee_d4e cited by CHANGE_LOG (2)
-    PASS  host-baselines-were-committed-into-the-t_9d0 cited by CHANGE_LOG (2)
-    PASS  the-not-installed-heuristic-matched-not_a90b cited by CHANGE_LOG (2)
-    PASS  the-ssh-runner-had-no-way-to-name-an-ide_86e cited by CHANGE_LOG (2)
-  CHANGE_LOG.md -> KNOWN_ISSUES.md
-    PASS  read-the-exit-code-as-a-bitmask-and-clas_e65 cited by KNOWN_ISSUES (1)
-    PASS  resolve-the-baselines-directory-at-run-t_6ae cited by KNOWN_ISSUES (1)
-    PASS  narrow-the-not-installed-heuristic-to-th_a25 cited by KNOWN_ISSUES (1)
-    PASS  add-an-identity-field-to-the-host-config_09a cited by KNOWN_ISSUES (1)
-  IMPLEMENTATIONS.md <-> TEMPLATES.md
+    PASS  issue  aide-check-exits-non-zero-when-it-succee_d4e
+    PASS  issue  host-baselines-were-committed-into-the-t_9d0
+    PASS  issue  the-not-installed-heuristic-matched-not_a90b
+    PASS  issue  the-ssh-runner-had-no-way-to-name-an-ide_86e
+    PASS  issue  aide-check-was-invoked-without-config-so_793
+    PASS  issue  rkhunter-evidence-captured-only-the-warn_f8b
+    PASS  change read-the-exit-code-as-a-bitmask-and-clas_e65
+    PASS  change resolve-the-baselines-directory-at-run-t_6ae
+    PASS  change narrow-the-not-installed-heuristic-to-th_a25
+    PASS  change add-an-identity-field-to-the-host-config_09a
+    PASS  change pass-an-explicit-config-path-to-aide-con_ab6
+    PASS  change capture-the-indented-file-and-hash-lines_c59
     PASS  imp-scheduled-sweep      cited by TEMPLATES
     PASS  imp-fleet-config         cited by TEMPLATES
     PASS  imp-rebaseline           cited by TEMPLATES
@@ -29,26 +30,16 @@
     PASS  tpl-rebaseline           cited by IMPLEMENTATIONS
 
 ## Check 3 — code layout: the tool's code sits under Tooling/v<version>/
-    Tooling/v1.0.0/bin/sentinel
-    Tooling/v1.0.0/sentinel/__init__.py
-    Tooling/v1.0.0/sentinel/__main__.py
-    Tooling/v1.0.0/sentinel/checks.py
-    Tooling/v1.0.0/sentinel/classify.py
-    Tooling/v1.0.0/sentinel/cli.py
-    Tooling/v1.0.0/sentinel/config.py
-    Tooling/v1.0.0/sentinel/errors.py
-    Tooling/v1.0.0/sentinel/report.py
-    Tooling/v1.0.0/sentinel/runner.py
-    Tooling/v1.0.0/tests/__init__.py
-    Tooling/v1.0.0/tests/test_classify.py
-    Tooling/v1.0.0/tests/test_config.py
-    Tooling/v1.0.0/tests/test_sweep.py
-    -> all code under Tooling/v1.0.0/: yes (nothing outside)
+    python modules under Tooling/v1.0.0/: 14
+    python files anywhere else:           0
 
 ## Check 4 — test layout: recorded results exist for the current version
+    RESULTS.md
     boundary-guard-2026-09-03.log
     live-sweep-2026-09-03.log
+    rkhunter-format-2026-09-03.log
     run-tests.log
+    sweep-2026-09-03-first-full-run.log
     track-b.log
 
 ## Check 5 — version agreement
@@ -60,3 +51,5 @@
 ## Verdict
 
 All five Track B checks PASS. Packages/Sentinel is conformant at v1.0.0.
+Conformance is not capability: see RESULTS.md for what the first production
+sweep found, and what 55 passing tests failed to catch.

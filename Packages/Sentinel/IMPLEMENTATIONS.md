@@ -31,6 +31,12 @@ monitoring dies.
 --check` does, so `set -e` kills the wrapper at the moment the tool works. See
 [`KNOWN_ISSUES.md#aide-check-exits-non-zero-when-it-succee_d4ecdc86`](KNOWN_ISSUES.md#aide-check-exits-non-zero-when-it-succee_d4ecdc86).
 
+**Prove it runs before you trust the schedule.** A scheduled sweep that errors is
+indistinguishable from one that is clean if nobody reads the report, and the first
+production run of this tool returned `ERROR` for AIDE on every host because of a
+missing `--config`. Run it by hand once per host and read the output before wiring
+it to a timer.
+
 **Cadence.** Daily for `aide_db_fingerprint` (one `sha256sum` per host, seconds).
 Weekly for the full sweep — `aide --check` over ~88,000 entries plus `debsums`
 plus `rkhunter` is minutes of CPU, and one of the hosts this was built for holds

@@ -21,15 +21,22 @@ from .runner import Runner
 
 # `aide --check` is run WITHOUT any `set -e` wrapper and its exit code is read
 # rather than trusted to be zero. See classify.classify_aide.
-AIDE_CMD = "aide --check"
+#
+# The `--config` is NOT optional. Debian and Ubuntu compile AIDE with no default
+# config path, so the bare `aide --check` exits 17 demanding one and the check
+# never runs at all. See
+# KNOWN_ISSUES.md#aide-check-was-invoked-without-config-so_7932f6e0.
+def aide_command(config_path: str) -> str:
+    return f"aide --config {config_path} --check"
 DEBSUMS_CMD = "debsums -c"
 RKHUNTER_CMD = "rkhunter --check --skip-keypress --report-warnings-only"
 CHKROOTKIT_CMD = "chkrootkit -q"
 
 
 def run_aide(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:
-    result = runner.run(AIDE_CMD)
-    return classify.classify_aide(host.name, result.exit_code, result.stdout, result.stderr)
+    result = runner.run(aide_command(host.aide_config))
+    return classify.classify_aide(host.name, result.exit_code, result.stdout,
+                                  result.stderr, config_path=host.aide_config)
 
 
 def run_aide_db_fingerprint(runner: Runner, host: Host, config: SweepConfig) -> CheckResult:

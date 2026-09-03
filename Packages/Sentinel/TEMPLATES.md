@@ -67,6 +67,7 @@ Goes in the **baselines directory** — never in this repo.
       "target": "root@203.0.113.10",
       "identity": "~/.ssh/id_ed25519_sweep",
       "aide_db": "/var/lib/aide/aide.db",
+      "aide_config": "/etc/aide/aide.conf",
       "checks": ["aide", "aide_db_fingerprint", "debsums", "rkhunter"],
       "notes": "Baseline 2026-09-01. Container layers excluded — see aide.conf.d/."
     },
@@ -82,7 +83,9 @@ Goes in the **baselines directory** — never in this repo.
 
 `name` must match the directory holding that host's `aide.db.sha256`. `identity`
 is how an unattended sweep authenticates: without it, ssh picks whatever key it
-likes and a working key reads as a host problem.
+likes and a working key reads as a host problem. `aide_config` defaults to
+`/etc/aide/aide.conf` and is required on Debian/Ubuntu, where AIDE has no
+compiled-in default and exits 17 without one.
 
 ---
 

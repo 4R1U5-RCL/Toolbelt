@@ -1,0 +1,64 @@
+# Packages/Sentinel — FIRST FULL PRODUCTION SWEEP, 2026-09-03
+#
+# Kept because it is the run that found two defects in this tool, and because it
+# is the honest record of what v1.0.0 did before they were fixed:
+#
+#   1. AIDE never ran, on either host — the command lacked --config, so AIDE
+#      exited 17. Classified ERROR (never clean), which is the only reason this
+#      was survivable. -> aide-check-was-invoked-without-config-so_7932f6e0
+#   2. 22 rkhunter warnings rendered as 22 identical lines naming no file.
+#      -> rkhunter-evidence-captured-only-the-warn_f8ba0431
+#
+# The 22 files were core system binaries changed by an unattended upgrade on
+# 2026-09-02, one day after the rkhunter baseline was taken on 09-01, and
+# confirmed legitimate by debsums passing on the same host in the same sweep.
+#
+# Host identifiers redacted.
+
+Sentinel — host integrity sweep
+Run: 2026-09-03T08:36:44Z
+Verdict: FINDING
+
+## <host-a> — finding
+  [ERROR] aide: AIDE failed to run (exit 17)
+      ERROR: missing configuration (use '--config' '--before' or '--after' command line parameter)
+  [ok] aide_db_fingerprint: aide.db matches its off-host record
+  [ok] debsums: every packaged file matches the distribution checksum
+  [FINDING] rkhunter: rkhunter raised 25 warning(s)
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The file properties have changed:
+      | Warning: The SSH configuration option 'PermitRootLogin' has not been set.
+      | Warning: Hidden file found: /etc/.resolv.conf.systemd-resolved.bak: ASCII text
+      | Warning: Hidden file found: /etc/.updated: ASCII text
+
+## <host-b> — finding
+  [ERROR] aide: AIDE failed to run (exit 17)
+      ERROR: missing configuration (use '--config' '--before' or '--after' command line parameter)
+  [ok] aide_db_fingerprint: aide.db matches its off-host record
+  [ok] debsums: every packaged file matches the distribution checksum
+  [FINDING] rkhunter: rkhunter raised 3 warning(s)
+      | Warning: The SSH configuration option 'PermitRootLogin' has not been set.
+      | Warning: Hidden file found: /etc/.resolv.conf.systemd-resolved.bak: ASCII text
+      | Warning: Hidden file found: /etc/.updated: ASCII text
+
+Note: A clean result proves no watched file changed since the baseline was taken. It does not prove the host is clean: a first baseline enshrines whatever was already there, and a competent implant defeats file-integrity, distribution checksums and signature scanning alike.

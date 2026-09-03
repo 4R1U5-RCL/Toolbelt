@@ -49,11 +49,15 @@ something exits 1 — a wrapper watching for 1 cannot miss it.
 
 | Check | Command | Needs a prior baseline? |
 |---|---|---|
-| `aide` | `aide --check` | yes |
+| `aide` | `aide --config <aide_config> --check` | yes |
 | `aide_db_fingerprint` | `sha256sum <aide_db>` vs the off-host record | yes |
 | `debsums` | `debsums -c` | **no** — the distribution's own checksums are the reference |
 | `rkhunter` | `rkhunter --check --skip-keypress --report-warnings-only` | no |
 | `chkrootkit` | `chkrootkit -q` | no |
+
+The `--config` is not optional: Debian and Ubuntu compile AIDE with no default
+config path, so a bare `aide --check` exits 17 and checks nothing. Set
+`aide_config` per host if yours is not at `/etc/aide/aide.conf`.
 
 `aide_db_fingerprint` is the tamper-evidence check and the reason a copy of the
 hash lives off the host at all: **a compromised host can rewrite its own

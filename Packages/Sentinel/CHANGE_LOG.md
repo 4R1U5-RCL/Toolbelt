@@ -13,8 +13,10 @@ hashed over the `iteration` field alone.
 | [resolve-the-baselines-directory-at-run-t_6aebf499](#resolve-the-baselines-directory-at-run-t_6aebf499) | Baselines outside the repo, enforced by a guard | [host-baselines-were-committed-into-the-t_9d09c448](KNOWN_ISSUES.md#host-baselines-were-committed-into-the-t_9d09c448) | `v1.0.0` |
 | [narrow-the-not-installed-heuristic-to-th_a252c780](#narrow-the-not-installed-heuristic-to-th_a252c780) | Absent-tool detection reads stderr only | [the-not-installed-heuristic-matched-not_a90badf2](KNOWN_ISSUES.md#the-not-installed-heuristic-matched-not_a90badf2) | `v1.0.0` |
 | [add-an-identity-field-to-the-host-config_09a88e07](#add-an-identity-field-to-the-host-config_09a88e07) | Configurable ssh identity | [the-ssh-runner-had-no-way-to-name-an-ide_86ed9055](KNOWN_ISSUES.md#the-ssh-runner-had-no-way-to-name-an-ide_86ed9055) | `v1.0.0` |
+| [pass-an-explicit-config-path-to-aide-con_ab659d01](#pass-an-explicit-config-path-to-aide-con_ab659d01) | AIDE gets an explicit `--config` | [aide-check-was-invoked-without-config-so_7932f6e0](KNOWN_ISSUES.md#aide-check-was-invoked-without-config-so_7932f6e0) | `v1.0.0` |
+| [capture-the-indented-file-and-hash-lines_c597ad8e](#capture-the-indented-file-and-hash-lines_c597ad8e) | rkhunter warnings name their file | [rkhunter-evidence-captured-only-the-warn_f8ba0431](KNOWN_ISSUES.md#rkhunter-evidence-captured-only-the-warn_f8ba0431) | `v1.0.0` |
 
-All four carry an empty `merge_commit`: the work is on branch
+All six carry an empty `merge_commit`: the work is on branch
 `feat/packages-sentinel` and has not merged. PROCESS.md §6 step 7 fills these in
 and moves the issues to `resolved`.
 
@@ -123,3 +125,62 @@ argument for PROCESS.md invariant 5 in miniature.
 **Evidence.** `TestSshIdentity` in `Tests/v1.0.0/run-tests.log`, and the live
 two-host sweep in `Tests/v1.0.0/live-sweep-2026-09-03.log` that only became
 possible after this change.
+
+
+---
+
+## pass-an-explicit-config-path-to-aide-con_ab659d01
+
+| Field | Value |
+|---|---|
+| **id** | `pass-an-explicit-config-path-to-aide-con_ab659d01` |
+| **resolves** | [`KNOWN_ISSUES.md#aide-check-was-invoked-without-config-so_7932f6e0`](KNOWN_ISSUES.md#aide-check-was-invoked-without-config-so_7932f6e0) |
+| **iteration** | Pass an explicit --config path to aide, configurable per host and defaulting to /etc/aide/aide.conf, and classify AIDE's configuration-error codes as an error that names the config it could not read |
+| **expected_result** | `aide --check` runs on Debian/Ubuntu hosts and returns a real integrity verdict; a genuinely bad config path produces an error that says which path failed |
+| **change** | `sentinel/checks.py` — `aide_command()` and `AIDE_CMD` retired in its favour; `sentinel/config.py` — `Host.aide_config`; `sentinel/classify.py` — `AIDE_CONFIG_ERRORS` message names the path; `tests/test_checks.py` — new file asserting the **command strings** |
+| **version** | `v1.0.0` |
+| **merge_commit** | — |
+
+**Why (Y → X → Z).** Because the bare `aide --check` cannot work on a distribution that
+compiles in no default config path, and because no test asserted on the command string
+(cause Y), the primary integrity check returned `ERROR` on both hosts on the first full
+production sweep (outcome X). Iteration Z passes the path explicitly and adds the missing
+layer of test coverage.
+
+**The coverage lesson, stated plainly.** 55 tests passed while the tool's headline check
+could not execute. Every one of them fed the classifier its inputs directly, so the suite
+proved the classifier and proved nothing about what the tool ran. **A test that supplies
+its own inputs to a pure function cannot fail for the reason the tool is about to fail.**
+`tests/test_checks.py` exists to close that class, not just this instance.
+
+**What kept it from being worse.** `classify_aide` maps unrecognised codes to `error`,
+never `clean` — so this surfaced as a loud failure rather than a passing check that never
+ran. That default was written for exactly this, and it is the reason a broken v1.0.0 could
+not have shipped a false all-clear.
+
+---
+
+## capture-the-indented-file-and-hash-lines_c597ad8e
+
+| Field | Value |
+|---|---|
+| **id** | `capture-the-indented-file-and-hash-lines_c597ad8e` |
+| **resolves** | [`KNOWN_ISSUES.md#rkhunter-evidence-captured-only-the-warn_f8ba0431`](KNOWN_ISSUES.md#rkhunter-evidence-captured-only-the-warn_f8ba0431) |
+| **iteration** | Capture the indented File: and hash lines that follow each rkhunter warning, so every warning names the file it is about |
+| **expected_result** | Each rkhunter warning in a report names its subject, so an operator can triage from the report instead of from the host's log |
+| **change** | `sentinel/classify.py` — `_rootkit_records()` walks header + indented continuation lines; `classify_rootkit` emits one entry per record |
+| **version** | `v1.0.0` |
+| **merge_commit** | — |
+
+**Why (Y → X → Z).** Because rkhunter's property warnings are three-line records and the
+filter kept only the header (cause Y), 22 warnings rendered as 22 identical lines naming no
+file (outcome X). Iteration Z attaches the continuation lines to their header.
+
+**What the missing lines actually were.** `su`, `sudo`, `login`, `mount`, `cp`, `fsck` and
+16 more — changed by an unattended upgrade one day after the rkhunter baseline was taken,
+and independently confirmed as legitimate distribution binaries by `debsums` passing on the
+same host in the same sweep. The right conclusion was reachable from data the sweep already
+held; the report simply did not carry it.
+
+**Evidence.** `Tests/v1.0.0/rkhunter-format-2026-09-03.log` — the real three-line record
+format this parses, captured from the run that exposed the defect.

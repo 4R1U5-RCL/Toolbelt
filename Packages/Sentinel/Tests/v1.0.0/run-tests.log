@@ -1,8 +1,21 @@
 # Packages/Sentinel v1.0.0 — declared runner
 # Command: ./run-tests.sh
 # Host: container at /studio, python3 3.11.2
-# Date: 2026-09-03T08:17:15Z
+# Date: 2026-09-03T08:41:54Z
+#
+# 67 tests. The 12 added on 2026-09-03 close the gap the first production
+# sweep exposed: tests/test_checks.py asserts on the COMMAND STRINGS, which
+# nothing did when 55 tests passed over a tool whose primary check could not run.
 
+test_config_error_is_not_a_finding_about_the_host (tests.test_checks.TestAideConfigError.test_config_error_is_not_a_finding_about_the_host) ... ok
+test_config_error_names_the_path (tests.test_checks.TestAideConfigError.test_config_error_names_the_path) ... ok
+test_other_error_codes_keep_the_generic_message (tests.test_checks.TestAideConfigError.test_other_error_codes_keep_the_generic_message) ... ok
+test_aide_command_always_passes_a_config (tests.test_checks.TestCommands.test_aide_command_always_passes_a_config)
+The bare `aide --check` exits 17 on Debian/Ubuntu and checks nothing. ... ok
+test_aide_command_honours_a_custom_config (tests.test_checks.TestCommands.test_aide_command_honours_a_custom_config) ... ok
+test_every_check_command_is_non_empty (tests.test_checks.TestCommands.test_every_check_command_is_non_empty) ... ok
+test_fingerprint_command_reads_the_configured_db (tests.test_checks.TestCommands.test_fingerprint_command_reads_the_configured_db) ... ok
+test_run_aide_sends_the_configured_path_to_the_runner (tests.test_checks.TestCommands.test_run_aide_sends_the_configured_path_to_the_runner) ... ok
 test_aide_error_codes_are_errors_not_findings (tests.test_classify.TestAideExitCodes.test_aide_error_codes_are_errors_not_findings)
 18 is AIDE's IO error. It says nothing about the host and must not ... ok
 test_all_difference_codes_are_findings (tests.test_classify.TestAideExitCodes.test_all_difference_codes_are_findings) ... ok
@@ -20,6 +33,10 @@ test_match_is_clean (tests.test_classify.TestFingerprint.test_match_is_clean) ..
 test_mismatch_is_a_finding_and_says_it_is_not_a_verdict (tests.test_classify.TestFingerprint.test_mismatch_is_a_finding_and_says_it_is_not_a_verdict) ... ok
 test_no_record_is_unbaselined_not_clean (tests.test_classify.TestFingerprint.test_no_record_is_unbaselined_not_clean) ... ok
 test_unreadable_db_is_an_error (tests.test_classify.TestFingerprint.test_unreadable_db_is_an_error) ... ok
+test_one_record_per_warning_not_per_line (tests.test_classify.TestRootkitRecordParsing.test_one_record_per_warning_not_per_line) ... ok
+test_property_warning_names_the_file (tests.test_classify.TestRootkitRecordParsing.test_property_warning_names_the_file) ... ok
+test_records_are_distinguishable_from_each_other (tests.test_classify.TestRootkitRecordParsing.test_records_are_distinguishable_from_each_other) ... ok
+test_standalone_warning_still_captured (tests.test_classify.TestRootkitRecordParsing.test_standalone_warning_still_captured) ... ok
 test_absent_tool_is_skipped (tests.test_classify.TestRootkitScanners.test_absent_tool_is_skipped) ... ok
 test_clean (tests.test_classify.TestRootkitScanners.test_clean) ... ok
 test_infected_is_a_finding (tests.test_classify.TestRootkitScanners.test_infected_is_a_finding) ... ok
@@ -66,6 +83,6 @@ An unreachable host must never render as a clean one. ... ok
 test_unrecorded_host_is_unbaselined (tests.test_sweep.TestSweepHost.test_unrecorded_host_is_unbaselined) ... ok
 
 ----------------------------------------------------------------------
-Ran 55 tests in 0.015s
+Ran 67 tests in 0.016s
 
 OK

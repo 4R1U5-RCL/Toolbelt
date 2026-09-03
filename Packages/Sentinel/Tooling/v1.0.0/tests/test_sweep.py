@@ -34,7 +34,7 @@ class TestSweepHost(unittest.TestCase):
     def test_clean_host(self):
         host = Host("h", "root@h", ("aide", "aide_db_fingerprint", "debsums"))
         runner = FakeRunner({
-            "aide --check": (0, CLEAN_AIDE, ""),
+            "--check": (0, CLEAN_AIDE, ""),
             "sha256sum": (0, f"{HASH}  /var/lib/aide/aide.db", ""),
             "debsums -c": (0, "", ""),
         })
@@ -46,7 +46,7 @@ class TestSweepHost(unittest.TestCase):
 
     def test_tampered_host_reports_a_finding(self):
         host = Host("h", "root@h", ("aide",))
-        runner = FakeRunner({"aide --check": (4, TAMPERED_AIDE, "")})
+        runner = FakeRunner({"--check": (4, TAMPERED_AIDE, "")})
         results = checks.sweep_host(runner, host, SweepConfig(baselines_dir=Path("/x")))
         self.assertEqual(classify.worst(results), classify.FINDING)
 
@@ -84,7 +84,7 @@ class TestSweepHost(unittest.TestCase):
 
 class TestFakeRunner(unittest.TestCase):
     def test_unmatched_command_is_an_error_not_a_default(self):
-        runner = FakeRunner({"aide --check": (0, "", "")})
+        runner = FakeRunner({"--check": (0, "", "")})
         with self.assertRaises(AssertionError):
             runner.run("debsums -c")
 

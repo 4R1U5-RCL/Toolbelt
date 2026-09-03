@@ -8,8 +8,9 @@ entry carrying the version that resolved it. Ids follow `process.yaml` →
 `definitions.issue-id`: `<description>_<hash8>`, hashed over the `summary` field
 alone (PROCESS.md §10.3).
 
-**Note on history.** All four entries were found while building `v1.0.0` —
-three of them by running the tool rather than by reading it. None is `legacy`:
+**Note on history.** All six entries were found while building `v1.0.0` —
+four of them by running the tool rather than by reading it, and the last two by the
+first full production sweep, before release. None is `legacy`:
 no prior version exists for them to predate, so all four are bound by the §7
 reciprocity check.
 
@@ -19,8 +20,10 @@ reciprocity check.
 | [host-baselines-were-committed-into-the-t_9d09c448](#host-baselines-were-committed-into-the-t_9d09c448) | Host baselines were committed into the Toolbelt repository, publishing addresses and integrity fingerprints if it is made public | in-progress |
 | [the-not-installed-heuristic-matched-not_a90badf2](#the-not-installed-heuristic-matched-not_a90badf2) | The not-installed heuristic matched "not found" anywhere in output, so a real finding classified as an absent tool | in-progress |
 | [the-ssh-runner-had-no-way-to-name-an-ide_86ed9055](#the-ssh-runner-had-no-way-to-name-an-ide_86ed9055) | The SSH runner could not name an identity file, so a working key returned Permission denied | in-progress |
+| [aide-check-was-invoked-without-config-so_7932f6e0](#aide-check-was-invoked-without-config-so_7932f6e0) | `aide --check` ran without `--config`, so AIDE exited 17 and the primary integrity check never ran on either host | in-progress |
+| [rkhunter-evidence-captured-only-the-warn_f8ba0431](#rkhunter-evidence-captured-only-the-warn_f8ba0431) | rkhunter evidence named no file — 22 changed-file warnings rendered as 22 identical lines | in-progress |
 
-**Why all four are `in-progress` and not `resolved`.** `merge_commit` is empty in
+**Why all six are `in-progress` and not `resolved`.** `merge_commit` is empty in
 every cited change entry: the work sits unmerged on branch
 `feat/packages-sentinel`. `process.yaml → definitions.issue-status` is explicit —
 "`resolved` is never written while merge_commit is empty; an approved-but-unmerged
@@ -204,3 +207,92 @@ guarantee.
 `~` expanded at construction so a config written with a tilde works from cron.
 Covered by `tests/test_sweep.py::TestSshIdentity`. Verified live the same day
 against both hosts: [`Tests/v1.0.0/live-sweep-2026-09-03.log`](Tests/v1.0.0/live-sweep-2026-09-03.log).
+
+
+---
+
+## aide-check-was-invoked-without-config-so_7932f6e0
+
+| Field | Value |
+|---|---|
+| **id** | `aide-check-was-invoked-without-config-so_7932f6e0` |
+| **summary** | aide --check was invoked without --config, so on Debian and Ubuntu installs AIDE exited 17 with a missing-configuration error and the primary file-integrity check never ran |
+| **outcome** | The first full production sweep returned `ERROR` for AIDE on **both** hosts. The headline check of the whole tool — the one the baselines exist for — did not execute, on either machine, on its first real run |
+| **cause** | `AIDE_CMD` was the bare `aide --check`. Debian and Ubuntu ship AIDE with no compiled-in default config path, so it exits 17 (`invalid configureline`) demanding `--config`, `--before` or `--after`. Every test in the suite fed `classify_aide` an exit code directly, so nothing ever exercised the command string itself |
+| **iteration** | Pass an explicit --config path to aide, configurable per host and defaulting to /etc/aide/aide.conf, and classify AIDE's configuration-error codes as an error that names the config it could not read |
+| **status** | `in-progress` |
+| **resolved_by** | [`CHANGE_LOG.md#pass-an-explicit-config-path-to-aide-con_ab659d01`](CHANGE_LOG.md#pass-an-explicit-config-path-to-aide-con_ab659d01), fix-version `v1.0.0` |
+| **occurrences** | 1 — 2026-09-03, first full sweep of both hosts |
+
+### Outcome (X)
+
+```
+## <host-a> — finding
+  [ERROR] aide: AIDE failed to run (exit 17)
+      ERROR: missing configuration (use '--config' '--before' or '--after' ...)
+```
+
+Identically on both hosts. The classifier behaved correctly — 17 is above the error
+floor, so it reported `error` and not `clean`, and the sweep verdict was not a false
+all-clear. **That is the only reason this was survivable.** Had the mapping defaulted
+to clean for unrecognised codes, the tool would have reported a passing integrity check
+that never ran, on every host, indefinitely.
+
+### Cause (Y)
+
+Two things, and the second is the real one.
+
+1. Debian/Ubuntu build AIDE without a default config path, so the bare command cannot work there.
+2. **The suite could not have caught it.** Every AIDE test called `classify_aide(host, code, output)`
+   directly. The commands in `checks.py` were never asserted against — so the module holding
+   the one string that had to be right was the module with no test coverage at all. A test
+   that supplies its own inputs to a classifier proves the classifier, and quietly proves
+   nothing about what the tool actually runs.
+
+### Iteration (Z)
+
+`Host.aide_config` (default `/etc/aide/aide.conf`), an `aide_command()` builder, and
+`AIDE_CONFIG_ERRORS` classified as an error whose message names the config path that
+failed. Tests now assert on the **command string**, not only on the classification —
+`test_checks.py::TestCommands`.
+
+
+---
+
+## rkhunter-evidence-captured-only-the-warn_f8ba0431
+
+| Field | Value |
+|---|---|
+| **id** | `rkhunter-evidence-captured-only-the-warn_f8ba0431` |
+| **summary** | rkhunter evidence captured only the Warning: line, so twenty-two changed-file warnings were reported as twenty-two identical lines naming no file |
+| **outcome** | The report said `rkhunter raised 25 warning(s)` and then printed `Warning: The file properties have changed:` twenty-two times, naming nothing. Unactionable: an operator cannot tell whether the changed files are `su` and `sudo` or a pair of manual pages, and has to go to the host log to find out |
+| **cause** | `classify_rootkit` filtered stdout to lines containing `Warning:`. rkhunter puts the *subject* of a property warning on the indented `File:` line that follows it, so the filter kept the header and dropped the payload |
+| **iteration** | Capture the indented File: and hash lines that follow each rkhunter warning, so every warning names the file it is about |
+| **status** | `in-progress` |
+| **resolved_by** | [`CHANGE_LOG.md#capture-the-indented-file-and-hash-lines_c597ad8e`](CHANGE_LOG.md#capture-the-indented-file-and-hash-lines_c597ad8e), fix-version `v1.0.0` |
+| **occurrences** | 1 — 2026-09-03, first full sweep |
+
+### Outcome (X)
+
+The count was right and the content was empty. In the run that produced this, the 22 files
+turned out to be core system binaries — `su`, `sudo`, `login`, `mount`, `cp` — changed by an
+unattended upgrade the day after the rkhunter baseline was taken, and confirmed legitimate
+by `debsums` passing on the same host in the same sweep. **None of that was visible in the
+report.** Establishing it took a separate SSH session and a read of `/var/log/rkhunter.log`.
+
+A finding an operator must leave the tool to interpret is a finding the tool did not
+deliver. The severity was right; the report was not usable.
+
+### Cause (Y)
+
+Line-oriented filtering against a record-oriented format. rkhunter's property warnings are
+three-line records — a `Warning:` header, then indented `File:`, `Current hash:` and
+`Stored hash:` lines. A `Warning:`-only filter is guaranteed to keep exactly the line that
+carries no information, for exactly the warning class that matters most.
+
+### Iteration (Z)
+
+`classify_rootkit` now walks the output and attaches the indented continuation lines to
+their header, emitting one evidence entry per record with the file named. Covered by
+`test_classify.py::TestRootkitScanners::test_property_warning_names_the_file`, which asserts
+against the real three-line rkhunter format captured in this run.
