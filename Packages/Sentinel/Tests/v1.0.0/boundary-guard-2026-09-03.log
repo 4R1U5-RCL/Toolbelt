@@ -1,0 +1,17 @@
+# Packages/Sentinel v1.0.0 — boundary guard, live
+# Date: 2026-09-03T08:08:46Z
+#
+# Proves the guard that lets this package be published: Sentinel refuses
+# to read baselines from inside the Toolbelt checkout.
+
+$ python3 -m sentinel --baselines <repo>/Packages/Sentinel/baselines hosts
+sentinel: baselines directory <repo>/Packages/Sentinel/baselines is inside the Toolbelt repo at <repo>. Baselines name hosts, addresses and kernel versions and this repo may be published; keep them outside it (default: ~/.claude/data/baselines).
+exit=2
+
+$ python3 -m sentinel --baselines <repo> hosts
+sentinel: baselines directory <repo> is inside the Toolbelt repo at <repo>. Baselines name hosts, addresses and kernel versions and this repo may be published; keep them outside it (default: ~/.claude/data/baselines).
+exit=2
+
+$ python3 -m sentinel --baselines /nonexistent hosts
+sentinel: baselines directory /nonexistent does not exist. Sentinel ships the method, not the data — create it and add hosts.json (see examples/hosts.example.json).
+exit=2

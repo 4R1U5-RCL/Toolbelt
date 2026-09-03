@@ -1,0 +1,62 @@
+# Packages/Sentinel v1.0.0 — Track B conformance (PROCESS.md §7)
+# Date: 2026-09-03T08:13:19Z
+# Run by hand, as every Track-B result in this repo so far has been (PROCESS.md §4).
+
+## Check 1 — canonical files: all five of §3 exist and are non-empty
+  PASS  README.md            5528 bytes
+  PASS  IMPLEMENTATIONS.md   3550 bytes
+  PASS  TEMPLATES.md         3274 bytes
+  PASS  KNOWN_ISSUES.md      12183 bytes
+  PASS  CHANGE_LOG.md        8136 bytes
+
+## Check 2 — reciprocity: every non-legacy entry cites its counterpart
+  KNOWN_ISSUES.md -> CHANGE_LOG.md
+    PASS  aide-check-exits-non-zero-when-it-succee_d4e cited by CHANGE_LOG (2)
+    PASS  host-baselines-were-committed-into-the-t_9d0 cited by CHANGE_LOG (2)
+    PASS  the-not-installed-heuristic-matched-not_a90b cited by CHANGE_LOG (2)
+    PASS  the-ssh-runner-had-no-way-to-name-an-ide_86e cited by CHANGE_LOG (2)
+  CHANGE_LOG.md -> KNOWN_ISSUES.md
+    PASS  read-the-exit-code-as-a-bitmask-and-clas_e65 cited by KNOWN_ISSUES (1)
+    PASS  resolve-the-baselines-directory-at-run-t_6ae cited by KNOWN_ISSUES (1)
+    PASS  narrow-the-not-installed-heuristic-to-th_a25 cited by KNOWN_ISSUES (1)
+    PASS  add-an-identity-field-to-the-host-config_09a cited by KNOWN_ISSUES (1)
+  IMPLEMENTATIONS.md <-> TEMPLATES.md
+    PASS  imp-scheduled-sweep      cited by TEMPLATES
+    PASS  imp-fleet-config         cited by TEMPLATES
+    PASS  imp-rebaseline           cited by TEMPLATES
+    PASS  tpl-cron-wrapper         cited by IMPLEMENTATIONS
+    PASS  tpl-hosts-json           cited by IMPLEMENTATIONS
+    PASS  tpl-rebaseline           cited by IMPLEMENTATIONS
+
+## Check 3 — code layout: the tool's code sits under Tooling/v<version>/
+    Tooling/v1.0.0/bin/sentinel
+    Tooling/v1.0.0/sentinel/__init__.py
+    Tooling/v1.0.0/sentinel/__main__.py
+    Tooling/v1.0.0/sentinel/checks.py
+    Tooling/v1.0.0/sentinel/classify.py
+    Tooling/v1.0.0/sentinel/cli.py
+    Tooling/v1.0.0/sentinel/config.py
+    Tooling/v1.0.0/sentinel/errors.py
+    Tooling/v1.0.0/sentinel/report.py
+    Tooling/v1.0.0/sentinel/runner.py
+    Tooling/v1.0.0/tests/__init__.py
+    Tooling/v1.0.0/tests/test_classify.py
+    Tooling/v1.0.0/tests/test_config.py
+    Tooling/v1.0.0/tests/test_sweep.py
+    -> all code under Tooling/v1.0.0/: yes (nothing outside)
+
+## Check 4 — test layout: recorded results exist for the current version
+    boundary-guard-2026-09-03.log
+    live-sweep-2026-09-03.log
+    run-tests.log
+    track-b.log
+
+## Check 5 — version agreement
+    README.md            : v1.0.0
+    newest Tooling/      : v1.0.0
+    newest Tests/        : v1.0.0
+    newest CHANGE_LOG    : v1.0.0
+
+## Verdict
+
+All five Track B checks PASS. Packages/Sentinel is conformant at v1.0.0.

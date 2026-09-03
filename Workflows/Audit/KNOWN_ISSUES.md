@@ -18,6 +18,7 @@ No entry in this file is `legacy`: both predate no conformant version, they
 |---|---|---|
 | [workflows-audit-failed-track-b-conforman_fb119cc2](#workflows-audit-failed-track-b-conforman_fb119cc2) | Failed Track B conformance: four of five canonical documents missing, no `Tooling/` or `Tests/`, no version, no implementation | in-progress |
 | [the-2026-08-31-conformance-migration-of_0b111e47](#the-2026-08-31-conformance-migration-of_0b111e47) | The migration's own records violated the amended spec: invented marker file, change-id off the wrong field, prose status, untrue branch claim | in-progress |
+| [workflows-audit-is-a-reserved-name-carry_1ec09cf6](#workflows-audit-is-a-reserved-name-carry_1ec09cf6) | A reserved name with one sentence and no implementation, while the capability it named was built as `Packages/Sentinel` | in-progress |
 
 ---
 
@@ -180,3 +181,56 @@ its place. Recorded in
   append-only invariant: `status` is explicitly mutable (`close_issue` writes
   it), and the identity fields `id` and `summary` of the first entry were not
   touched — its id still recomputes to `fb119cc2`.
+
+---
+
+## workflows-audit-is-a-reserved-name-carry_1ec09cf6
+
+| Field | Value |
+|---|---|
+| **id** | `workflows-audit-is-a-reserved-name-carry_1ec09cf6` |
+| **summary** | Workflows/Audit is a reserved name carrying one sentence and no implementation, and the auditing capability it named has now been built elsewhere, so the empty name leaves the repository ambiguous about where auditing lives |
+| **outcome** | The repository holds a tool directory that conforms to every convention and does nothing, next to a package that does the work — a reader looking for "the audit tool" finds the wrong one first |
+| **cause** | The directory was created as a reserved name and never implemented; separately, "audit" names three unrelated capabilities in the system this repo serves, so no single implementation could have honoured the name |
+| **iteration** | Retire Workflows/Audit at v1.1.0: keep the directory as a signpost whose Tooling document records that the name is retired and where the capability went, and author no workflow logic for it |
+| **status** | `in-progress` |
+| **resolved_by** | [`CHANGE_LOG.md#retire-workflows-audit-at-v1-1-0-keep-th_add8a5e2`](CHANGE_LOG.md#retire-workflows-audit-at-v1-1-0-keep-th_add8a5e2), fix-version `v1.1.0` |
+| **occurrences** | 1 — raised 2026-09-03, when the host-integrity capability was built as `Packages/Sentinel` |
+
+**Why `in-progress` and not `resolved`.** `merge_commit` is empty in the cited
+change entry: the work sits unmerged on branch `feat/packages-sentinel`. It moves
+to `resolved` at PROCESS.md §6 step 7, on merge.
+
+### Outcome (X) — what the gap resulted in
+
+The 2026-09-01 conformance work left this directory fully conformant and
+completely inert, and PROCESS.md recorded the result plainly:
+
+> `Workflows/Audit` and `Workflows/Review` are one sentence each. Both conform.
+> Neither is useful. What they are meant to be is not written down anywhere in
+> this repository.
+
+Conformance had made the emptiness *legible*, which was the point — but legible
+emptiness sitting under the most obvious name still misdirects. The
+[`v1.0.0` issue](#workflows-audit-failed-track-b-conforman_fb119cc2) closed the
+documentation gap and explicitly left the capability question open for an owner
+decision. This entry is that decision.
+
+### Cause (Y) — the mechanism
+
+Two causes, and only the second is interesting.
+
+1. The directory was created as a reserved name and no implementation followed.
+2. **"Audit" was never one capability.** It named host integrity sweeping,
+   app-surface security review, and PROCESS.md conformance — three unrelated
+   things with three different shapes. Any implementation placed here would have
+   claimed a name the other two also answer to. The name could not be filled in
+   correctly, only occupied.
+
+### Iteration (Z) — the retirement
+
+`v1.1.0` records the retirement in `Tooling/v1.1.0/WORKFLOW.md` and points at
+[`Packages/Sentinel`](../../Packages/Sentinel), where the host-integrity
+capability was built. `v1.0.0` is untouched and remains the rollback point. The
+directory is not deleted: the record of a reserved name that was never built is
+the finding that produced this entry.

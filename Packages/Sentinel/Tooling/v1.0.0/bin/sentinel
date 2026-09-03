@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Sentinel entry point.
+#
+# NOTE the absence of `set -e`, and that it is deliberate. Sentinel exits
+# non-zero when it FINDS something (1) or cannot run a check (2). Under `set -e`
+# a calling wrapper dies at the moment the tool succeeds — the exact failure
+# recorded in KNOWN_ISSUES.md#aide-check-exits-non-zero-when-it-succee_d4ecdc86.
+set -uo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec python3 -m sentinel "$@"

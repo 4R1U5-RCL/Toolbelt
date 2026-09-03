@@ -1,0 +1,42 @@
+# Workflows/Audit v1.1.0 — Track B conformance (PROCESS.md §7)
+# Date: 2026-09-03T08:15:56Z
+# Code-less tool: no executable suite exists; this result is the evidence
+# it merges on (PROCESS.md §5.5, §8). Run by hand, as §4 describes.
+
+## Check 1 — canonical files
+  PASS  README.md            3535 bytes
+  PASS  IMPLEMENTATIONS.md   2464 bytes
+  PASS  TEMPLATES.md         1705 bytes
+  PASS  KNOWN_ISSUES.md      16702 bytes
+  PASS  CHANGE_LOG.md        17328 bytes
+
+## Check 2 — reciprocity (non-legacy entries)
+  PASS  issue workflows-audit-failed-track-b-conforman_fb1 cited by CHANGE_LOG
+  PASS  issue the-2026-08-31-conformance-migration-of_0b11 cited by CHANGE_LOG
+  PASS  issue workflows-audit-is-a-reserved-name-carry_1ec cited by CHANGE_LOG
+  PASS  change a-documents-only-conformance-migration-a_27d cited by KNOWN_ISSUES
+  PASS  change correct-the-migration-records-in-place-a_531 cited by KNOWN_ISSUES
+  PASS  change retire-workflows-audit-at-v1-1-0-keep-th_add cited by KNOWN_ISSUES
+  NOTE  IMPLEMENTATIONS/TEMPLATES are empty-but-valid: no entries on either
+        side, so the pair is vacuously reciprocal (as at v1.0.0).
+
+## Check 3 — code layout: the tool's substance sits under Tooling/v<version>/
+    Tooling/v1.0.0/WORKFLOW.md
+    Tooling/v1.1.0/WORKFLOW.md
+    -> no file outside Tooling/ holds workflow substance: 5 canonical docs only
+
+## Check 4 — test layout: recorded results for the current version
+    RESULTS.md
+    track-b.log
+
+## Check 5 — version agreement
+    README.md         : v1.1.0
+    newest Tooling/   : v1.1.0
+    newest Tests/     : v1.1.0
+    newest CHANGE_LOG : v1.1.0
+
+## Verdict
+
+All five Track B checks PASS. Workflows/Audit is conformant at v1.1.0.
+Conformance is not capability: v1.1.0 retires the tool and there is
+deliberately nothing here to run.

@@ -1,0 +1,25 @@
+# Packages/Sentinel v1.0.0 — live sweep against the real fleet
+# Date: 2026-09-03T08:08:58Z
+#
+# Command: python3 -m sentinel sweep --only aide_db_fingerprint
+#
+# HOST IDENTIFIERS ARE REDACTED. The same rule that keeps the baselines
+# out of this repo applies to recorded output that names the hosts. The
+# unredacted run is reproducible by anyone with the baselines directory.
+#
+# Two hosts, both with a recorded aide.db fingerprint taken 2026-09-01.
+# This exercises the full path: config -> ssh -> sha256sum -> classify -> report.
+
+Sentinel — host integrity sweep
+Run: 2026-09-03T08:09:02Z
+Verdict: CLEAN
+
+## <host-a> — clean
+  [ok] aide_db_fingerprint: aide.db matches its off-host record
+
+## <host-b> — clean
+  [ok] aide_db_fingerprint: aide.db matches its off-host record
+
+Note: A clean result proves no watched file changed since the baseline was taken. It does not prove the host is clean: a first baseline enshrines whatever was already there, and a competent implant defeats file-integrity, distribution checksums and signature scanning alike.
+
+exit=0  (0 = clean, 1 = finding or unbaselined, 2 = a check could not run)

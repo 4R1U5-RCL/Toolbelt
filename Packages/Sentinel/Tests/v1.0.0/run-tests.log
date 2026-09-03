@@ -1,0 +1,71 @@
+# Packages/Sentinel v1.0.0 — declared runner
+# Command: ./run-tests.sh
+# Host: container at /studio, python3 3.11.2
+# Date: 2026-09-03T08:17:15Z
+
+test_aide_error_codes_are_errors_not_findings (tests.test_classify.TestAideExitCodes.test_aide_error_codes_are_errors_not_findings)
+18 is AIDE's IO error. It says nothing about the host and must not ... ok
+test_all_difference_codes_are_findings (tests.test_classify.TestAideExitCodes.test_all_difference_codes_are_findings) ... ok
+test_bitmask_decomposes (tests.test_classify.TestAideExitCodes.test_bitmask_decomposes) ... ok
+test_non_zero_is_a_finding_not_a_crash (tests.test_classify.TestAideExitCodes.test_non_zero_is_a_finding_not_a_crash)
+The recorded failure: aide exits non-zero when it SUCCEEDS at detecting. ... ok
+test_unmapped_code_is_an_error_never_clean (tests.test_classify.TestAideExitCodes.test_unmapped_code_is_an_error_never_clean) ... ok
+test_zero_is_clean (tests.test_classify.TestAideExitCodes.test_zero_is_clean) ... ok
+test_absent_tool_is_skipped (tests.test_classify.TestDebsums.test_absent_tool_is_skipped) ... ok
+test_changed_files_are_findings (tests.test_classify.TestDebsums.test_changed_files_are_findings) ... ok
+test_clean (tests.test_classify.TestDebsums.test_clean) ... ok
+test_missing_file_output_is_not_mistaken_for_an_absent_tool (tests.test_classify.TestDebsums.test_missing_file_output_is_not_mistaken_for_an_absent_tool)
+'not found' in the FINDINGS must not read as 'tool not installed'. ... ok
+test_match_is_clean (tests.test_classify.TestFingerprint.test_match_is_clean) ... ok
+test_mismatch_is_a_finding_and_says_it_is_not_a_verdict (tests.test_classify.TestFingerprint.test_mismatch_is_a_finding_and_says_it_is_not_a_verdict) ... ok
+test_no_record_is_unbaselined_not_clean (tests.test_classify.TestFingerprint.test_no_record_is_unbaselined_not_clean) ... ok
+test_unreadable_db_is_an_error (tests.test_classify.TestFingerprint.test_unreadable_db_is_an_error) ... ok
+test_absent_tool_is_skipped (tests.test_classify.TestRootkitScanners.test_absent_tool_is_skipped) ... ok
+test_clean (tests.test_classify.TestRootkitScanners.test_clean) ... ok
+test_infected_is_a_finding (tests.test_classify.TestRootkitScanners.test_infected_is_a_finding) ... ok
+test_warning_is_a_finding (tests.test_classify.TestRootkitScanners.test_warning_is_a_finding) ... ok
+test_empty_sweep_is_not_clean (tests.test_classify.TestWorst.test_empty_sweep_is_not_clean) ... ok
+test_error_outranks_unbaselined_and_clean (tests.test_classify.TestWorst.test_error_outranks_unbaselined_and_clean) ... ok
+test_finding_outranks_everything (tests.test_classify.TestWorst.test_finding_outranks_everything) ... ok
+test_baselines_inside_the_repo_are_refused (tests.test_config.TestBoundaryGuard.test_baselines_inside_the_repo_are_refused) ... ok
+test_baselines_outside_the_repo_are_allowed (tests.test_config.TestBoundaryGuard.test_baselines_outside_the_repo_are_allowed) ... ok
+test_load_refuses_before_it_reads_anything (tests.test_config.TestBoundaryGuard.test_load_refuses_before_it_reads_anything)
+The guard runs ahead of the directory check, so pointing Sentinel at ... ok
+test_nested_baselines_inside_the_repo_are_also_refused (tests.test_config.TestBoundaryGuard.test_nested_baselines_inside_the_repo_are_also_refused) ... ok
+test_no_repo_detected_means_no_guard (tests.test_config.TestBoundaryGuard.test_no_repo_detected_means_no_guard) ... ok
+test_loads_hosts (tests.test_config.TestLoad.test_loads_hosts) ... ok
+test_malformed_json_is_reported_as_such (tests.test_config.TestLoad.test_malformed_json_is_reported_as_such) ... ok
+test_missing_directory_explains_the_split (tests.test_config.TestLoad.test_missing_directory_explains_the_split) ... ok
+test_missing_manifest_points_at_the_example (tests.test_config.TestLoad.test_missing_manifest_points_at_the_example) ... ok
+test_remote_host_without_target_is_rejected (tests.test_config.TestLoad.test_remote_host_without_target_is_rejected) ... ok
+test_unknown_check_is_rejected (tests.test_config.TestLoad.test_unknown_check_is_rejected) ... ok
+test_unknown_host_lookup_lists_the_known_ones (tests.test_config.TestLoad.test_unknown_host_lookup_lists_the_known_ones) ... ok
+test_argument_beats_env (tests.test_config.TestResolution.test_argument_beats_env) ... ok
+test_default_is_outside_the_repo (tests.test_config.TestResolution.test_default_is_outside_the_repo) ... ok
+test_env_beats_default (tests.test_config.TestResolution.test_env_beats_default) ... ok
+test_dry_run_executes_nothing (tests.test_sweep.TestCli.test_dry_run_executes_nothing) ... ok
+test_hosts_lists_configuration (tests.test_sweep.TestCli.test_hosts_lists_configuration) ... ok
+test_missing_config_exits_two_not_zero (tests.test_sweep.TestCli.test_missing_config_exits_two_not_zero) ... ok
+test_unmatched_command_is_an_error_not_a_default (tests.test_sweep.TestFakeRunner.test_unmatched_command_is_an_error_not_a_default) ... ok
+test_only_narrows_the_checks (tests.test_sweep.TestOnlyFilter.test_only_narrows_the_checks) ... ok
+test_only_with_no_matching_host_exits_two (tests.test_sweep.TestOnlyFilter.test_only_with_no_matching_host_exits_two) ... ok
+test_a_finding_alongside_an_error_still_exits_as_a_finding (tests.test_sweep.TestReport.test_a_finding_alongside_an_error_still_exits_as_a_finding) ... ok
+test_clean_report_still_carries_the_caveat (tests.test_sweep.TestReport.test_clean_report_still_carries_the_caveat) ... ok
+test_exit_codes (tests.test_sweep.TestReport.test_exit_codes) ... ok
+test_json_report_is_machine_readable (tests.test_sweep.TestReport.test_json_report_is_machine_readable) ... ok
+test_text_report_carries_the_caveat (tests.test_sweep.TestReport.test_text_report_carries_the_caveat) ... ok
+test_batchmode_is_always_set (tests.test_sweep.TestSshIdentity.test_batchmode_is_always_set) ... ok
+test_identity_is_passed_to_ssh (tests.test_sweep.TestSshIdentity.test_identity_is_passed_to_ssh) ... ok
+test_no_identity_leaves_options_alone (tests.test_sweep.TestSshIdentity.test_no_identity_leaves_options_alone) ... ok
+test_clean_host (tests.test_sweep.TestSweepHost.test_clean_host) ... ok
+test_swapped_database_reports_a_finding (tests.test_sweep.TestSweepHost.test_swapped_database_reports_a_finding)
+The tamper-evidence property: the host's own db no longer matches the ... ok
+test_tampered_host_reports_a_finding (tests.test_sweep.TestSweepHost.test_tampered_host_reports_a_finding) ... ok
+test_unreachable_host_is_an_error_and_stops_that_host (tests.test_sweep.TestSweepHost.test_unreachable_host_is_an_error_and_stops_that_host)
+An unreachable host must never render as a clean one. ... ok
+test_unrecorded_host_is_unbaselined (tests.test_sweep.TestSweepHost.test_unrecorded_host_is_unbaselined) ... ok
+
+----------------------------------------------------------------------
+Ran 55 tests in 0.015s
+
+OK

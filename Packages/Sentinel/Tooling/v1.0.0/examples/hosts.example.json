@@ -1,0 +1,22 @@
+{
+  "_comment": [
+    "Copy this to <baselines-dir>/hosts.json — NOT into this repository.",
+    "It names hosts and addresses; the repo may be published.",
+    "Default baselines dir: ~/.claude/data/baselines (override with SENTINEL_BASELINES_DIR)."
+  ],
+  "hosts": [
+    {
+      "name": "example.internal",
+      "target": "root@203.0.113.10",
+      "aide_db": "/var/lib/aide/aide.db",
+      "checks": ["aide", "aide_db_fingerprint", "debsums", "rkhunter"],
+      "notes": "Baseline taken after tuning; see host.md alongside aide.db.sha256."
+    },
+    {
+      "name": "this-machine",
+      "local": true,
+      "checks": ["debsums"],
+      "notes": "A local host needs no target. debsums speaks without a prior baseline."
+    }
+  ]
+}
